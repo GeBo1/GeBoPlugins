@@ -17,13 +17,19 @@ Contains shared code used by other plugins in this repo. Unless otherwise noted 
 
 **Note:** Requires [IllusionModdingAPI](https://github.com/IllusionMods/IllusionModdingAPI/)
 
+- KK v0.9.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r1/KK_GeBoCommon.v0.9.0.zip)
+
 ### GameDialogHelper 
 
 Highlights correct dialog choice in KK main game. You can configure level of relationship required (defaults to `Friend`).
 
+- KK v0.9.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r1/KK_GameDialogHelper.v0.9.0.zip) 
+
 ### StudioMultiselectChara
 
 If you select a character in studio and press the hotkey, all other instances of that character in the scene will also be selected. Useful for replacing all instances of a given character.
+
+- KK v0.8.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r1/KK_StudioMultiselectChara.v0.8.0.zip)
 
 [//]: # (### StudioSceneCharaInfo)
 
@@ -31,11 +37,15 @@ If you select a character in studio and press the hotkey, all other instances of
 
 Provides hotkeys for loading the next/previous scene from the scenes folder. Supports [Illusion BrowserFolders](https://github.com/ManlyMarco/Illusion_BrowserFolders). Tracks last loaded image so it can pick up where it left off between sessions (or if you change folders).
 
+- KK v0.8.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r1/KK_StudioSceneNavigation.v0.8.0.zip)
+
 ### TranslationCacheCleaner
 
 Removes all entries from your translation cache file that would be translated by existing translations.  Useful when translation files are updated to ensure you aren't still getting old translations from your cache.  
 
 **Note:** Requires [XUnity.AutoTranslator](https://github.com/bbepis/XUnity.AutoTranslator)
+
+- KK v0.5.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r1/KK_TranslationCacheCleaner.v0.5.0.zip)
 
 [//]: # (### TranslationHelper)
 

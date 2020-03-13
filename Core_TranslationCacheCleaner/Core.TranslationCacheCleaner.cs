@@ -24,8 +24,8 @@ namespace TranslationCacheCleanerPlugin
         public const string PluginName = "Translation Cache Cleaner";
         public const string Version = "0.5.1";
 
-        private const float notifySeconds = 10f;
-        private const float yieldSeconds = 0.1f;
+        private const float NotifySeconds = 10f;
+        private const float YieldSeconds = 0.1f;
 
         internal static new ManualLogSource Logger;
 
@@ -67,6 +67,7 @@ namespace TranslationCacheCleanerPlugin
         {
             GeBoAPI.Instance.AutoTranslationHelper.ReloadTranslations();
         }
+
         private static string GetWorkFileName(string path, string prefix, string extension)
         {
             string timestamp = DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss");
@@ -96,8 +97,8 @@ namespace TranslationCacheCleanerPlugin
         public IEnumerator CleanTranslationCacheCoroutine()
         {
             var reloadCoroutine = CoroutineUtils.CreateCoroutine(() => { }, ReloadTranslations);
-            float cutoff = Time.realtimeSinceStartup + yieldSeconds;
-            float notifyTime = Time.realtimeSinceStartup + notifySeconds;
+            float cutoff = Time.realtimeSinceStartup + YieldSeconds;
+            float notifyTime = Time.realtimeSinceStartup + NotifySeconds;
             Logger.LogMessage("Attempting to clean translation cache, please be patient...");
             var cache = GeBoAPI.Instance.AutoTranslationHelper.DefaultCache;
 
@@ -144,11 +145,11 @@ namespace TranslationCacheCleanerPlugin
                     if (now > notifyTime)
                     {
                         Logger.LogMessage("Cleaning translation cache...");
-                        notifyTime = now + notifySeconds;
+                        notifyTime = now + NotifySeconds;
                     }
                     if (now > cutoff)
                     {
-                        cutoff = now + yieldSeconds;
+                        cutoff = now + YieldSeconds;
                         yield return null;
                     }
                     string[] parts = line.Split(splitter, StringSplitOptions.None);

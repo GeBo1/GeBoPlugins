@@ -1,9 +1,8 @@
-﻿using BepInEx.Logging;
+﻿using System;
+using System.Collections.Generic;
 using GeBoCommon.Utilities;
 using HarmonyLib;
 using Studio;
-using System;
-using System.Collections.Generic;
 #if AI
 using AIChara;
 #endif
@@ -12,53 +11,42 @@ namespace StudioMultiSelectCharaPlugin
 {
     public static class Extensions
     {
+        #region TreeNode reflection
+
         public delegate void AddSelectNodeOpenDelegate(TreeNodeCtrl obj, TreeNodeObject treeNodeObject, bool multiple);
         public delegate void DeselectNodeOpenDelegate(TreeNodeCtrl obj, TreeNodeObject _node);
 
-        //private static ManualLogSource Logger => StudioMultiSelectChara.Logger;
-
-        private static readonly SimpleLazy<HookedSimpleCache<ChaFile, CharaId, ChaControl>> _charaIdCache = new SimpleLazy<HookedSimpleCache<ChaFile, CharaId, ChaControl>>(() =>
-            new HookedSimpleCache<ChaFile, CharaId, ChaControl>(IdLoader, CacheConverter, true, true));
-
-        private static readonly SimpleLazy<Action<TreeNodeObject>> _SelectInWorkareaAction = new SimpleLazy<Action<TreeNodeObject>>(() =>
+        private static readonly SimpleLazy<AddSelectNodeOpenDelegate> _addSelectNode = new SimpleLazy<Extensions.AddSelectNodeOpenDelegate>(() =>
         {
             var AddSelectNode = AccessTools.Method(typeof(TreeNodeCtrl), "AddSelectNode");
-            var AddSelectNodeDelegate = (AddSelectNodeOpenDelegate)Delegate.CreateDelegate(typeof(AddSelectNodeOpenDelegate), null, AddSelectNode);
-            return new Action<TreeNodeObject>((tno) => AddSelectNodeDelegate(tno.GetTreeNodeCtrl(), tno, true));
+            return (AddSelectNodeOpenDelegate)Delegate.CreateDelegate(typeof(AddSelectNodeOpenDelegate), null, AddSelectNode);
         });
 
-        private static readonly SimpleLazy<Action<TreeNodeObject>> _UnselectInWorkareaAction = new SimpleLazy<Action<TreeNodeObject>>(() =>
+        private static readonly SimpleLazy<DeselectNodeOpenDelegate> _deselectNode = new SimpleLazy<Extensions.DeselectNodeOpenDelegate>(() =>
         {
             var DeselectNode = AccessTools.Method(typeof(TreeNodeCtrl), "DeselectNode");
-            var DeselectNodeDelegate = (DeselectNodeOpenDelegate)Delegate.CreateDelegate(typeof(DeselectNodeOpenDelegate), null, DeselectNode);
-            return new Action<TreeNodeObject>((tno) => DeselectNodeDelegate(tno.GetTreeNodeCtrl(), tno));
+            return (DeselectNodeOpenDelegate)Delegate.CreateDelegate(typeof(DeselectNodeOpenDelegate), null, DeselectNode);
         });
+
+        private static void DeselectNode(TreeNodeCtrl obj, TreeNodeObject node) => _deselectNode.Value(obj, node);
+        private static void AddSelectNode(TreeNodeCtrl obj, TreeNodeObject treeNodeObject, bool multiple = false) => _addSelectNode.Value(obj, treeNodeObject, multiple);
 
         private static readonly SimpleLazy<GetterHandler<TreeNodeObject, TreeNodeCtrl>> _treeNodeCtrlGetter = new SimpleLazy<GetterHandler<TreeNodeObject, TreeNodeCtrl>>(
             () => FastAccess.CreateGetterHandler<TreeNodeObject, TreeNodeCtrl>(AccessTools.Field(typeof(TreeNodeObject), "m_TreeNodeCtrl")));
 
-        internal static HookedSimpleCache<ChaFile, CharaId, ChaControl> CharaIdCache => _charaIdCache.Value;
-
-        private static ChaFile CacheConverter(ChaControl chaControl)
-        {
-            return chaControl?.chaFile;
-        }
-
-        public static bool IsSelectedInWorkarea(this ObjectCtrlInfo objectCtrlInfo)
-        {
-            return objectCtrlInfo.treeNodeObject.GetTreeNodeCtrl().CheckSelect(objectCtrlInfo.treeNodeObject);
-        }
-
-        public static TreeNodeCtrl GetTreeNodeCtrl(this TreeNodeObject obj) => _treeNodeCtrlGetter.Value(obj);
-
         private static readonly SimpleLazy<GetterHandler<TreeNodeCtrl, List<TreeNodeObject>>> _treeNodeObjectsGetter = new SimpleLazy<GetterHandler<TreeNodeCtrl, List<TreeNodeObject>>>(
             () => FastAccess.CreateGetterHandler<TreeNodeCtrl, List<TreeNodeObject>>(AccessTools.Field(typeof(TreeNodeCtrl), "m_TreeNodeObject")));
 
-        public static List<TreeNodeObject> GetTreeNodeObjects(this TreeNodeCtrl obj) => _treeNodeObjectsGetter.Value(obj);
+        #endregion TreeNode reflection
 
-        public static void UnselectInWorkarea(this ObjectCtrlInfo objectCtrlInfo) => _UnselectInWorkareaAction.Value(objectCtrlInfo?.treeNodeObject);
+        #region CharaId cache
 
-        public static void SelectInWorkarea(this ObjectCtrlInfo objectCtrlInfo) => _SelectInWorkareaAction.Value(objectCtrlInfo?.treeNodeObject);
+        private static readonly SimpleLazy<HookedSimpleCache<ChaFile, CharaId, ChaControl>> _charaIdCache = new SimpleLazy<HookedSimpleCache<ChaFile, CharaId, ChaControl>>(() =>
+           new HookedSimpleCache<ChaFile, CharaId, ChaControl>(IdLoader, CacheConverter, true, true));
+
+        internal static HookedSimpleCache<ChaFile, CharaId, ChaControl> CharaIdCache => _charaIdCache.Value;
+
+        private static ChaFile CacheConverter(ChaControl chaControl) => chaControl?.chaFile;
 
         internal static TResult CacheWrapper<T, TResult>(this T obj, Dictionary<T, TResult> cache, Func<T, TResult> loader)
         {
@@ -69,19 +57,55 @@ namespace StudioMultiSelectCharaPlugin
             return cache[obj] = loader(obj);
         }
 
-        private static CharaId IdLoader(ChaFile chaFile)
+        private static CharaId IdLoader(ChaFile chaFile) => new CharaId(chaFile);
+
+        #endregion CharaId cache
+
+        public static bool IsSelectedInWorkarea(this ObjectCtrlInfo objectCtrlInfo) => objectCtrlInfo.treeNodeObject.GetTreeNodeCtrl().CheckSelect(objectCtrlInfo.treeNodeObject);
+
+        public static void UnselectInWorkarea(this ObjectCtrlInfo objectCtrlInfo)
         {
-            return new CharaId(chaFile);
+            var treeNodeObject = objectCtrlInfo?.treeNodeObject;
+            if (treeNodeObject != null)
+            {
+                var treeNodeCtrl = treeNodeObject.GetTreeNodeCtrl();
+                // DeselectNode is slow, even when it does nothing, check first
+                if (treeNodeCtrl.CheckSelect(treeNodeObject))
+                {
+                    DeselectNode(treeNodeCtrl, treeNodeObject);
+                }
+            }
         }
 
-        public static CharaId GetMatchId(this ChaFile chaFile)
+        public static void MultiSelectInWorkarea(this ObjectCtrlInfo objectCtrlInfo)
         {
-            return CharaIdCache.Get(chaFile);
+            var treeNodeObject = objectCtrlInfo?.treeNodeObject;
+            if (treeNodeObject != null)
+            {
+                var treeNodeCtrl = treeNodeObject.GetTreeNodeCtrl();
+                // AddSelectNode with multi=true on selected object clears it's selected status, don't want that
+                if (!treeNodeCtrl.CheckSelect(treeNodeObject))
+                {
+                    AddSelectNode(treeNodeCtrl, treeNodeObject, true);
+                }
+            }
         }
 
-        public static CharaId GetMatchId(this OCIChar ociChar)
+        public static void SelectInWorkarea(this ObjectCtrlInfo objectCtrlInfo)
         {
-            return ociChar?.oiCharInfo.charFile.GetMatchId();
+            var treeNodeObject = objectCtrlInfo?.treeNodeObject;
+            if (treeNodeObject != null)
+            {
+                AddSelectNode(treeNodeObject.GetTreeNodeCtrl(), treeNodeObject);
+            }
         }
+
+        public static List<TreeNodeObject> GetTreeNodeObjects(this TreeNodeCtrl treeNodeCtrl) => _treeNodeObjectsGetter.Value(treeNodeCtrl);
+
+        public static TreeNodeCtrl GetTreeNodeCtrl(this TreeNodeObject treeNodeObject) => _treeNodeCtrlGetter.Value(treeNodeObject);
+
+        public static CharaId GetMatchId(this ChaFile chaFile) => CharaIdCache.Get(chaFile);
+
+        public static CharaId GetMatchId(this OCIChar ociChar) => ociChar?.oiCharInfo.charFile.GetMatchId();
     }
 }

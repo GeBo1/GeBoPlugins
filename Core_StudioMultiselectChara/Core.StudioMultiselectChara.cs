@@ -25,7 +25,7 @@ namespace StudioMultiSelectCharaPlugin
         internal static new ManualLogSource Logger;
         public const string GUID = "com.gebo.BepInEx.studiomultiselectchara";
         public const string PluginName = "Studio Multiselect Chara";
-        public const string Version = "0.8.0";
+        public const string Version = "0.9.0";
 
         private bool busy = false;
 
@@ -121,12 +121,15 @@ namespace StudioMultiSelectCharaPlugin
                 {
                     if (DoesCharaMatch(matchId, ociChar))
                     {
-                        ociChar.SelectInWorkarea();
+                        ociChar.MultiSelectInWorkarea();
                         selected++;
                     }
                     else
                     {
-                        ociChar.UnselectInWorkarea();
+                        if (ociChar.IsSelectedInWorkarea())
+                        {
+                            ociChar.UnselectInWorkarea();
+                        }
                     }
                 }
                 else

@@ -33,7 +33,7 @@ namespace StudioSceneNavigationPlugin
     {
         public const string GUID = "com.gebo.bepinex.studioscenenavigation";
         public const string PluginName = "Studio Scene Navigation";
-        public const string Version = "0.8.0";
+        public const string Version = "0.8.1";
 
         #region configuration
 
@@ -238,6 +238,11 @@ namespace StudioSceneNavigationPlugin
             string newFile = TrackLastLoadedSceneFile + Path.GetRandomFileName();
             string oldFile = TrackLastLoadedSceneFile + Path.GetRandomFileName();
 
+            Dictionary<string, string> relativeScenes = new Dictionary<string, string>();
+            foreach (KeyValuePair<string, string> entry in LastLoadedScenes)
+            {
+                relativeScenes[PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, entry.Key)] = Path.GetFileName(entry.Value);
+            }
             lock (SavePendingLock)
             {
                 if (SavePending)
@@ -253,11 +258,11 @@ namespace StudioSceneNavigationPlugin
                             streamWriter.Write('\0');
                             streamWriter.Write(LastLoadedScenes.Count);
                             streamWriter.Write('\n');
-                            foreach (KeyValuePair<string, string> entry in LastLoadedScenes)
+                            foreach (KeyValuePair<string, string> entry in relativeScenes)
                             {
-                                streamWriter.Write(PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, entry.Key));
+                                streamWriter.Write(entry.Key);
                                 streamWriter.Write('\0');
-                                streamWriter.Write(Path.GetFileName(entry.Value));
+                                streamWriter.Write(entry.Value);
                                 streamWriter.Write('\n');
                             }
                         }
@@ -320,6 +325,12 @@ namespace StudioSceneNavigationPlugin
                                 // first line should be header (older files may not have)
                                 entry = line.Split(split);
                                 expectedCount = int.Parse(entry[2]);
+                                continue;
+                            }
+                            if (entry[0] == GUID)
+                            {
+                                // older versions may have left multiple GUID entries behind, skip them
+                                continue;
                             }
                             // Normalize on load to take care of any changes between versions
                             if (!Path.IsPathRooted(entry[0]))

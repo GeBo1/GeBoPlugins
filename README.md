@@ -17,13 +17,13 @@ Contains shared code used by other plugins in this repo. Unless otherwise noted 
 
 **Note:** Requires [IllusionModdingAPI](https://github.com/IllusionMods/IllusionModdingAPI/)
 
-- KK v0.9.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r1/KK_GeBoCommon.v0.9.0.zip)
+- KK v0.9.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r2/KK_GeBoCommon.v0.9.1.zip)
 
 ### GameDialogHelper 
 
 Highlights correct dialog choice in KK main game. You can configure level of relationship required (defaults to `Friend`).
 
-- KK v0.9.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r1/KK_GameDialogHelper.v0.9.0.zip) 
+- KK v0.9.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r2/KK_GameDialogHelper.v0.9.1.zip) 
 
 ### StudioMultiselectChara
 
@@ -45,7 +45,7 @@ Removes all entries from your translation cache file that would be translated by
 
 **Note:** Requires [XUnity.AutoTranslator](https://github.com/bbepis/XUnity.AutoTranslator)
 
-- KK v0.5.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r1/KK_TranslationCacheCleaner.v0.5.0.zip)
+- KK v0.5.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r2/KK_TranslationCacheCleaner.v0.5.1.zip)
 
 [//]: # (### TranslationHelper)
 

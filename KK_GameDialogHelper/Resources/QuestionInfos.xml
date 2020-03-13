@@ -1,0 +1,236 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<QuestionInfos>
+
+  <QuestionInfo>
+    <Id>68</Id>
+    <QuestionType>Likes</QuestionType>
+    <LikeTarget>Animal</LikeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>188</Id>
+    <QuestionType>Likes</QuestionType>
+    <LikeTarget>BlackCoffee</LikeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>74</Id>
+    <QuestionType>Likes</QuestionType>
+    <LikeTarget>Cook</LikeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>77</Id>
+    <QuestionType>Likes</QuestionType>
+    <LikeTarget>Exercise</LikeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>83</Id>
+    <QuestionType>Likes</QuestionType>
+    <LikeTarget>Fashionable</LikeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>191</Id>
+    <QuestionType>Likes</QuestionType>
+    <LikeTarget>Spicy</LikeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>80</Id>
+    <QuestionType>Likes</QuestionType>
+    <LikeTarget>Study</LikeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>194</Id>
+    <QuestionType>Likes</QuestionType>
+    <LikeTarget>Sweet</LikeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>71</Id>
+    <QuestionType>Likes</QuestionType>
+    <LikeTarget>Eat</LikeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>197</Id>
+    <QuestionType>PhysicalAttributes</QuestionType>
+    <PhysicalAttributeTarget>BustSize</PhysicalAttributeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>201</Id>
+    <QuestionType>PhysicalAttributes</QuestionType>
+    <PhysicalAttributeTarget>Height</PhysicalAttributeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>205</Id>
+    <QuestionType>PhysicalAttributes</QuestionType>
+    <PhysicalAttributeTarget>Figure</PhysicalAttributeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>64</Id>
+    <Description>Acquaintance General</Description>
+    <RelationshipLevel>Acquaintance</RelationshipLevel>
+    <QuestionType>Personality</QuestionType>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>185</Id>
+    <Description>Friend General</Description>
+    <RelationshipLevel>Friend</RelationshipLevel>
+    <QuestionType>Personality</QuestionType>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>358</Id>
+    <Description>Lover General (1)</Description>
+    <RelationshipLevel>Lover</RelationshipLevel>
+    <QuestionType>Personality</QuestionType>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>361</Id>
+    <Description>Lover General (2)</Description>
+    <RelationshipLevel>Lover</RelationshipLevel>
+    <QuestionType>Personality</QuestionType>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>364</Id>
+    <Description>Lover General (3)</Description>
+    <RelationshipLevel>Lover</RelationshipLevel>
+    <QuestionType>Personality</QuestionType>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>373</Id>
+    <QuestionType>PhysicalAttributes</QuestionType>
+    <RelationshipLevel>Lover</RelationshipLevel>
+    <PhysicalAttributeTarget>BustSize</PhysicalAttributeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>377</Id>
+    <QuestionType>PhysicalAttributes</QuestionType>
+    <RelationshipLevel>Lover</RelationshipLevel>
+    <PhysicalAttributeTarget>Height</PhysicalAttributeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>381</Id>
+    <QuestionType>PhysicalAttributes</QuestionType>
+    <RelationshipLevel>Lover</RelationshipLevel>
+    <PhysicalAttributeTarget>Figure</PhysicalAttributeTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>251</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>BecomeLovers</InvitationTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>261</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>H</InvitationTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>266</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>Lunch</InvitationTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>271</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>Club</InvitationTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>276</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>GoHome</InvitationTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>282</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>Date</InvitationTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>287</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>Study</InvitationTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>292</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>Exercise</InvitationTarget>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>424</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>H</InvitationTarget>
+    <RelationshipLevel>Lover</RelationshipLevel>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>432</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>Lunch</InvitationTarget>
+    <RelationshipLevel>Lover</RelationshipLevel>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>436</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>Club</InvitationTarget>
+    <RelationshipLevel>Lover</RelationshipLevel>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>440</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>GoHome</InvitationTarget>
+    <RelationshipLevel>Lover</RelationshipLevel>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>444</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>Date</InvitationTarget>
+    <RelationshipLevel>Lover</RelationshipLevel>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>448</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>Study</InvitationTarget>
+    <RelationshipLevel>Lover</RelationshipLevel>
+  </QuestionInfo>
+
+  <QuestionInfo>
+    <Id>451</Id>
+    <QuestionType>Invitation</QuestionType>
+    <InvitationTarget>Exercise</InvitationTarget>
+    <RelationshipLevel>Lover</RelationshipLevel>
+  </QuestionInfo>
+
+  <!--
+  <QuestionInfo>
+    <Id></Id>
+    <Description></Description>
+    <QuestionType></QuestionType>
+  </QuestionInfo>
+-->
+</QuestionInfos>

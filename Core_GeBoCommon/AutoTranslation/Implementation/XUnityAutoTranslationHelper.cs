@@ -26,7 +26,7 @@ namespace GeBoCommon.AutoTranslation.Implementation
             _defaultCache = new SimpleLazy<object>(LazyReflectionGetter<object>(() => DefaultTranslator, "TextCache"));
             _reloadTranslations = new SimpleLazy<ReloadTranslationsDelegate>(ReloadTranslationsDelegateLoader);
             _addTranslationToCache = new SimpleLazy<AddTranslationToCacheDelegate>(AddTranslationToCacheLoader);
-            _settingsType = new SimpleLazy<Type>(() => AccessTools.TypeByName("XUnity.AutoTranslator.Plugin.Core.Configuration.Settings"));
+            _settingsType = new SimpleLazy<Type>(() => typeof(XUnity.AutoTranslator.Plugin.Core.IPluginEnvironment).Assembly.GetType("XUnity.AutoTranslator.Plugin.Core.Configuration.Settings", true));
 
             getReplacements = LazyReflectionGetter<Dictionary<string, string>>(_settingsType, "Replacements");
             getAutoTranslationsFilePath = LazyReflectionGetter<string>(_settingsType, "AutoTranslationsFilePath");

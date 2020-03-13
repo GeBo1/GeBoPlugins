@@ -29,7 +29,7 @@ Highlights correct dialog choice in KK main game. You can configure level of rel
 
 If you select a character in studio and press the hotkey, all other instances of that character in the scene will also be selected. Useful for replacing all instances of a given character.
 
-- KK v0.8.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r1/KK_StudioMultiselectChara.v0.8.0.zip)
+- KK v0.9.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r3/KK_StudioMultiselectChara.v0.9.0.zip)
 
 [//]: # (### StudioSceneCharaInfo)
 
@@ -37,7 +37,7 @@ If you select a character in studio and press the hotkey, all other instances of
 
 Provides hotkeys for loading the next/previous scene from the scenes folder. Supports [Illusion BrowserFolders](https://github.com/ManlyMarco/Illusion_BrowserFolders). Tracks last loaded image so it can pick up where it left off between sessions (or if you change folders).
 
-- KK v0.8.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r1/KK_StudioSceneNavigation.v0.8.0.zip)
+- KK v0.8.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r3/KK_StudioSceneNavigation.v0.8.1.zip)
 
 ### TranslationCacheCleaner
 

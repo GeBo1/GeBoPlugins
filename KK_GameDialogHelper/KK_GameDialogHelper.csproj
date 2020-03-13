@@ -50,6 +50,14 @@
       <HintPath>..\packages\IllusionLibs.BepInEx.Harmony.2.0.0-beta2\lib\net35\BepInEx.Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ExtensibleSaveFormat, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ExtensibleSaveFormat.Koikatu.14.0.0\lib\net35\ExtensibleSaveFormat.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="KKAPI, Version=1.11.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IllusionModdingAPI.KKAPI.1.11.0\lib\net35\KKAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -62,18 +70,33 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="KK.DialogInfo.cs" />
+    <Compile Include="KK.Enums.cs" />
+    <Compile Include="KK.Extensions.cs" />
     <Compile Include="KK.GameDialogHelper.Hooks.cs" />
     <Compile Include="KK.GameDialogHelper.cs" />
+    <Compile Include="KK.GameDialogHelperController.cs" />
+    <Compile Include="PluginModeLogic\Advanced.cs" />
+    <Compile Include="PluginModeLogic\Disabled.cs" />
+    <Compile Include="PluginModeLogic\IPluginModeLogic.cs" />
+    <Compile Include="PluginModeLogic\RelationshipBased.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QuestionInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <EmbeddedResource Include="Resources\QuestionInfos.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KK_GeBoCommon\KK_GeBoCommon.csproj">
       <Project>{ed839651-4764-420e-97fc-a40d7d98449b}</Project>
       <Name>KK_GeBoCommon</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\QuestionInfos.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

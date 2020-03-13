@@ -25,7 +25,7 @@ namespace GeBoCommon
     {
         public const string GUID = "com.gebo.BepInEx.GeBoAPI";
         public const string PluginName = "GeBo Modding API";
-        public const string Version = "0.9.0";
+        public const string Version = "0.9.1";
 
         private static readonly Dictionary<string, bool> NotificationSoundsEnabled = new Dictionary<string, bool>();
         public static GeBoAPI Instance { get; private set; }

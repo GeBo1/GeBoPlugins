@@ -31,7 +31,7 @@ namespace GameDialogHelperPlugin
         Disabled = int.MinValue
     }
 
-    [BepInDependency(GeBoAPI.PluginName, GeBoAPI.Version)]
+    [BepInDependency(GeBoAPI.GUID, GeBoAPI.Version)]
     [BepInPlugin(GUID, PluginName, Version)]
     [BepInProcess(GeBoCommon.Constants.GameProcessName)]
 #if KK
@@ -41,7 +41,7 @@ namespace GameDialogHelperPlugin
     {
         public const string GUID = "com.gebo.BepInEx.GameDialogHelper";
         public const string PluginName = "Game Dialog Helper";
-        public const string Version = "0.9.0";
+        public const string Version = "0.9.1";
 
         private readonly HashSet<string> SupportedSceneNames = new HashSet<string>(new string[] { "Talk" });
 

@@ -25,8 +25,8 @@ namespace GeBoCommon
         public const string Prefix = "HS";
         public const RegexOptions SupportedRegexComplitationOption = RegexOptions.None;
 #elif KK
-        public const string GameName = "Koikatsu";
-        public const string GameProcessName = "Koikatsu";
+        public const string GameName = "Koikatu";
+        public const string GameProcessName = "Koikatu";
         public const string AltGameProcessName = "Koikatsu Party";
         public const string StudioProcessName = "CharaStudio";
         public const string Prefix = "KK";

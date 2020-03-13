@@ -1,23 +1,17 @@
-﻿using BepInEx;
-using BepInEx.Configuration;
-using BepInEx.Logging;
-using HarmonyLib;
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using UnityEngine;
-using XUnity.AutoTranslator.Plugin.Core;
-using GeBoCommon.AutoTranslation;
-using KeyboardShortcut = BepInEx.Configuration.KeyboardShortcut;
+using BepInEx;
+using BepInEx.Configuration;
+using BepInEx.Logging;
 using GeBoCommon;
-using System.ComponentModel;
 using KKAPI.Utilities;
-using System.Collections;
-using System.Diagnostics;
+using UnityEngine;
+using KeyboardShortcut = BepInEx.Configuration.KeyboardShortcut;
 
 namespace TranslationCacheCleanerPlugin
 {
@@ -28,7 +22,7 @@ namespace TranslationCacheCleanerPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationcachecleaner";
         public const string PluginName = "Translation Cache Cleaner";
-        public const string Version = "0.5.0";
+        public const string Version = "0.5.1";
 
         private const float notifySeconds = 10f;
         private const float yieldSeconds = 0.1f;

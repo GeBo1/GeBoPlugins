@@ -37,7 +37,7 @@ If you select a character in studio and press the hotkey, all other instances of
 
 Provides hotkeys for loading the next/previous scene from the scenes folder. Supports [Illusion BrowserFolders](https://github.com/ManlyMarco/Illusion_BrowserFolders). Tracks last loaded image so it can pick up where it left off between sessions (or if you change folders).
 
-- KK v0.8.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r3/KK_StudioSceneNavigation.v0.8.1.zip)
+- KK v0.8.5 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r4/KK_StudioSceneNavigation.v0.8.5.zip)
 
 ### TranslationCacheCleaner
 

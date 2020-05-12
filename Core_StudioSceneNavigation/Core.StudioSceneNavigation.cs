@@ -33,7 +33,9 @@ namespace StudioSceneNavigationPlugin
     {
         public const string GUID = "com.gebo.bepinex.studioscenenavigation";
         public const string PluginName = "Studio Scene Navigation";
-        public const string Version = "0.8.1";
+        public const string Version = "0.8.5";
+
+        internal static readonly char[] TrackingFileEntrySplit = { '\0' };
 
         #region configuration
 
@@ -235,107 +237,149 @@ namespace StudioSceneNavigationPlugin
 #if DEBUG
             //Logger.Log(LogLevel.Debug, $"SaveTrackingFile fired");
 #endif
-            string newFile = TrackLastLoadedSceneFile + Path.GetRandomFileName();
-            string oldFile = TrackLastLoadedSceneFile + Path.GetRandomFileName();
+            var prefix = Path.Combine(BepInEx.Paths.CachePath, Path.GetFileName(TrackLastLoadedSceneFile));
+            var newFile = prefix + Path.GetRandomFileName();
+            var oldFile = prefix + Path.GetRandomFileName();
 
-            Dictionary<string, string> relativeScenes = new Dictionary<string, string>();
+            var relativeScenes = new Dictionary<string, string>();
             foreach (KeyValuePair<string, string> entry in LastLoadedScenes)
             {
                 relativeScenes[PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, entry.Key)] = Path.GetFileName(entry.Value);
             }
             lock (SavePendingLock)
             {
-                if (SavePending)
+                if (!SavePending)
                 {
-                    try
-                    {
-                        using (FileStream fileStream = new FileStream(newFile, FileMode.Create))
-                        using (StreamWriter streamWriter = new StreamWriter(fileStream, Encoding.UTF8))
-                        {
-                            streamWriter.Write(GUID);
-                            streamWriter.Write('\0');
-                            streamWriter.Write(Version);
-                            streamWriter.Write('\0');
-                            streamWriter.Write(LastLoadedScenes.Count);
-                            streamWriter.Write('\n');
-                            foreach (KeyValuePair<string, string> entry in relativeScenes)
-                            {
-                                streamWriter.Write(entry.Key);
-                                streamWriter.Write('\0');
-                                streamWriter.Write(entry.Value);
-                                streamWriter.Write('\n');
-                            }
-                        }
+                    return;
+                }
 
-                        File.Move(TrackLastLoadedSceneFile, oldFile);
-                        File.Move(newFile, TrackLastLoadedSceneFile);
+                try
+                {
+                    using (FileStream fileStream = new FileStream(newFile, FileMode.Create))
+                    using (StreamWriter streamWriter = new StreamWriter(fileStream, Encoding.UTF8))
+                    {
+                        streamWriter.Write(GUID);
+                        streamWriter.Write(TrackingFileEntrySplit[0]);
+                        streamWriter.Write(Version);
+                        streamWriter.Write(TrackingFileEntrySplit[0]);
+                        streamWriter.Write(relativeScenes.Count);
+                        streamWriter.Write(TrackingFileEntrySplit[0]);
+                        streamWriter.Write('\n');
+                        foreach (KeyValuePair<string, string> entry in relativeScenes)
+                        {
+                            streamWriter.Write(entry.Key);
+                            streamWriter.Write(TrackingFileEntrySplit[0]);
+                            streamWriter.Write(entry.Value);
+                            streamWriter.Write('\n');
+                        }
+                    }
+
+                    File.Move(TrackLastLoadedSceneFile, oldFile);
+                    File.Move(newFile, TrackLastLoadedSceneFile);
+                    File.Delete(oldFile);
+                    SavePending = false;
+                    Logger.Log(LogLevel.Debug, $"Updated {TrackLastLoadedSceneFile}");
+                }
+                catch (Exception err)
+                {
+                    if (File.Exists(oldFile))
+                    {
+                        Logger.Log(LogLevel.Error, $"Error encountered, restoring {TrackLastLoadedSceneFile}");
+                        Logger.Log(LogLevel.Error, err);
+                        File.Copy(oldFile, TrackLastLoadedSceneFile);
+                    }
+                    throw;
+                }
+                finally
+                {
+                    if (File.Exists(oldFile))
+                    {
                         File.Delete(oldFile);
-                        SavePending = false;
-                        Logger.Log(LogLevel.Debug, $"Updated {TrackLastLoadedSceneFile}");
                     }
-                    catch (Exception err)
+                    if (File.Exists(newFile))
                     {
-                        if (File.Exists(oldFile))
-                        {
-                            Logger.Log(LogLevel.Error, $"Error encountered, restoring {TrackLastLoadedSceneFile}");
-                            Logger.Log(LogLevel.Error, err);
-                            File.Copy(oldFile, TrackLastLoadedSceneFile);
-                        }
-                        throw;
-                    }
-                    finally
-                    {
-                        if (File.Exists(oldFile))
-                        {
-                            File.Delete(oldFile);
-                        }
-                        if (File.Exists(newFile))
-                        {
-                            File.Delete(newFile);
-                        }
+                        File.Delete(newFile);
                     }
                 }
             }
         }
 
+        private bool TryReadTrackingHeader(StreamReader reader, out Version version, out int expectedCount)
+        {
+            version = new Version(0, 0, 0, 0);
+            expectedCount = -1;
+
+            var line = reader.ReadLine();
+            if (!string.IsNullOrEmpty(line))
+            {
+                var entry = line.Split(TrackingFileEntrySplit);
+                if (entry[0] == GUID)
+                {
+                    try
+                    {
+                        version = new Version(entry[1]);
+                    }
+                    catch (ArgumentException) { }
+                    catch (FormatException) { }
+                    catch (OverflowException) { }
+
+                    if (!int.TryParse(entry[2], out expectedCount))
+                    {
+                        expectedCount = -1;
+                    }
+
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private Dictionary<string, string> LoadTrackingFile()
         {
-            char[] split = { '\0' };
+            
             Dictionary<string, string> lastLoadedScenes = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             int count = 0;
-            int expectedCount = -1;
             using (FileStream fileStream = new FileStream(TrackLastLoadedSceneFile, FileMode.OpenOrCreate))
             {
+                int expectedCount;
+                Version version;
                 using (StreamReader streamReader = new StreamReader(fileStream, Encoding.UTF8, true))
                 {
+                    if (!TryReadTrackingHeader(streamReader, out version, out expectedCount))
+                    {
+                        fileStream.Position = 0;
+                    }
+
                     string line;
 
                     while ((line = streamReader.ReadLine()) != null)
                     {
-                        count++;
                         if (line.IsNullOrEmpty())
                         {
                             continue;
                         }
+
                         try
                         {
-                            string[] entry = line.Split(split, 2);
-                            if (count == 1 && entry[0] == GUID)
-                            {
-                                // first line should be header (older files may not have)
-                                entry = line.Split(split);
-                                expectedCount = int.Parse(entry[2]);
-                                continue;
-                            }
-                            if (entry[0] == GUID)
-                            {
-                                // older versions may have left multiple GUID entries behind, skip them
-                                continue;
-                            }
+                            count++;
+                            string[] entry = line.Split(TrackingFileEntrySplit, 2);
                             // Normalize on load to take care of any changes between versions
                             if (!Path.IsPathRooted(entry[0]))
                             {
-                                entry[0] = PathUtils.NormalizePath(Path.Combine(SceneUtils.StudioSceneRootFolder, entry[0]));
+                                if (entry[0] == ".")
+                                {
+                                    entry[0] = PathUtils.NormalizePath(SceneUtils.StudioSceneRootFolder);
+                                }
+                                else
+                                {
+                                    entry[0] = PathUtils.NormalizePath(Path.Combine(SceneUtils.StudioSceneRootFolder,
+                                        entry[0]));
+                                }
+                            }
+
+                            if (lastLoadedScenes.ContainsKey(entry[0]))
+                            {
+                                Logger.LogWarning($"LoadTrackingFile: line {count}: duplicate key {entry[0]}");
                             }
 
                             lastLoadedScenes[entry[0]] = Path.GetFileName(entry[1]);
@@ -346,18 +390,16 @@ namespace StudioSceneNavigationPlugin
                         }
                     }
                 }
-                if (expectedCount >= 0)
+
+                if (expectedCount >= 0 && version >= new Version(0, 8, 7) && expectedCount != count)
                 {
-                    count--;
-                    if (expectedCount != count)
-                    {
-                        Logger.Log(LogLevel.Warning | LogLevel.Message, $"{TrackLastLoadedSceneFile} may be corrupted. It contains {count} entries, expected {expectedCount}.");
-                    }
+                    Logger.Log(LogLevel.Warning | LogLevel.Message,
+                        $"{TrackLastLoadedSceneFile} may be corrupted. It contains {count} entries, expected {expectedCount}.");
                 }
             }
+
             return lastLoadedScenes;
         }
-
         private void NavigateScene(int offset)
         {
             bool navigated = false;
@@ -403,8 +445,17 @@ namespace StudioSceneNavigationPlugin
                                 nextImage = null;
                             }
                         }
-                        Logger.Log(LogLevel.Message | LogLevel.Info, $"Loading scene {paths.Count - index}/{paths.Count} ('{PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, nextImage)}')");
-                        StartCoroutine(Singleton<Studio.Studio>.Instance.LoadSceneCoroutine(nextImage));
+
+                        List<IEnumerator> coroutines = new List<IEnumerator>
+                        {
+                            CoroutineUtils.CreateCoroutine(
+                                () => Logger.Log(LogLevel.Message | LogLevel.Info,
+                                    $"Loading scene {paths.Count - index}/{paths.Count} ('{PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, nextImage)}')")),
+                            Singleton<Studio.Studio>.Instance.LoadSceneCoroutine(nextImage)
+                        };
+
+                        StartCoroutine(CoroutineUtils.ComposeCoroutine(coroutines.ToArray()));
+
                         navigated = true;
                     }
                 }
@@ -464,6 +515,7 @@ namespace StudioSceneNavigationPlugin
                 {
                     current = string.Empty;
                 }
+
                 string currentValue = Path.GetFileName(CurrentScenePath);
                 if (!currentValue.Compare(current, StringComparison.InvariantCultureIgnoreCase))
                 {

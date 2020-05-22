@@ -16,7 +16,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\Implementation\XUnityAutoTranslationHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\ITranslationResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Chara\Extensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GeBoAPIBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IGeBoAPI.cs" />

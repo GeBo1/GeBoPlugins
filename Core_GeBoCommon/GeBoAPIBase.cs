@@ -68,14 +68,14 @@ namespace GeBoCommon
                 return;
             }
             var entry = sender as ConfigEntry<bool>;
-            NotificationSoundsEnabled[guid] = entry.Value;
+            NotificationSoundsEnabled[guid] = entry?.Value ?? false;
         }
 
         public void PlayNotificationSound(NotificationSound notificationSound, string guid = null)
         {
-            if (!guid.IsNullOrEmpty())
+            if (!string.IsNullOrEmpty(guid))
             {
-                if (NotificationSoundsEnabled.TryGetValue(guid, out bool enabled) && !enabled)
+                if (NotificationSoundsEnabled.TryGetValue(guid, out bool isEnabled) && !isEnabled)
                 {
                     return;
                 }

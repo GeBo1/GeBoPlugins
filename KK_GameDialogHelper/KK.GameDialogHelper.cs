@@ -1,41 +1,29 @@
-﻿using ActionGame.Communication;
+﻿using System;
+using System.Collections.Generic;
+using ActionGame.Communication;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Harmony;
 using BepInEx.Logging;
+using ExtensibleSaveFormat;
+using GameDialogHelperPlugin.PluginModeLogic;
 using GeBoCommon;
 using GeBoCommon.AutoTranslation;
+using GeBoCommon.Utilities;
 using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using KKAPI;
+using KKAPI.Chara;
 using UnityEngine.SceneManagement;
 
 namespace GameDialogHelperPlugin
 {
-    public enum RelationshipLevel : int
-    {
-        [Description("Always show correct answers")]
-        Anyone = -1,
-
-        [Description("Show correct answers for acquaintances (or higher)")]
-        Acquaintance = 0,
-
-        [Description("Show correct answers for friends (or higher)")]
-        Friend = 1,
-
-        [Description("Show correct answers only if you're dating")]
-        Lover = 2,
-
-        [Description("Disable showing correct answers")]
-        Disabled = int.MinValue
-    }
-
+    [BepInDependency(ExtendedSave.GUID, ExtendedSave.Version)]
+    [BepInDependency(KoikatuAPI.GUID, KoikatuAPI.VersionConst)]
     [BepInDependency(GeBoAPI.GUID, GeBoAPI.Version)]
     [BepInPlugin(GUID, PluginName, Version)]
-    [BepInProcess(GeBoCommon.Constants.GameProcessName)]
+    [BepInProcess(Constants.GameProcessName)]
 #if KK
-    [BepInProcess(GeBoCommon.Constants.AltGameProcessName)]
+    [BepInProcess(Constants.AltGameProcessName)]
 #endif
     public partial class GameDialogHelper : BaseUnityPlugin
     {
@@ -43,29 +31,103 @@ namespace GameDialogHelperPlugin
         public const string PluginName = "Game Dialog Helper";
         public const string Version = "0.9.1";
 
-        private readonly HashSet<string> SupportedSceneNames = new HashSet<string>(new string[] { "Talk" });
-
-        internal delegate int InfoCheckSelectConditionsDelegate(Info obj, int _conditions);
-
         internal static new ManualLogSource Logger;
-        private static int? successIndex = null;
-        private static InfoCheckSelectConditionsDelegate _infoCheckSelectConditions = null;
-        private static readonly string[] splitter = { ",tag" };
-        private static SaveData.Heroine _targetHeroine = null;
+        internal static GameDialogHelper Instance;
 
+        private static readonly SimpleLazy<InfoCheckSelectConditionsDelegate> _infoCheckSelectConditions =
+            new SimpleLazy<InfoCheckSelectConditionsDelegate>(() =>
+            {
+                var csc = AccessTools.Method(typeof(Info), "CheckSelectConditions");
+                return (InfoCheckSelectConditionsDelegate)Delegate.CreateDelegate(
+                    typeof(InfoCheckSelectConditionsDelegate), csc);
+            });
+
+        private static readonly string[] splitter = {",tag"};
+        private static SaveData.Heroine _targetHeroine;
+
+        private static IPluginModeLogic Logic;
+
+        private readonly HashSet<string> SupportedSceneNames = new HashSet<string>(new[] {"Talk"});
+        internal static DialogInfo CurrentDialog { get; private set; }
+
+        public static ConfigEntry<PluginMode> CurrentPluginMode { get; private set; }
         public static ConfigEntry<RelationshipLevel> MinimumRelationshipLevel { get; private set; }
-        public static ConfigEntry<string> Highlight { get; private set; }
+        public static ConfigEntry<string> CorrectHighlight { get; private set; }
+        public static ConfigEntry<string> IncorrectHighlight { get; private set; }
         public static bool CurrentlyEnabled { get; private set; }
+
+        private static IAutoTranslationHelper AutoTranslator => GeBoAPI.Instance.AutoTranslationHelper;
+
+        public static SaveData.Heroine TargetHeroine =>
+            CurrentlyEnabled
+                ? _targetHeroine ?? (_targetHeroine = FindObjectOfType<TalkScene>()?.targetHeroine)
+                : null;
+
+        internal static InfoCheckSelectConditionsDelegate InfoCheckSelectConditions => _infoCheckSelectConditions.Value;
+
+        internal static void SetCurrentDialog(int questionId, int correctAnswerId, int numChoices)
+        {
+            CurrentDialog = new DialogInfo(questionId, correctAnswerId, numChoices);
+        }
+
+        internal static void ClearCurrentDialog()
+        {
+            CurrentDialog = null;
+        }
 
         internal void Main()
         {
-            MinimumRelationshipLevel = Config.Bind("Config", "Minimum Relationship", RelationshipLevel.Friend, "Highlight correct choice if relationship with character is the selected level or higher");
-            Highlight = Config.Bind("Config", "Highlight", "←", "String to append to correct answers when highlighting");
+            Instance = this;
+            Logger = base.Logger;
+
+            CurrentPluginMode = Config.Bind("Config", "Plugin Mode", PluginMode.RelationshipBased,
+                "Controls how plugin operates");
+
+            CorrectHighlight = Config.Bind("General", "Highlight (correct)", "←",
+                "String to append to highlighting correct answers");
+            IncorrectHighlight = Config.Bind("General", "Highlight (incorrect)", "∅",
+                "String to append when highlighting incorrect answers");
+
+            MinimumRelationshipLevel = Config.Bind("Relationship Mode", "Minimum Relationship",
+                RelationshipLevel.Friend,
+                "Highlight correct choice if relationship with character is the selected level or higher");
+
+            CurrentPluginMode.SettingChanged += CurrentPluginMode_SettingChanged;
+
+            SetupPluginModeLogic(CurrentPluginMode.Value);
+        }
+
+        private void SetupPluginModeLogic(PluginMode pluginMode)
+        {
+            switch (pluginMode)
+            {
+                case PluginMode.RelationshipBased:
+                    Logic = new RelationshipBased();
+                    break;
+
+                case PluginMode.Advanced:
+                    Logic = new Advanced();
+                    break;
+
+                default:
+                    Logic = new Disabled();
+                    break;
+            }
+        }
+
+        private void CurrentPluginMode_SettingChanged(object sender, EventArgs e)
+        {
+            Logger.LogError($"{nameof(CurrentPluginMode_SettingChanged)} fired: {sender}, {e}");
+            SetupPluginModeLogic(sender is ConfigEntry<PluginMode> configMode ? configMode.Value : PluginMode.Disabled);
         }
 
         internal void Awake()
         {
+            Instance = this;
             Logger = base.Logger;
+
+            CharacterApi.RegisterExtraBehaviour<GameDialogHelperController>(GUID);
+
             HarmonyWrapper.PatchAll(typeof(Hooks));
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
             SceneManager.sceneUnloaded += SceneManager_sceneUnloaded;
@@ -89,44 +151,25 @@ namespace GameDialogHelperPlugin
             }
         }
 
-        private static IAutoTranslationHelper AutoTranslator => GeBoAPI.Instance.AutoTranslationHelper;
-
-        public static SaveData.Heroine TargetHeroine
-        {
-            get
-            {
-                if (CurrentlyEnabled)
-                {
-                    if (_targetHeroine is null)
-                    {
-                        _targetHeroine = FindObjectOfType<TalkScene>()?.targetHeroine;
-                    }
-                    return _targetHeroine;
-                }
-
-                return null;
-            }
-        }
 
         internal static bool EnabledForCurrentHeroine()
         {
-            return TargetHeroine != null && TargetHeroine.relation >= (int)MinimumRelationshipLevel.Value;
+            return CurrentlyEnabled && Logic.EnabledForHeroine(TargetHeroine);
         }
 
-        internal static InfoCheckSelectConditionsDelegate InfoCheckSelectConditions
+        internal static bool EnabledForCurrentQuestion()
         {
-            get
-            {
-                if (_infoCheckSelectConditions is null)
-                {
-                    var csc = AccessTools.Method(typeof(Info), "CheckSelectConditions");
-                    _infoCheckSelectConditions = (InfoCheckSelectConditionsDelegate)Delegate.CreateDelegate(typeof(InfoCheckSelectConditionsDelegate), csc);
-                }
-                return _infoCheckSelectConditions;
-            }
+            return CurrentlyEnabled && CurrentDialog != null && Logic.EnabledForQuestion(TargetHeroine, CurrentDialog);
         }
 
-        internal static void HighlightSelection(int idx, ref string[] args)
+        internal static bool EnabledForCurrentQuestionAnswer(int answer)
+        {
+            return CurrentlyEnabled && CurrentDialog != null &&
+                   Logic.EnableForAnswer(TargetHeroine, CurrentDialog, answer);
+        }
+
+        /*
+        internal static void HighlightSelection(int idx, ref string[] args, bool correct = true)
         {
             string[] tmp = args[idx].Split(splitter, 2, StringSplitOptions.None);
             if (tmp.Length == 2)
@@ -135,8 +178,54 @@ namespace GameDialogHelperPlugin
                 {
                     tmp[0] = translatedText;
                 }
-                args[idx] = string.Join(string.Empty, new string[] { tmp[0], Highlight.Value, splitter[0], tmp[1] });
+                args[idx] = string.Join(string.Empty, new string[] { tmp[0], correct ? Logic.CorrectHighlight : Logic.IncorrectHighlight, splitter[0], tmp[1] });
             }
         }
+        */
+
+        internal static void HighlightSelections(ref string[] args)
+        {
+            Logger.LogDebug($"HighlightSelection for {CurrentDialog.QuestionInfo}");
+            if (EnabledForCurrentQuestion())
+            {
+                // skip first entry in array
+                for (var i = 1; i < args.Length; i++)
+                {
+                    var answerId = i - 1;
+                    if (!EnabledForCurrentQuestionAnswer(answerId))
+                    {
+                        continue;
+                    }
+
+                    var suffix = answerId == CurrentDialog.CorrectAnswerId
+                        ? Logic.CorrectHighlight
+                        : Logic.IncorrectHighlight;
+                    if (string.IsNullOrEmpty(suffix))
+                    {
+                        continue;
+                    }
+
+                    var tmp = args[i].Split(splitter, 2, StringSplitOptions.None);
+                    if (tmp.Length != 2)
+                    {
+                        continue;
+                    }
+
+                    if (AutoTranslator.TryTranslate(tmp[0], out var translatedText))
+                    {
+                        tmp[0] = translatedText;
+                    }
+
+                    args[i] = string.Join(string.Empty, new[] {tmp[0], suffix, splitter[0], tmp[1]});
+                }
+            }
+        }
+
+        internal static void ProcessDialogAnswered()
+        {
+            Logic.ProcessDialogAnswered(TargetHeroine, CurrentDialog);
+        }
+
+        internal delegate int InfoCheckSelectConditionsDelegate(Info obj, int _conditions);
     }
 }

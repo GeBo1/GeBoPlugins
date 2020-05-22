@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="QuestionInfo" nillable="true" type="QuestionInfo" />
+  <xs:complexType name="QuestionInfo">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element minOccurs="1" maxOccurs="1" name="Id" type="xs:int" />
+      <xs:element minOccurs="1" maxOccurs="1" name="QuestionType" type="QuestionType" />
+      <xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="RelationshipLevel" type="RelationshipLevel" default="Anyone" />
+      <xs:element minOccurs="0" maxOccurs="1" name="InvitationTarget" type="InvitationTarget" default="None" />
+      <xs:element minOccurs="0" maxOccurs="1" name="PhysicalAttributeTarget" type="PhysicalAttribute" default="None" />
+      <xs:element minOccurs="0" maxOccurs="1" name="LikeTarget" type="LikeTarget" default="None" />
+    </xs:choice>
+  </xs:complexType>
+  <xs:simpleType name="QuestionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Unknown" />
+      <xs:enumeration value="Likes" />
+      <xs:enumeration value="Personality" />
+      <xs:enumeration value="PhysicalAttributes" />
+      <xs:enumeration value="Invitation" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="RelationshipLevel">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Anyone" />
+      <xs:enumeration value="Acquaintance" />
+      <xs:enumeration value="Friend" />
+      <xs:enumeration value="Lover" />
+      <!--<xs:enumeration value="Disabled" />-->
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="InvitationTarget">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="None" />
+      <xs:enumeration value="Chase" />
+      <xs:enumeration value="H" />
+      <xs:enumeration value="Lunch" />
+      <xs:enumeration value="Club" />
+      <xs:enumeration value="GoHome" />
+      <xs:enumeration value="Study" />
+      <xs:enumeration value="Exercise" />
+      <xs:enumeration value="Divorce" />
+      <xs:enumeration value="BecomeLovers" />
+      <xs:enumeration value="Date" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="PhysicalAttribute">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="None" />
+      <xs:enumeration value="BustSize" />
+      <xs:enumeration value="Height" />
+      <xs:enumeration value="Figure" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="LikeTarget">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="None" />
+      <xs:enumeration value="Animal" />
+      <xs:enumeration value="BlackCoffee" />
+      <xs:enumeration value="Cook" />
+      <xs:enumeration value="Eat" />
+      <xs:enumeration value="Exercise" />
+      <xs:enumeration value="Fashionable" />
+      <xs:enumeration value="Spicy" />
+      <xs:enumeration value="Study" />
+      <xs:enumeration value="Sweet" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:element name="QuestionInfos" nillable="true" type="QuestionInfos" />
+  <xs:complexType name="QuestionInfos">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="QuestionInfo" nillable="true" type="QuestionInfo" />
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>

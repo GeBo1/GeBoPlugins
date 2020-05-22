@@ -78,6 +78,7 @@
   </ItemGroup>
   <Import Project="..\Core_GeBoCommon\Shared.Core.projitems" Label="Shared" />
   <Import Project="..\Core_GeBoCommon.Studio\Shared.CharaStudio.projitems" Label="Shared" />
+  <Import Project="..\Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>IF EXIST $(SolutionDir)PostBuild.bat CALL "$(SolutionDir)PostBuild.bat" "$(TargetPath)" KK</PostBuildEvent>

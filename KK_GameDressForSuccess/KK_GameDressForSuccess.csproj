@@ -4,17 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{ED839651-4764-420E-97FC-A40D7D98449B}</ProjectGuid>
+    <ProjectGuid>{7193DFAE-7481-4708-BCBB-81D01FF9F413}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>GeBoCommon</RootNamespace>
-    <AssemblyName>KK_GeBoCommon</AssemblyName>
+    <RootNamespace>GameDressForSuccessPlugin</RootNamespace>
+    <AssemblyName>KK_GameDressForSuccess</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <LangVersion>7.3</LangVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -50,10 +47,6 @@
       <HintPath>..\packages\IllusionLibs.BepInEx.Harmony.2.0.0-beta2\lib\net35\BepInEx.Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="KKAPI, Version=1.11.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IllusionModdingAPI.KKAPI.1.11.1\lib\net35\KKAPI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -61,26 +54,22 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IllusionLibs.Koikatu.UnityEngine.5.6.2\lib\net35\UnityEngine.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="XUnity.AutoTranslator.Plugin.Core, Version=4.11.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IllusionLibs.XUnity.AutoTranslator.Plugin.Core.4.11.0\lib\net35\XUnity.AutoTranslator.Plugin.Core.dll</HintPath>
+      <HintPath>..\packages\IllusionLibs.HoneySelect.UnityEngine.5.3.5\lib\net35\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GeBoAPI.cs" />
+    <Compile Include="Enums.cs" />
+    <Compile Include="GameDressForSuccess.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GameDressForSuccess.Hooks.cs" />
     <None Include="packages.config" />
   </ItemGroup>
-  <Import Project="..\Core_GeBoCommon\Shared.Core.projitems" Label="Shared" />
-  <Import Project="..\Core_GeBoCommon.Studio\Shared.CharaStudio.projitems" Label="Shared" />
   <Import Project="..\Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>IF EXIST $(SolutionDir)PostBuild.bat CALL "$(SolutionDir)PostBuild.bat" "$(TargetPath)" KK</PostBuildEvent>
+    <PostBuildEvent>IF EXIST $(SolutionDir)PostBuild.bat CALL "$(SolutionDir)PostBuild.bat" $(TargetPath) KK</PostBuildEvent>
   </PropertyGroup>
 </Project>

@@ -25,6 +25,13 @@ Highlights correct dialog choice in KK main game. You can configure level of rel
 
 - KK v0.9.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r2/KK_GameDialogHelper.v0.9.1.zip) 
 
+### GameDressForSuccess
+
+Fixes it so when player invites (or is invited) to swim/exercise with a girl he remembers to change his clothes rather than going in what he's already wearing. By default only applies if player clothes are already set to automatic, but can be configured to always be applied.
+
+- KK v1.0 [Download Coming Soon](#GameDressForSuccess)
+
+
 ### StudioMultiselectChara
 
 If you select a character in studio and press the hotkey, all other instances of that character in the scene will also be selected. Useful for replacing all instances of a given character.

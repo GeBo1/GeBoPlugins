@@ -6,7 +6,7 @@
 [*.cs]
 dotnet_diagnostic.RCS1058.severity = none
 dotnet_diagnostic.CA1825.severity = none
-
+dotnet_style_prefer_compound_assignment = false:silent
 
 
 ###############################
@@ -111,11 +111,20 @@ csharp_style_conditional_delegate_call = true:suggestion
 csharp_preferred_modifier_order = public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async:suggestion
 
 # Expression-level preferences
-csharp_prefer_braces = true:suggestion
+#csharp_prefer_braces = true:suggestion
 csharp_style_deconstructed_variable_declaration = true:suggestion
 csharp_prefer_simple_default_expression = true:suggestion
 csharp_style_pattern_local_over_anonymous_function = true:suggestion
 csharp_style_inlined_variable_declaration = true:suggestion
+
+resharper_apply_auto_detected_rules=false
+resharper_braces_for_for=required_for_multiline_statement
+resharper_braces_for_foreach=required_for_multiline_statement
+resharper_braces_for_ifelse=required_for_multiline_statement
+resharper_braces_for_while=required_for_multiline_statement
+resharper_csharp_empty_block_style=together_same_line
+resharper_csharp_empty_block_style=together_same_line
+resharper_enforce_line_ending_style=true
 
 ###############################
 # C# Formatting Rules         #

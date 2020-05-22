@@ -29,7 +29,7 @@ Highlights correct dialog choice in KK main game. You can configure level of rel
 
 Fixes it so when player invites (or is invited) to swim/exercise with a girl he remembers to change his clothes rather than going in what he's already wearing. By default only applies if player clothes are already set to automatic, but can be configured to always be applied.
 
-- KK v1.0 [Download Coming Soon](#GameDressForSuccess)
+- KK v1.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r5/KK_GameDressForSuccess.v1.0.zip)
 
 
 ### StudioMultiselectChara

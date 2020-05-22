@@ -1,12 +1,9 @@
 ﻿using BepInEx.Logging;
 using GeBoCommon;
 using GeBoCommon.Chara;
-using HarmonyLib;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using XUnity.AutoTranslator.Plugin.Core;
+
 #if AI
 using AIChara;
 #endif
@@ -32,7 +29,7 @@ namespace TranslationHelperPlugin
 
         private bool CounterAdd(string name, string regId)
         {
-            if (!regCounter.TryGetValue(name, out HashSet<string> entries))
+            if (!regCounter.TryGetValue(name, out var entries))
             {
                 regCounter[name] = entries = new HashSet<string>();
             }
@@ -64,26 +61,26 @@ namespace TranslationHelperPlugin
 
         public void Track(ChaFile chaFile)
         {
-            string regID = chaFile.GetRegistrationID();
+            var regID = chaFile.GetRegistrationID();
             if (trackedRegistrationIDs.Contains(regID))
             {
                 return;
             }
             trackedRegistrationIDs.Add(regID);
             //Logger.LogDebug($"Attempting to register translation replacement: {regID}");
-            Dictionary<string, string> replacements = GetReplacements();
+            var replacements = GetReplacements();
             if (replacements == null)
             {
                 return;
             }
 
-            HashSet<string> handled = new HashSet<string>();
+            var handled = new HashSet<string>();
 
-            List<string> names = chaFile.IterNames().Select((n) => n.Value).ToList();
+            var names = chaFile.EnumerateNames().Select((n) => n.Value).ToList();
             names.Add(chaFile.GetFullName());
 
             //Logger.LogFatal($"fullname={chaFile.GetFullName()}");
-            foreach (string name in names.Where((n) => n.Length > 2))
+            foreach (var name in names.Where((n) => n.Length > 2))
             {
                 if (handled.Contains(name))
                 {
@@ -106,12 +103,12 @@ namespace TranslationHelperPlugin
 
         public void Untrack(ChaFile chaFile)
         {
-            string regID = chaFile.GetRegistrationID();
+            var regID = chaFile.GetRegistrationID();
             //Logger.LogDebug($"Attempting to unregister translation replacements: {regID}");
-            Dictionary<string, string> replacements = GetReplacements();
-            foreach (KeyValuePair<int, string> namePair in chaFile.IterNames())
+            var replacements = GetReplacements();
+            foreach (var namePair in chaFile.EnumerateNames())
             {
-                string name = namePair.Value;
+                var name = namePair.Value;
                 //Logger.LogDebug($"Attempting to unregister translation replacements: {regID} / {name}");
                 if (!name.IsNullOrEmpty())
                 {
@@ -132,7 +129,7 @@ namespace TranslationHelperPlugin
 
         public void Cleanup()
         {
-            foreach (string key in regCounter.Keys.ToArray().Where(key => regCounter[key].Count == 0))
+            foreach (var key in regCounter.Keys.ToArray().Where(key => regCounter[key].Count == 0))
             {
                 regCounter.Remove(key);
             }
@@ -140,8 +137,8 @@ namespace TranslationHelperPlugin
 
         public void Reset()
         {
-            Dictionary<string, string> replacements = GetReplacements();
-            foreach (string name in currentRegistrations)
+            var replacements = GetReplacements();
+            foreach (var name in currentRegistrations)
             {
                 replacements?.Remove(name);
             }

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace GeBoCommon.Utilities
 {
@@ -8,34 +6,34 @@ namespace GeBoCommon.Utilities
     {
         public delegate TValue CacheDataLoader(TKey key);
 
-        private readonly Dictionary<TKey, TValue> Cache;
-        private readonly CacheDataLoader Loader;
+        private readonly Dictionary<TKey, TValue> _cache;
+        private readonly CacheDataLoader _loader;
 
         public SimpleCache(CacheDataLoader loader)
         {
-            Cache = new Dictionary<TKey, TValue>();
-            Loader = loader;
+            _cache = new Dictionary<TKey, TValue>();
+            _loader = loader;
         }
 
         public TValue Get(TKey key)
         {
-            if (Cache.TryGetValue(key, out TValue cachedResult))
+            if (_cache.TryGetValue(key, out var cachedResult))
             {
                 return cachedResult;
             }
-            return Cache[key] = Loader(key);
+            return _cache[key] = _loader(key);
         }
 
         public bool Remove(TKey key)
         {
-            return Cache.Remove(key);
+            return _cache.Remove(key);
         }
 
         public void Clear()
         {
-            Cache.Clear();
+            _cache.Clear();
         }
 
-        public int Count => Cache.Count;
+        public int Count => _cache.Count;
     }
 }

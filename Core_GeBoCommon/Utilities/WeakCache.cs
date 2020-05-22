@@ -7,10 +7,10 @@ namespace GeBoCommon.Utilities
 {
     public class WeakCache<TKey, TValue> : IDictionary<TKey, TValue>
     {
-        private int nextKey = 0;
-        private readonly Dictionary<int, TValue> values = new Dictionary<int, TValue>();
+        private int _nextKey;
+        private readonly Dictionary<int, TValue> _values = new Dictionary<int, TValue>();
 
-        private readonly Dictionary<WeakReference, int> keyLookup = new Dictionary<WeakReference, int>();
+        private readonly Dictionary<WeakReference, int> _keyLookup = new Dictionary<WeakReference, int>();
 
         public ICollection<TKey> Keys => this.Select((e) => e.Key).ToList();
 
@@ -22,49 +22,49 @@ namespace GeBoCommon.Utilities
 
         private int GetNextKey()
         {
-            return nextKey++;
+            return _nextKey++;
         }
 
         public TValue this[TKey key]
         {
-            get => values[keyLookup[new WeakReference(key)]];
+            get => _values[_keyLookup[new WeakReference(key)]];
             set
             {
-                WeakReference keyRef = new WeakReference(key);
-                if (!keyLookup.TryGetValue(keyRef, out int valKey))
+                var keyRef = new WeakReference(key);
+                if (!_keyLookup.TryGetValue(keyRef, out var valKey))
                 {
                     valKey = GetNextKey();
-                    keyLookup[keyRef] = valKey;
+                    _keyLookup[keyRef] = valKey;
                 }
-                values[valKey] = value;
+                _values[valKey] = value;
             }
         }
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            var live = keyLookup.Where((k) => k.Key.IsAlive);
-            return live.Select((k) => new KeyValuePair<TKey, TValue>((TKey)k.Key.Target, values[k.Value])).GetEnumerator();
+            var live = _keyLookup.Where((k) => k.Key.IsAlive);
+            return live.Select((k) => new KeyValuePair<TKey, TValue>((TKey)k.Key.Target, _values[k.Value])).GetEnumerator();
         }
 
         public void Add(TKey key, TValue value)
         {
-            WeakReference keyRef = new WeakReference(key);
-            keyLookup.Add(keyRef, 0); // will throw if add should throw
-            int valKey = GetNextKey();
-            keyLookup[keyRef] = valKey;
-            values[valKey] = value;
+            var keyRef = new WeakReference(key);
+            _keyLookup.Add(keyRef, 0); // will throw if add should throw
+            var valKey = GetNextKey();
+            _keyLookup[keyRef] = valKey;
+            _values[valKey] = value;
         }
 
         public bool Remove(TKey key)
         {
-            WeakReference keyRef = new WeakReference(key);
-            if (!keyLookup.TryGetValue(keyRef, out int valKey))
+            var keyRef = new WeakReference(key);
+            if (!_keyLookup.TryGetValue(keyRef, out var valKey))
             {
                 valKey = -1;
             }
-            if (keyLookup.Remove(keyRef))
+            if (_keyLookup.Remove(keyRef))
             {
-                values.Remove(valKey);
+                _values.Remove(valKey);
                 return true;
             }
             return false;
@@ -72,10 +72,10 @@ namespace GeBoCommon.Utilities
 
         public bool TryGetValue(TKey key, out TValue value)
         {
-            WeakReference keyRef = new WeakReference(key);
-            if (keyLookup.TryGetValue(keyRef, out int valKey))
+            var keyRef = new WeakReference(key);
+            if (_keyLookup.TryGetValue(keyRef, out var valKey))
             {
-                value = values[valKey];
+                value = _values[valKey];
                 return true;
             }
             value = default;
@@ -89,9 +89,9 @@ namespace GeBoCommon.Utilities
 
         public void Clear()
         {
-            keyLookup.Clear();
-            values.Clear();
-            nextKey = 0;
+            _keyLookup.Clear();
+            _values.Clear();
+            _nextKey = 0;
         }
 
         public bool Contains(KeyValuePair<TKey, TValue> item)
@@ -101,8 +101,8 @@ namespace GeBoCommon.Utilities
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            int i = arrayIndex;
-            foreach (KeyValuePair<TKey, TValue> entry in this)
+            var i = arrayIndex;
+            foreach (var entry in this)
             {
                 array[i] = entry;
                 i++;
@@ -125,17 +125,17 @@ namespace GeBoCommon.Utilities
 
         public bool ContainsKey(TKey key)
         {
-            WeakReference keyRef = new WeakReference(key);
-            return keyLookup.ContainsKey(keyRef);
+            var keyRef = new WeakReference(key);
+            return _keyLookup.ContainsKey(keyRef);
         }
 
         public void Cleanup()
         {
-            var toRemove = keyLookup.Where((k) => !k.Key.IsAlive);
+            var toRemove = _keyLookup.Where((k) => !k.Key.IsAlive);
             foreach (var entry in toRemove)
             {
-                values.Remove(entry.Value);
-                keyLookup.Remove(entry.Key);
+                _values.Remove(entry.Value);
+                _keyLookup.Remove(entry.Key);
             }
         }
     }

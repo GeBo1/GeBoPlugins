@@ -20,7 +20,6 @@ using KKAPI.Studio.SaveLoad;
 using KKAPI.Utilities;
 using Studio;
 using UnityEngine;
-using KeyboardShortcut = BepInEx.Configuration.KeyboardShortcut;
 
 namespace StudioSceneNavigationPlugin
 {
@@ -31,42 +30,79 @@ namespace StudioSceneNavigationPlugin
     [BepInPlugin(GUID, PluginName, Version)]
     public partial class StudioSceneNavigation : BaseUnityPlugin
     {
+        public enum NotificationSound
+        {
+            Success,
+            Error
+        }
+
         public const string GUID = "com.gebo.bepinex.studioscenenavigation";
         public const string PluginName = "Studio Scene Navigation";
         public const string Version = "0.8.5";
 
-        internal static readonly char[] TrackingFileEntrySplit = { '\0' };
+        internal static readonly char[] TrackingFileEntrySplit = {'\0'};
 
-        #region configuration
-
-        public static ConfigEntry<KeyboardShortcut> NavigateNextSceneShortcut { get; private set; }
-        public static ConfigEntry<KeyboardShortcut> NavigatePrevSceneShortcut { get; private set; }
-        public static ConfigEntry<KeyboardShortcut> ReloadCurrentSceneShortcut { get; private set; }
-        public static ConfigEntry<bool> NotificationSoundsEnabled { get; private set; }
-        public static ConfigEntry<bool> TrackLastLoadedSceneEnabled { get; private set; }
-
-        #endregion configuration
-
-        private static List<string> _scenePaths = new List<string>();
-        private static List<string> ScenePaths => _scenePaths;
-
-        private static List<string> _normalizedScenePaths = null;
-        private static List<string> NormalizedScenePaths => _normalizedScenePaths ?? (_normalizedScenePaths = new List<string>(ScenePaths.Select(PathUtils.NormalizePath)));
+        private static List<string> _normalizedScenePaths;
 
         private static string CurrentSceneFolder = string.Empty;
 
-        private string CurrentScenePathCandidate = string.Empty;
-        private string CurrentScenePath = string.Empty;
-        private bool NavigationInProgress = false;
-
         private static readonly object SavePendingLock = new object();
-        private static bool setPage = false;
-        private static SceneLoadScene sceneLoadScene = null;
+        private static bool setPage;
+        private static SceneLoadScene sceneLoadScene;
 
-        private readonly SimpleLazy<Func<string, bool>> _isSceneValid = null;
+        private static readonly string TrackLastLoadedSceneFile = string.Join(Path.DirectorySeparatorChar.ToString(),
+            new[] {"BepinEx", "config", string.Join(".", new[] {GUID, "LastLoadedScene", "data"})});
+
+        private readonly SimpleLazy<Func<string, bool>> _isSceneValid;
+
+        private readonly SimpleLazy<Dictionary<string, string>> _lastLoadedScenes;
+
+        private bool _savePending;
+        private string CurrentScenePath = string.Empty;
+
+        private string CurrentScenePathCandidate = string.Empty;
+        private bool NavigationInProgress;
+
+        public StudioSceneNavigation()
+        {
+            _lastLoadedScenes = new SimpleLazy<Dictionary<string, string>>(() =>
+            {
+                if (TrackLastLoadedSceneEnabled.Value)
+                {
+                    return LoadTrackingFile();
+                }
+
+                return new Dictionary<string, string>();
+            });
+
+            _isSceneValid = new SimpleLazy<Func<string, bool>>(() =>
+            {
+                var pluginInfo = Chainloader.PluginInfos.Where(pi => pi.Key.EndsWith("InvalidSceneFileProtection"))
+                    .Select(pi => pi.Value).FirstOrDefault();
+                if (pluginInfo != null)
+                {
+                    var pluginType = pluginInfo.Instance.GetType();
+                    var method = AccessTools.Method(pluginType, "IsFileValid");
+                    if (method != null)
+                    {
+                        Logger.LogDebug(
+                            $"Will use {pluginType.Name}.{method.Name} to pre-check images during navigation");
+                        return (Func<string, bool>) Delegate.CreateDelegate(typeof(Func<string, bool>), method);
+                    }
+                }
+
+                return _ => true;
+            });
+        }
+
+        private static List<string> ScenePaths { get; set; } = new List<string>();
+
+        private static List<string> NormalizedScenePaths => _normalizedScenePaths ??
+                                                            (_normalizedScenePaths =
+                                                                new List<string>(
+                                                                    ScenePaths.Select(PathUtils.NormalizePath)));
+
         private Func<string, bool> IsSceneValid => _isSceneValid.Value;
-
-        private bool _savePending = false;
 
         private bool SavePending
         {
@@ -86,56 +122,21 @@ namespace StudioSceneNavigationPlugin
             }
         }
 
-        private static readonly string TrackLastLoadedSceneFile = string.Join(Path.DirectorySeparatorChar.ToString(),
-            new string[] { "BepinEx", "config",
-                string.Join(".", new string[] { GUID, "LastLoadedScene", "data"}) });
-
-        private readonly SimpleLazy<Dictionary<string, string>> _lastLoadedScenes;
-
         private Dictionary<string, string> LastLoadedScenes => _lastLoadedScenes.Value;
-
-        public StudioSceneNavigation()
-        {
-            _lastLoadedScenes = new SimpleLazy<Dictionary<string, string>>(() =>
-             {
-                 if (TrackLastLoadedSceneEnabled.Value)
-                 {
-                     return LoadTrackingFile();
-                 }
-                 return new Dictionary<string, string>();
-             });
-
-            _isSceneValid = new SimpleLazy<Func<string, bool>>(() =>
-            {
-                var pluginInfo = Chainloader.PluginInfos.Where((pi) => pi.Key.EndsWith("InvalidSceneFileProtection")).Select((pi) => pi.Value).FirstOrDefault();
-                if (pluginInfo != null)
-                {
-                    var pluginType = pluginInfo.Instance.GetType();
-                    var method = AccessTools.Method(pluginType, "IsFileValid");
-                    if (method != null)
-                    {
-                        Logger.LogDebug($"Will use {pluginType.Name}.{method.Name} to pre-check images during navigation");
-                        return (Func<string, bool>)Delegate.CreateDelegate(typeof(Func<string, bool>), method);
-                    }
-                }
-                return (_) => true;
-            });
-        }
-
-        public enum NotificationSound
-        {
-            Success,
-            Error
-        }
 
         internal void Main()
         {
             // TODO: add OnDestroy to verify file write
-            NavigateNextSceneShortcut = Config.Bind("Keyboard Shortcuts", "Navigate Next", new KeyboardShortcut(KeyCode.F3, KeyCode.LeftShift), "Navigate to the next (newer) scene");
-            NavigatePrevSceneShortcut = Config.Bind("Keyboard Shortcuts", "Navigate Previous", new KeyboardShortcut(KeyCode.F4, KeyCode.LeftShift), "Navigate to the previous (older) scene");
-            ReloadCurrentSceneShortcut = Config.Bind("Keyboard Shortcuts", "Reload Current", new KeyboardShortcut(KeyCode.F5, KeyCode.LeftShift), "Reload the currently loaded scene");
-            NotificationSoundsEnabled = Config.Bind("Config", "Notification Sounds", true, "When enabled, notification sounds will play when scene loading is complete, or navigation fails");
-            TrackLastLoadedSceneEnabled = Config.Bind("Config", "Track Last Loaded Scene", true, "When enabled, the last loaded scene will be tracked externally and can be reloaded upon return");
+            NavigateNextSceneShortcut = Config.Bind("Keyboard Shortcuts", "Navigate Next",
+                new KeyboardShortcut(KeyCode.F3, KeyCode.LeftShift), "Navigate to the next (newer) scene");
+            NavigatePrevSceneShortcut = Config.Bind("Keyboard Shortcuts", "Navigate Previous",
+                new KeyboardShortcut(KeyCode.F4, KeyCode.LeftShift), "Navigate to the previous (older) scene");
+            ReloadCurrentSceneShortcut = Config.Bind("Keyboard Shortcuts", "Reload Current",
+                new KeyboardShortcut(KeyCode.F5, KeyCode.LeftShift), "Reload the currently loaded scene");
+            NotificationSoundsEnabled = Config.Bind("Config", "Notification Sounds", true,
+                "When enabled, notification sounds will play when scene loading is complete, or navigation fails");
+            TrackLastLoadedSceneEnabled = Config.Bind("Config", "Track Last Loaded Scene", true,
+                "When enabled, the last loaded scene will be tracked externally and can be reloaded upon return");
         }
 
         internal void Awake()
@@ -186,7 +187,8 @@ namespace StudioSceneNavigationPlugin
             {
                 CurrentScenePath = CurrentScenePathCandidate = string.Empty;
             }
-            List<IEnumerator> coroutines = new List<IEnumerator>();
+
+            var coroutines = new List<IEnumerator>();
 
             if (!string.IsNullOrEmpty(CurrentScenePathCandidate) && e.Operation == SceneOperationKind.Load)
             {
@@ -194,10 +196,12 @@ namespace StudioSceneNavigationPlugin
                 CurrentScenePathCandidate = string.Empty;
                 if (NavigationInProgress)
                 {
-                    coroutines.Add(CoroutineUtils.CreateCoroutine(() => PlayNotificationSound(NotificationSound.Success)));
+                    coroutines.Add(
+                        CoroutineUtils.CreateCoroutine(() => PlayNotificationSound(NotificationSound.Success)));
                     coroutines.Add(SetPageCoroutine(CurrentScenePath));
                 }
             }
+
             coroutines.Add(CoroutineUtils.CreateCoroutine(() =>
             {
                 NavigationInProgress = false;
@@ -223,12 +227,13 @@ namespace StudioSceneNavigationPlugin
             //Logger.Log(LogLevel.Debug, $"StudioInitInfoPost({__instance})");
 #endif
             CurrentSceneFolder = string.Empty;
-            _scenePaths = SceneUtils.GetSceneLoaderPaths(__instance);
+            ScenePaths = SceneUtils.GetSceneLoaderPaths(__instance);
             _normalizedScenePaths = null;
             if (ScenePaths.Count > 0)
             {
                 CurrentSceneFolder = PathUtils.NormalizePath(Path.GetDirectoryName(ScenePaths[0]));
             }
+
             sceneLoadScene = __instance;
         }
 
@@ -237,15 +242,17 @@ namespace StudioSceneNavigationPlugin
 #if DEBUG
             //Logger.Log(LogLevel.Debug, $"SaveTrackingFile fired");
 #endif
-            var prefix = Path.Combine(BepInEx.Paths.CachePath, Path.GetFileName(TrackLastLoadedSceneFile));
+            var prefix = Path.Combine(Paths.CachePath, Path.GetFileName(TrackLastLoadedSceneFile));
             var newFile = prefix + Path.GetRandomFileName();
             var oldFile = prefix + Path.GetRandomFileName();
 
             var relativeScenes = new Dictionary<string, string>();
-            foreach (KeyValuePair<string, string> entry in LastLoadedScenes)
+            foreach (var entry in LastLoadedScenes)
             {
-                relativeScenes[PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, entry.Key)] = Path.GetFileName(entry.Value);
+                relativeScenes[PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, entry.Key)] =
+                    Path.GetFileName(entry.Value);
             }
+
             lock (SavePendingLock)
             {
                 if (!SavePending)
@@ -255,8 +262,8 @@ namespace StudioSceneNavigationPlugin
 
                 try
                 {
-                    using (FileStream fileStream = new FileStream(newFile, FileMode.Create))
-                    using (StreamWriter streamWriter = new StreamWriter(fileStream, Encoding.UTF8))
+                    using (var fileStream = new FileStream(newFile, FileMode.Create))
+                    using (var streamWriter = new StreamWriter(fileStream, Encoding.UTF8))
                     {
                         streamWriter.Write(GUID);
                         streamWriter.Write(TrackingFileEntrySplit[0]);
@@ -265,7 +272,7 @@ namespace StudioSceneNavigationPlugin
                         streamWriter.Write(relativeScenes.Count);
                         streamWriter.Write(TrackingFileEntrySplit[0]);
                         streamWriter.Write('\n');
-                        foreach (KeyValuePair<string, string> entry in relativeScenes)
+                        foreach (var entry in relativeScenes)
                         {
                             streamWriter.Write(entry.Key);
                             streamWriter.Write(TrackingFileEntrySplit[0]);
@@ -288,6 +295,7 @@ namespace StudioSceneNavigationPlugin
                         Logger.Log(LogLevel.Error, err);
                         File.Copy(oldFile, TrackLastLoadedSceneFile);
                     }
+
                     throw;
                 }
                 finally
@@ -296,6 +304,7 @@ namespace StudioSceneNavigationPlugin
                     {
                         File.Delete(oldFile);
                     }
+
                     if (File.Exists(newFile))
                     {
                         File.Delete(newFile);
@@ -309,41 +318,44 @@ namespace StudioSceneNavigationPlugin
             version = new Version(0, 0, 0, 0);
             expectedCount = -1;
 
+
             var line = reader.ReadLine();
-            if (!string.IsNullOrEmpty(line))
+            if (string.IsNullOrEmpty(line))
             {
-                var entry = line.Split(TrackingFileEntrySplit);
-                if (entry[0] == GUID)
-                {
-                    try
-                    {
-                        version = new Version(entry[1]);
-                    }
-                    catch (ArgumentException) { }
-                    catch (FormatException) { }
-                    catch (OverflowException) { }
-
-                    if (!int.TryParse(entry[2], out expectedCount))
-                    {
-                        expectedCount = -1;
-                    }
-
-                    return true;
-                }
+                return false;
             }
-            return false;
+
+            var entry = line.Split(TrackingFileEntrySplit);
+            if (entry[0] != GUID)
+            {
+                return false;
+            }
+
+            try
+            {
+                version = new Version(entry[1]);
+            }
+            catch (ArgumentException) { }
+            catch (FormatException) { }
+            catch (OverflowException) { }
+
+            if (!int.TryParse(entry[2], out expectedCount))
+            {
+                expectedCount = -1;
+            }
+
+            return true;
         }
 
         private Dictionary<string, string> LoadTrackingFile()
         {
-            
-            Dictionary<string, string> lastLoadedScenes = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-            int count = 0;
-            using (FileStream fileStream = new FileStream(TrackLastLoadedSceneFile, FileMode.OpenOrCreate))
+            var lastLoadedScenes = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            var count = 0;
+            using (var fileStream = new FileStream(TrackLastLoadedSceneFile, FileMode.OpenOrCreate))
             {
                 int expectedCount;
                 Version version;
-                using (StreamReader streamReader = new StreamReader(fileStream, Encoding.UTF8, true))
+                using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true))
                 {
                     if (!TryReadTrackingHeader(streamReader, out version, out expectedCount))
                     {
@@ -362,7 +374,7 @@ namespace StudioSceneNavigationPlugin
                         try
                         {
                             count++;
-                            string[] entry = line.Split(TrackingFileEntrySplit, 2);
+                            var entry = line.Split(TrackingFileEntrySplit, 2);
                             // Normalize on load to take care of any changes between versions
                             if (!Path.IsPathRooted(entry[0]))
                             {
@@ -400,26 +412,29 @@ namespace StudioSceneNavigationPlugin
 
             return lastLoadedScenes;
         }
+
         private void NavigateScene(int offset)
         {
-            bool navigated = false;
+            var navigated = false;
             if (!NavigationInProgress)
             {
                 NavigationInProgress = true;
                 Logger.Log(LogLevel.Debug, $"Attempting navigate to scene: {offset}");
                 try
                 {
-                    List<string> paths = NormalizedScenePaths;
-                    int index = -1;
+                    var paths = NormalizedScenePaths;
+                    var index = -1;
                     if (!CurrentScenePath.IsNullOrEmpty() && !paths.IsNullOrEmpty())
                     {
                         index = paths.IndexOf(CurrentScenePath);
                     }
+
                     if (index == -1)
                     {
                         if (!paths.IsNullOrEmpty())
                         {
-                            Logger.Log(LogLevel.Info, $"Folder changed, resuming navigation for: {PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, CurrentSceneFolder)}");
+                            Logger.Log(LogLevel.Info,
+                                $"Folder changed, resuming navigation for: {PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, CurrentSceneFolder)}");
                             if (LoadLastLoadedScene())
                             {
                                 navigated = true;
@@ -434,19 +449,20 @@ namespace StudioSceneNavigationPlugin
                             index -= offset;
                             if (index < 0 || index >= paths.Count)
                             {
-                                Logger.Log(LogLevel.Info | LogLevel.Message, $"No further scenes to navigate to.");
+                                Logger.Log(LogLevel.Info | LogLevel.Message, "No further scenes to navigate to.");
                                 return;
                             }
 
                             nextImage = paths[index];
                             if (!IsSceneValid(nextImage))
                             {
-                                Logger.Log(LogLevel.Warning | LogLevel.Message, $"Skipping invalid scene file: {nextImage}");
+                                Logger.Log(LogLevel.Warning | LogLevel.Message,
+                                    $"Skipping invalid scene file: {nextImage}");
                                 nextImage = null;
                             }
                         }
 
-                        List<IEnumerator> coroutines = new List<IEnumerator>
+                        var coroutines = new List<IEnumerator>
                         {
                             CoroutineUtils.CreateCoroutine(
                                 () => Logger.Log(LogLevel.Message | LogLevel.Info,
@@ -472,6 +488,7 @@ namespace StudioSceneNavigationPlugin
                         PlayNotificationSound(NotificationSound.Error);
                     }
                 }
+
                 if (navigated)
                 {
                     setPage = true;
@@ -485,7 +502,7 @@ namespace StudioSceneNavigationPlugin
             {
                 setPage = false;
                 yield return null;
-                int page = NormalizedScenePaths.IndexOf(scenePath) / IMAGES_PER_PAGE;
+                var page = NormalizedScenePaths.IndexOf(scenePath) / IMAGES_PER_PAGE;
                 if (page >= 0)
                 {
                     sceneLoadScene?.GetType().GetField("page", AccessTools.all)?.SetValue(null, page);
@@ -510,13 +527,13 @@ namespace StudioSceneNavigationPlugin
         {
             if (!CurrentScenePath.IsNullOrEmpty())
             {
-                string key = PathUtils.NormalizePath(Path.GetDirectoryName(CurrentScenePath));
-                if (!LastLoadedScenes.TryGetValue(key, out string current))
+                var key = PathUtils.NormalizePath(Path.GetDirectoryName(CurrentScenePath));
+                if (!LastLoadedScenes.TryGetValue(key, out var current))
                 {
                     current = string.Empty;
                 }
 
-                string currentValue = Path.GetFileName(CurrentScenePath);
+                var currentValue = Path.GetFileName(CurrentScenePath);
                 if (!currentValue.Compare(current, StringComparison.InvariantCultureIgnoreCase))
                 {
                     LastLoadedScenes[key] = currentValue;
@@ -529,15 +546,16 @@ namespace StudioSceneNavigationPlugin
         /// <returns>`true` if scene was loaded, otherwise `false`</returns>
         private bool LoadLastLoadedScene()
         {
-            bool navigated = false;
-            bool clearNavigation = !NavigationInProgress;
+            var navigated = false;
+            var clearNavigation = !NavigationInProgress;
             NavigationInProgress = true;
             try
             {
-                if (!LastLoadedScenes.TryGetValue(CurrentSceneFolder, out string nextImage))
+                if (!LastLoadedScenes.TryGetValue(CurrentSceneFolder, out var nextImage))
                 {
                     nextImage = ScenePaths.LastOrDefault();
                 }
+
                 if (nextImage != default)
                 {
                     nextImage = PathUtils.NormalizePath(Path.Combine(CurrentSceneFolder, nextImage));
@@ -554,14 +572,26 @@ namespace StudioSceneNavigationPlugin
             {
                 if (!navigated)
                 {
-                    Logger.Log(LogLevel.Message | LogLevel.Error, $"Error loading last scene from {CurrentSceneFolder}");
+                    Logger.Log(LogLevel.Message | LogLevel.Error,
+                        $"Error loading last scene from {CurrentSceneFolder}");
                     if (clearNavigation)
                     {
                         NavigationInProgress = false;
                     }
                 }
             }
+
             return navigated;
         }
+
+        #region configuration
+
+        public static ConfigEntry<KeyboardShortcut> NavigateNextSceneShortcut { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> NavigatePrevSceneShortcut { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> ReloadCurrentSceneShortcut { get; private set; }
+        public static ConfigEntry<bool> NotificationSoundsEnabled { get; private set; }
+        public static ConfigEntry<bool> TrackLastLoadedSceneEnabled { get; private set; }
+
+        #endregion configuration
     }
 }

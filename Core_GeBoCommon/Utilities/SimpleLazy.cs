@@ -1,23 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+#if (HS || PH || KK)
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
+#endif
 
 namespace GeBoCommon.Utilities
 {
 #if (HS || PH || KK)
     public class SimpleLazy<T>
     {
-        private object value = null;
-        private readonly Func<T> valueFactory;
-        private readonly object basicLock;
+        private object _value;
+        private readonly Func<T> _valueFactory;
+        private readonly object _basicLock;
 
         public SimpleLazy(Func<T> valueFactory)
         {
-            this.valueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
-            basicLock = new object();
+            this._valueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
+            _basicLock = new object();
         }
 
         public override string ToString()
@@ -25,14 +24,14 @@ namespace GeBoCommon.Utilities
             return IsValueCreated ? Value.ToString() : "Value is not created.";
         }
 
-        public bool IsValueCreated => value != null && value is StrongBox<T>;
+        public bool IsValueCreated => _value is StrongBox<T>;
 
         public T Value
         {
             get
             {
-                StrongBox<T> realBox = null;
-                if (value is Exception tmpException)
+                StrongBox<T> realBox;
+                if (_value is Exception tmpException)
                 {
                     throw new MemberAccessException("Unexpected error", tmpException);
                 }
@@ -40,29 +39,26 @@ namespace GeBoCommon.Utilities
                 {
                     if (!IsValueCreated)
                     {
-                        lock (basicLock)
+                        lock (_basicLock)
                         {
                             if (!IsValueCreated)
                             {
-                                Interlocked.CompareExchange(ref value, new StrongBox<T>(valueFactory()), null);
+                                Interlocked.CompareExchange(ref _value, new StrongBox<T>(_valueFactory()), null);
                             }
                         }
                     }
-                    realBox = value as StrongBox<T>;
+                    realBox = _value as StrongBox<T>;
                 }
                 catch (Exception e)
                 {
-                    value = e;
+                    _value = e;
                     throw;
                 }
 
-                if (realBox is null)
-                {
-                    var error = new MemberAccessException("error during lazy initialization");
-                    value = error;
-                    throw error;
-                }
-                return realBox.Value;
+                if (realBox != null) return realBox.Value;
+                var error = new MemberAccessException("error during lazy initialization");
+                _value = error;
+                throw error;
             }
         }
     }

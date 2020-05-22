@@ -11,28 +11,28 @@ namespace GeBoCommon.AutoTranslation.Implementation
 {
     internal class XUnityAutoTranslationHelper : AutoTranslationHelperBase, IAutoTranslationHelper
     {
-        private readonly SimpleLazy<AddTranslationToCacheDelegate> _addTranslationToCache = null;
-        private readonly SimpleLazy<ReloadTranslationsDelegate> _reloadTranslations = null;
-        private readonly SimpleLazy<object> _defaultCache = null;
-        private readonly SimpleLazy<Type> _settingsType = null;
-        public readonly Func<Dictionary<string, string>> getReplacements;
-        public readonly Func<Dictionary<string, string>> getTranslations;
-        public readonly Func<string> getAutoTranslationsFilePath;
-        public readonly Func<HashSet<string>> getRegisteredRegexes;
-        public readonly Func<HashSet<string>> getRegisteredSplitterRegexes;
+        private readonly SimpleLazy<AddTranslationToCacheDelegate> _addTranslationToCache;
+        private readonly SimpleLazy<ReloadTranslationsDelegate> _reloadTranslations;
+        private readonly SimpleLazy<object> _defaultCache;
+        private readonly Func<Dictionary<string, string>> _getReplacements;
+        private readonly Func<Dictionary<string, string>> _getTranslations;
+        private readonly Func<string> _getAutoTranslationsFilePath;
+        private readonly Func<HashSet<string>> _getRegisteredRegexes;
+        private readonly Func<HashSet<string>> _getRegisteredSplitterRegexes;
 
         public XUnityAutoTranslationHelper()
         {
             _defaultCache = new SimpleLazy<object>(LazyReflectionGetter<object>(() => DefaultTranslator, "TextCache"));
             _reloadTranslations = new SimpleLazy<ReloadTranslationsDelegate>(ReloadTranslationsDelegateLoader);
             _addTranslationToCache = new SimpleLazy<AddTranslationToCacheDelegate>(AddTranslationToCacheLoader);
-            _settingsType = new SimpleLazy<Type>(() => typeof(XUnity.AutoTranslator.Plugin.Core.IPluginEnvironment).Assembly.GetType("XUnity.AutoTranslator.Plugin.Core.Configuration.Settings", true));
 
-            getReplacements = LazyReflectionGetter<Dictionary<string, string>>(_settingsType, "Replacements");
-            getAutoTranslationsFilePath = LazyReflectionGetter<string>(_settingsType, "AutoTranslationsFilePath");
-            getTranslations = LazyReflectionGetter<Dictionary<string, string>>(_defaultCache, "_translations");
-            getRegisteredRegexes = LazyReflectionGetter<HashSet<string>>(_defaultCache, "_registeredRegexes");
-            getRegisteredSplitterRegexes = LazyReflectionGetter<HashSet<string>>(_defaultCache, "_registeredSplitterRegexes");
+            var settingsType = new SimpleLazy<Type>(() => typeof(IPluginEnvironment).Assembly.GetType("XUnity.AutoTranslator.Plugin.Core.Configuration.Settings", true));
+
+            _getReplacements = LazyReflectionGetter<Dictionary<string, string>>(settingsType, "Replacements");
+            _getAutoTranslationsFilePath = LazyReflectionGetter<string>(settingsType, "AutoTranslationsFilePath");
+            _getTranslations = LazyReflectionGetter<Dictionary<string, string>>(_defaultCache, "_translations");
+            _getRegisteredRegexes = LazyReflectionGetter<HashSet<string>>(_defaultCache, "_registeredRegexes");
+            _getRegisteredSplitterRegexes = LazyReflectionGetter<HashSet<string>>(_defaultCache, "_registeredSplitterRegexes");
         }
 
         //private Type SettingsType => _settingsType.Value;
@@ -41,29 +41,26 @@ namespace GeBoCommon.AutoTranslation.Implementation
 
         private AddTranslationToCacheDelegate AddTranslationToCacheLoader()
         {
-            AddTranslationToCacheDelegate addTranslationToCache = null;
+            AddTranslationToCacheDelegate addTranslationToCache;
 
-            if (addTranslationToCache is null)
+            if (DefaultCache != null)
             {
-                if (DefaultCache != null)
+                var method = AccessTools.Method(DefaultCache.GetType(), "AddTranslationToCache");
+                try
                 {
-                    var method = AccessTools.Method(DefaultCache.GetType(), "AddTranslationToCache");
-                    try
-                    {
-                        addTranslationToCache = (AddTranslationToCacheDelegate)Delegate.CreateDelegate(
-                            typeof(AddTranslationToCacheDelegate), DefaultCache, method);
-                    }
-                    catch (ArgumentException e)
-                    {
-                        Logger.LogWarning($"Mono bug preventing delegate creation for {method.Name}, using workaround: {e.Message}");
-                        addTranslationToCache = (key, value, persistToDisk, translationType, scope) => method.Invoke(DefaultCache, new object[] { key, value, persistToDisk, translationType, scope });
-                    }
+                    addTranslationToCache = (AddTranslationToCacheDelegate)Delegate.CreateDelegate(
+                        typeof(AddTranslationToCacheDelegate), DefaultCache, method);
                 }
-                else
+                catch (ArgumentException e)
                 {
-                    Logger.LogWarning($"Unable to expose 'AddTranslationToCache'");
-                    addTranslationToCache = FallbackAddTranslationToCache;
+                    Logger.LogWarning($"Mono bug preventing delegate creation for {method.Name}, using workaround: {e.Message}");
+                    addTranslationToCache = (key, value, persistToDisk, translationType, scope) => method.Invoke(DefaultCache, new object[] { key, value, persistToDisk, translationType, scope });
                 }
+            }
+            else
+            {
+                Logger.LogWarning("Unable to expose 'AddTranslationToCache'");
+                addTranslationToCache = FallbackAddTranslationToCache;
             }
             return addTranslationToCache;
         }
@@ -111,17 +108,17 @@ namespace GeBoCommon.AutoTranslation.Implementation
         }
         */
 
-        public Dictionary<string, string> GetReplacements() => getReplacements();
-        public string GetAutoTranslationsFilePath() => getAutoTranslationsFilePath();
+        public Dictionary<string, string> GetReplacements() => _getReplacements();
+        public string GetAutoTranslationsFilePath() => _getAutoTranslationsFilePath();
 
-        public Dictionary<string, string> GetTranslations() => getTranslations();
-        public HashSet<string> GetRegisteredRegexes() => getRegisteredRegexes();
+        public Dictionary<string, string> GetTranslations() => _getTranslations();
+        public HashSet<string> GetRegisteredRegexes() => _getRegisteredRegexes();
 
-        public HashSet<string> GetRegisteredSplitterRegexes() => getRegisteredSplitterRegexes();
+        public HashSet<string> GetRegisteredSplitterRegexes() => _getRegisteredSplitterRegexes();
 
         public class TranslationResult : ITranslationResult
         {
-            private readonly XUnity.AutoTranslator.Plugin.Core.TranslationResult Source = null;
+            protected readonly XUnity.AutoTranslator.Plugin.Core.TranslationResult Source;
             public bool Succeeded { get; }
             public string TranslatedText { get; }
             public string ErrorMessage { get; }

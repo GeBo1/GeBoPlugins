@@ -27,12 +27,12 @@ namespace TranslationCacheCleanerPlugin
         private const float NotifySeconds = 10f;
         private const float YieldSeconds = 0.1f;
 
-        internal static new ManualLogSource Logger;
+        internal new static ManualLogSource Logger;
 
         public static ConfigEntry<KeyboardShortcut> CleanCacheHotkey { get; private set; }
 
-        private static bool cleaningActive = false;
-        private string latestBackup = null;
+        private static bool cleaningActive;
+        private string latestBackup;
 
         internal void Awake()
         {
@@ -70,9 +70,9 @@ namespace TranslationCacheCleanerPlugin
 
         private static string GetWorkFileName(string path, string prefix, string extension)
         {
-            string timestamp = DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss");
-            string result = string.Empty;
-            for (int i = 0; string.IsNullOrEmpty(result) || File.Exists(result); i++)
+            var timestamp = DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss");
+            var result = string.Empty;
+            for (var i = 0; string.IsNullOrEmpty(result) || File.Exists(result); i++)
             {
                 result = Path.Combine(path, string.Join(".", new string[] { prefix, PluginName, timestamp, i.ToString(), extension }));
             }
@@ -97,8 +97,8 @@ namespace TranslationCacheCleanerPlugin
         public IEnumerator CleanTranslationCacheCoroutine()
         {
             var reloadCoroutine = CoroutineUtils.CreateCoroutine(() => { }, ReloadTranslations);
-            float cutoff = Time.realtimeSinceStartup + YieldSeconds;
-            float notifyTime = Time.realtimeSinceStartup + NotifySeconds;
+            var cutoff = Time.realtimeSinceStartup + YieldSeconds;
+            var notifyTime = Time.realtimeSinceStartup + NotifySeconds;
             Logger.LogMessage("Attempting to clean translation cache, please be patient...");
             var cache = GeBoAPI.Instance.AutoTranslationHelper.DefaultCache;
 
@@ -108,11 +108,11 @@ namespace TranslationCacheCleanerPlugin
                 yield break;
             }
 
-            Dictionary<string, string> translations = GeBoAPI.Instance.AutoTranslationHelper.GetTranslations();
+            var translations = GeBoAPI.Instance.AutoTranslationHelper.GetTranslations();
             Logger.LogWarning($"{translations} {translations?.Count}");
-            List<Regex> regexes = new List<Regex>();
+            var regexes = new List<Regex>();
 
-            HashSet<string> tmp = GeBoAPI.Instance.AutoTranslationHelper.GetRegisteredRegexes();//(HashSet<string>)cache?.GetType().GetField("_registeredRegexes", AccessTools.all)?.GetValue(cache);
+            var tmp = GeBoAPI.Instance.AutoTranslationHelper.GetRegisteredRegexes();//(HashSet<string>)cache?.GetType().GetField("_registeredRegexes", AccessTools.all)?.GetValue(cache);
             if (tmp != null)
             {
                 regexes.AddRange(tmp.Select((s) => new Regex(s)));
@@ -123,8 +123,8 @@ namespace TranslationCacheCleanerPlugin
                 regexes.AddRange(tmp.Select((s) => new Regex(s)));
             }
 
-            string newFile = GetWorkFileName(Path.GetDirectoryName(AutoTranslationsFilePath), Path.GetFileName(AutoTranslationsFilePath), "new");
-            string backupFile = GetWorkFileName(Path.GetDirectoryName(AutoTranslationsFilePath), Path.GetFileName(AutoTranslationsFilePath), "bak");
+            var newFile = GetWorkFileName(Path.GetDirectoryName(AutoTranslationsFilePath), Path.GetFileName(AutoTranslationsFilePath), "new");
+            var backupFile = GetWorkFileName(Path.GetDirectoryName(AutoTranslationsFilePath), Path.GetFileName(AutoTranslationsFilePath), "bak");
             MoveReplaceFile(AutoTranslationsFilePath, backupFile);
             latestBackup = backupFile;
             Logger.LogInfo("Reloading translations without existing cache file");
@@ -132,7 +132,7 @@ namespace TranslationCacheCleanerPlugin
             Logger.LogInfo("Reloading done");
 
             char[] splitter = { '=' };
-            int changed = 0;
+            var changed = 0;
             using (var outStream = File.Open(newFile, FileMode.CreateNew, FileAccess.Write))
             using (var writer = new StreamWriter(outStream, Encoding.UTF8))
             using (var inStream = File.Open(backupFile, FileMode.Open, FileAccess.Read))
@@ -152,7 +152,7 @@ namespace TranslationCacheCleanerPlugin
                         cutoff = now + YieldSeconds;
                         yield return null;
                     }
-                    string[] parts = line.Split(splitter, StringSplitOptions.None);
+                    var parts = line.Split(splitter, StringSplitOptions.None);
                     if (parts.Length == 2 && !parts[0].StartsWith("//", StringComparison.InvariantCulture))
                     {
                         if (translations.ContainsKey(parts[0]))
@@ -207,15 +207,15 @@ namespace TranslationCacheCleanerPlugin
                 return;
             }
 
-            Dictionary<string, string> translations = GeBoAPI.Instance.AutoTranslationHelper.GetTranslations();
+            var translations = GeBoAPI.Instance.AutoTranslationHelper.GetTranslations();
             Logger.LogWarning($"{translations} {translations?.Count}");
             /*
             (Dictionary<string, string>)cache?.GetType().GetField("_translations", AccessTools.all)?.GetValue(cache) ??
             new Dictionary<string, string>();
             */
-            List<Regex> regexes = new List<Regex>();
+            var regexes = new List<Regex>();
 
-            HashSet<string> tmp = GeBoAPI.Instance.AutoTranslationHelper.GetRegisteredRegexes();//(HashSet<string>)cache?.GetType().GetField("_registeredRegexes", AccessTools.all)?.GetValue(cache);
+            var tmp = GeBoAPI.Instance.AutoTranslationHelper.GetRegisteredRegexes();//(HashSet<string>)cache?.GetType().GetField("_registeredRegexes", AccessTools.all)?.GetValue(cache);
             if (tmp != null)
             {
                 regexes.AddRange(tmp.Select((s) => new Regex(s)));
@@ -226,18 +226,18 @@ namespace TranslationCacheCleanerPlugin
                 regexes.AddRange(tmp.Select((s) => new Regex(s)));
             }
 
-            string newFile = GetWorkFileName(Path.GetDirectoryName(AutoTranslationsFilePath), Path.GetFileName(AutoTranslationsFilePath), "new");
-            string backupFile = GetWorkFileName(Path.GetDirectoryName(AutoTranslationsFilePath), Path.GetFileName(AutoTranslationsFilePath), "bak");
+            var newFile = GetWorkFileName(Path.GetDirectoryName(AutoTranslationsFilePath), Path.GetFileName(AutoTranslationsFilePath), "new");
+            var backupFile = GetWorkFileName(Path.GetDirectoryName(AutoTranslationsFilePath), Path.GetFileName(AutoTranslationsFilePath), "bak");
             MoveReplaceFile(AutoTranslationsFilePath, backupFile);
             Logger.LogInfo("Reloading translations without existing cache file");
             ReloadTranslations();
 
-            bool completed = false;
+            var completed = false;
 
             try
             {
                 char[] splitter = { '=' };
-                int changed = 0;
+                var changed = 0;
                 using (var outStream = File.Open(newFile, FileMode.CreateNew, FileAccess.Write))
                 using (var writer = new StreamWriter(outStream, Encoding.UTF8))
                 using (var inStream = File.Open(backupFile, FileMode.Open, FileAccess.Read))
@@ -247,7 +247,7 @@ namespace TranslationCacheCleanerPlugin
                     string line;
                     while ((line = reader.ReadLine()) != null)
                     {
-                        string[] parts = line.Split(splitter, StringSplitOptions.None);
+                        var parts = line.Split(splitter, StringSplitOptions.None);
                         if (parts.Length == 2 && !parts[0].StartsWith("//", StringComparison.InvariantCulture))
                         {
                             if (translations.ContainsKey(parts[0]))

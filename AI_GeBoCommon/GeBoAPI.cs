@@ -1,31 +1,25 @@
-﻿using BepInEx;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AIChara;
 using AIProject;
 using IllusionStudio = Studio;
-using KKAPI;
-using HarmonyLib;
 
 namespace GeBoCommon
 {
     public partial class GeBoAPI
     {
-        public IEnumerable<KeyValuePair<int, string>> ChaFileIterNames(ChaFile chaFile)
+        public IEnumerable<KeyValuePair<int, string>> ChaFileEnumerateNames(ChaFile chaFile)
         {
             yield return new KeyValuePair<int, string>(0, chaFile?.parameter?.fullname);
         }
 
         public string ChaFileFullName(ChaFile chaFile) => chaFile?.parameter.fullname;
 
-        public void ChaFileSetName(ChaFile chaFile, int index, string name)
+        public void ChaFileSetName(ChaFile chaFile, int index, string chaName)
         {
             if (index == 0)
             {
-                chaFile.parameter.fullname = name;
+                chaFile.parameter.fullname = chaName;
             }
             else
             {

@@ -8,12 +8,13 @@ namespace GameDialogHelperPlugin
 {
     public class QuestionInfo
     {
-        private static readonly SimpleLazy<QuestionInfo> _default = new SimpleLazy<QuestionInfo>(() => new QuestionInfo
+        private static readonly SimpleLazy<QuestionInfo> DefaultLoader = new SimpleLazy<QuestionInfo>(() => new QuestionInfo
         {
-            Id = -1, Description = string.Empty, QuestionType = QuestionType.Unknown
+            Id = -1, Description = string.Empty, QuestionType = QuestionType.Unknown, InvitationTarget = InvitationTarget.None, 
+            LikeTarget = LikeTarget.None, PhysicalAttributeTarget = PhysicalAttribute.None, RelationshipLevel = RelationshipLevel.Anyone
         });
 
-        private static readonly SimpleLazy<Dictionary<int, QuestionInfo>> _questionInfos =
+        private static readonly SimpleLazy<Dictionary<int, QuestionInfo>> QuestionInfos =
             new SimpleLazy<Dictionary<int, QuestionInfo>>(() =>
             {
                 var result = new Dictionary<int, QuestionInfo>();
@@ -30,7 +31,7 @@ namespace GameDialogHelperPlugin
         private string _description;
         private static ManualLogSource Logger => GameDialogHelper.Logger;
 
-        public static QuestionInfo Default => _default.Value;
+        public static QuestionInfo Default => DefaultLoader.Value;
 
         public int Id { get; private set; }
 
@@ -51,7 +52,7 @@ namespace GameDialogHelperPlugin
                             break;
 
                         case QuestionType.Invitation:
-                            _description = $"Invitation to ${InvitationTarget}";
+                            _description = $"Invitation to {InvitationTarget}";
 
                             break;
 
@@ -74,13 +75,13 @@ namespace GameDialogHelperPlugin
 
         public QuestionType QuestionType { get; private set; }
 
-        public RelationshipLevel RelationshipLevel { get; } = RelationshipLevel.Anyone;
+        public RelationshipLevel RelationshipLevel { get; private set; }
 
-        public InvitationTarget InvitationTarget { get; } = InvitationTarget.None;
+        public InvitationTarget InvitationTarget { get; private set; }
 
-        public PhysicalAttribute PhysicalAttributeTarget { get; } = PhysicalAttribute.None;
+        public PhysicalAttribute PhysicalAttributeTarget { get; private set; }
 
-        public LikeTarget LikeTarget { get; } = LikeTarget.None;
+        public LikeTarget LikeTarget { get; private set; }
 
         public override string ToString()
         {
@@ -94,14 +95,13 @@ namespace GameDialogHelperPlugin
             using (var stream = Assembly.GetExecutingAssembly()
                 .GetManifestResourceStream(typeof(QuestionInfo), "Resources.QuestionInfos.xml"))
             {
-                if (stream != null)
+                if (stream == null) return new QuestionInfo[0];
+
+                var result = serializer.Deserialize(stream) as List<QuestionInfo>;
+                Logger.LogFatal(result);
+                if (result != null)
                 {
-                    var result = serializer.Deserialize(stream) as List<QuestionInfo>;
-                    Logger.LogFatal(result);
-                    if (result != null)
-                    {
-                        return result;
-                    }
+                    return result;
                 }
             }
 
@@ -110,7 +110,7 @@ namespace GameDialogHelperPlugin
 
         public static QuestionInfo GetById(int questionId)
         {
-            return _questionInfos.Value.TryGetValue(questionId, out var result) ? result : null;
+            return QuestionInfos.Value.TryGetValue(questionId, out var result) ? result : null;
         }
     }
 

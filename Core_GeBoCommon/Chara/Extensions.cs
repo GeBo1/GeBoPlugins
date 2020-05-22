@@ -5,11 +5,11 @@ using AIChara;
 
 namespace GeBoCommon.Chara
 {
-    public static partial class Extensions
+    public static class Extensions
     {
-        public static IEnumerable<KeyValuePair<int, string>> IterNames(this ChaFile chaFile)
+        public static IEnumerable<KeyValuePair<int, string>> EnumerateNames(this ChaFile chaFile)
         {
-            return GeBoAPI.Instance.ChaFileIterNames(chaFile);
+            return GeBoAPI.Instance.ChaFileEnumerateNames(chaFile);
         }
 
         public static void SetName(this ChaFile chaFile, int index, string name)

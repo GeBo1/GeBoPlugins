@@ -15,7 +15,7 @@ namespace GeBoCommon.Utilities
 
         public static bool IsNormalized(string path)
         {
-            return path[1] == ':' && !NonNormalizedSubstrings.Any(s => path.Contains(s));
+            return path[1] == ':' && !NonNormalizedSubstrings.Any(path.Contains);
         }
 
         public static string NormalizePath(string path)
@@ -47,10 +47,10 @@ namespace GeBoCommon.Utilities
                 return ".";
             }
 
-            Uri rootUri = new Uri(relativeTo + Path.DirectorySeparatorChar, UriKind.Absolute);
-            Uri pathUri = new Uri(path, UriKind.Absolute);
+            var rootUri = new Uri(relativeTo + Path.DirectorySeparatorChar, UriKind.Absolute);
+            var pathUri = new Uri(path, UriKind.Absolute);
 
-            Uri relativeUri = rootUri.MakeRelativeUri(pathUri);
+            var relativeUri = rootUri.MakeRelativeUri(pathUri);
 
             return Uri.UnescapeDataString(relativeUri.ToString());
         }

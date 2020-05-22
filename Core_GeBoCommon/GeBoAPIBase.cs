@@ -1,22 +1,25 @@
-﻿using BepInEx;
+﻿using System;
+using System.Collections.Generic;
+using BepInEx;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
-using System;
-using System.Collections.Generic;
-using BepInEx.Bootstrap;
+using GeBoCommon.AutoTranslation;
+using GeBoCommon.AutoTranslation.Implementation;
 using GeBoCommon.Utilities;
+using XUnity.AutoTranslator.Plugin.Core.Constants;
 #if AI
 using AIChara;
 #endif
 
 namespace GeBoCommon
 {
-    [BepInDependency(XUnity.AutoTranslator.Plugin.Core.Constants.PluginData.Identifier, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(PluginData.Identifier, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(GUID, PluginName, Version)]
     [BepInProcess(Constants.StudioProcessName)]
-    [BepInProcess(Constants.GameProcessName)]
-#if KK
-    [BepInProcess(Constants.AltGameProcessName)]
+    [BepInProcess(Constants.MainGameProcessName)]
+#if KK || AI
+    [BepInProcess(Constants.MainGameProcessNameSteam)]
 #endif
 #if HS
     [BepInProcess(Constants.BattleArenaProcessName)]
@@ -34,7 +37,7 @@ namespace GeBoCommon
 
         public GeBoAPI()
         {
-            autoTranslationHelper = new SimpleLazy<AutoTranslation.IAutoTranslationHelper>(AutoTranslationHelperLoader);
+            _autoTranslationHelper = new SimpleLazy<IAutoTranslationHelper>(AutoTranslationHelperLoader);
         }
 
         internal void Main()
@@ -43,22 +46,23 @@ namespace GeBoCommon
             Logger = base.Logger;
         }
 
-        private readonly SimpleLazy<AutoTranslation.IAutoTranslationHelper> autoTranslationHelper;
-        public AutoTranslation.IAutoTranslationHelper AutoTranslationHelper => autoTranslationHelper.Value;
+        private readonly SimpleLazy<IAutoTranslationHelper> _autoTranslationHelper;
+        public IAutoTranslationHelper AutoTranslationHelper => _autoTranslationHelper.Value;
 
-        private AutoTranslation.IAutoTranslationHelper AutoTranslationHelperLoader()
+        private IAutoTranslationHelper AutoTranslationHelperLoader()
         {
-            if (Chainloader.PluginInfos.ContainsKey(XUnity.AutoTranslator.Plugin.Core.Constants.PluginData.Identifier))
+            if (Chainloader.PluginInfos.ContainsKey(PluginData.Identifier))
             {
-                return new AutoTranslation.Implementation.XUnityAutoTranslationHelper();
+                return new XUnityAutoTranslationHelper();
             }
-            return new AutoTranslation.Implementation.StubAutoTranslationHelper();
+
+            return new StubAutoTranslationHelper();
         }
 
         public void SetupNotificationSoundConfig(string guid, ConfigEntry<bool> configEntry)
         {
             NotificationSoundsEnabled[guid] = configEntry.Value;
-            configEntry.SettingChanged += new EventHandler((sender, e) => NotificationSound_SettingChanged(guid, sender, e));
+            configEntry.SettingChanged += (sender, e) => NotificationSound_SettingChanged(guid, sender, e);
         }
 
         private void NotificationSound_SettingChanged(string guid, object sender, EventArgs e)
@@ -67,19 +71,21 @@ namespace GeBoCommon
             {
                 return;
             }
-            var entry = sender as ConfigEntry<bool>;
-            NotificationSoundsEnabled[guid] = entry?.Value ?? false;
+
+            var entry = (ConfigEntry<bool>) sender;
+            NotificationSoundsEnabled[guid] = entry.Value;
         }
 
         public void PlayNotificationSound(NotificationSound notificationSound, string guid = null)
         {
-            if (!string.IsNullOrEmpty(guid))
+            if (!guid.IsNullOrEmpty())
             {
-                if (NotificationSoundsEnabled.TryGetValue(guid, out bool isEnabled) && !isEnabled)
+                if (NotificationSoundsEnabled.TryGetValue(guid, out var soundEnabled) && !soundEnabled)
                 {
                     return;
                 }
             }
+
             PlayNotification(notificationSound);
         }
     }

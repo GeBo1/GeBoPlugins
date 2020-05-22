@@ -26,7 +26,7 @@ namespace TranslationHelperPlugin
         public const string PluginName = "Translation Helper";
         public const string Version = "0.8.0";
 
-        internal static new ManualLogSource Logger;
+        internal new static ManualLogSource Logger;
         public static TranslationHelper Instance;
 
         #region ConfigMgr
@@ -333,7 +333,7 @@ namespace TranslationHelperPlugin
             //Logger.LogDebug($"TranslateCardName: attempting to translated name(s): {charaFileName}");
 
             int jobs = 0;
-            foreach (KeyValuePair<int, string> name in file.IterNames())
+            foreach (KeyValuePair<int, string> name in file.EnumerateNames())
             {
                 string origName = name.Value;
                 int nameKey = name.Key;

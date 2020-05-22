@@ -2,7 +2,6 @@
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using GeBoCommon;
-using HarmonyLib;
 using KKAPI.Studio;
 using KKAPI.Utilities;
 using Studio;
@@ -22,12 +21,12 @@ namespace StudioMultiSelectCharaPlugin
     [BepInProcess(Constants.StudioProcessName)]
     public partial class StudioMultiSelectChara
     {
-        internal static new ManualLogSource Logger;
+        internal new static ManualLogSource Logger;
         public const string GUID = "com.gebo.BepInEx.studiomultiselectchara";
         public const string PluginName = "Studio Multiselect Chara";
         public const string Version = "0.9.0";
 
-        private bool busy = false;
+        private bool _busy;
 
         #region configuration
 
@@ -48,10 +47,10 @@ namespace StudioMultiSelectCharaPlugin
 
         internal void Update()
         {
-            if (Enabled.Value && MultiselectShortcut.Value.IsDown() && !busy)
+            if (Enabled.Value && MultiselectShortcut.Value.IsDown() && !_busy)
             {
-                busy = true;
-                StartCoroutine(UpdateSelectionsCoroutine().AppendCo(() => busy = false));
+                _busy = true;
+                StartCoroutine(UpdateSelectionsCoroutine().AppendCo(() => _busy = false));
             }
         }
 
@@ -67,7 +66,7 @@ namespace StudioMultiSelectCharaPlugin
 
         private IEnumerable<TreeNodeObject> EnumerateTreeNodeObjects(TreeNodeObject root = null)
         {
-            List<TreeNodeObject> roots = new List<TreeNodeObject>();
+            var roots = new List<TreeNodeObject>();
             if (root != null)
             {
                 roots.Add(root);
@@ -80,12 +79,12 @@ namespace StudioMultiSelectCharaPlugin
                     roots.AddRange(root.GetTreeNodeCtrl().GetTreeNodeObjects());
                 }
             }
-            foreach (TreeNodeObject entry in roots)
+            foreach (var entry in roots)
             {
                 yield return entry;
-                foreach (TreeNodeObject childNode in entry.child)
+                foreach (var childNode in entry.child)
                 {
-                    foreach (TreeNodeObject tnObj in EnumerateTreeNodeObjects(childNode))
+                    foreach (var tnObj in EnumerateTreeNodeObjects(childNode))
                     {
                         yield return tnObj;
                     }
@@ -100,9 +99,9 @@ namespace StudioMultiSelectCharaPlugin
             {
                 tnRoot = root.treeNodeObject;
             }
-            foreach (TreeNodeObject tnObj in EnumerateTreeNodeObjects(tnRoot))
+            foreach (var tnObj in EnumerateTreeNodeObjects(tnRoot))
             {
-                if (Singleton<Studio.Studio>.Instance.dicInfo.TryGetValue(tnObj, out ObjectCtrlInfo result))
+                if (Singleton<Studio.Studio>.Instance.dicInfo.TryGetValue(tnObj, out var result))
                 {
                     yield return result;
                 }
@@ -111,10 +110,10 @@ namespace StudioMultiSelectCharaPlugin
 
         private void SelectCharasById(CharaId matchId)
         {
-            int selected = 0;
-            int origCharCount = StudioAPI.GetSelectedCharacters().Count();
-            int origObjCount = StudioAPI.GetSelectedObjects().Count() - origCharCount;
-            foreach (ObjectCtrlInfo objectCtrlInfo in EnumerateObjects())
+            var selected = 0;
+            var origCharCount = StudioAPI.GetSelectedCharacters().Count();
+            var origObjCount = StudioAPI.GetSelectedObjects().Count() - origCharCount;
+            foreach (var objectCtrlInfo in EnumerateObjects())
             {
                 Logger.Log(BepinLogLevel.Debug, $"SelectCharasById: {objectCtrlInfo}");
                 if (objectCtrlInfo is OCIChar ociChar)
@@ -143,8 +142,8 @@ namespace StudioMultiSelectCharaPlugin
 
         private IEnumerator UpdateSelectionsCoroutine()
         {
-            var selectedIds = GetSelectedMatchIds();
-            int selectedCount = selectedIds.Count();
+            var selectedIds = GetSelectedMatchIds().ToList();
+            var selectedCount = selectedIds.Count;
             if (selectedCount == 0)
             {
                 Logger.Log(BepinLogLevel.Warning | BepinLogLevel.Message, "No characters selected");

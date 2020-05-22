@@ -3,14 +3,13 @@ using KKAPI;
 using UnityEngine.SceneManagement;
 using Manager;
 using System;
-using GeBoCommon;
 
 namespace TranslationHelperPlugin
 {
     [BepInPlugin(GUID, PluginName, Version)]
     public partial class TranslationHelper : BaseUnityPlugin
     {
-        private WeakReference RegisteredPlayer = null;
+        private WeakReference RegisteredPlayer;
 
         internal void GameSpecificAwake()
         {
@@ -28,21 +27,21 @@ namespace TranslationHelperPlugin
 
         private void RegisterPlayer(UnityEngine.SceneManagement.Scene arg0, UnityEngine.SceneManagement.Scene arg1)
         {
-            SaveData.Player player = Singleton<Game>.Instance?.Player;
+            var player = Singleton<Game>.Instance?.Player;
             if (RegisteredPlayer != null && RegisteredPlayer.Target != player)
             {
                 if (RegisteredPlayer.IsAlive)
                 {
-                    SaveData.Player oldPlayer = RegisteredPlayer.Target as SaveData.Player;
-                    StartCoroutine(UnregisterReplacements(oldPlayer.charFile));
+                    var oldPlayer = RegisteredPlayer.Target as SaveData.Player;
+                    StartCoroutine(UnregisterReplacements(oldPlayer?.charFile));
                 }
                 RegisteredPlayer = null;
             }
-            if (player != null && RegistrationGameModes.Contains(KoikatuAPI.GetCurrentGameMode()))
-            {
-                StartCoroutine(RegisterReplacementsWrapper(player.charFile));
-                RegisteredPlayer = new WeakReference(player);
-            }
+
+            if (player == null || !RegistrationGameModes.Contains(KoikatuAPI.GetCurrentGameMode())) return;
+
+            StartCoroutine(RegisterReplacementsWrapper(player.charFile));
+            RegisteredPlayer = new WeakReference(player);
         }
     }
 }

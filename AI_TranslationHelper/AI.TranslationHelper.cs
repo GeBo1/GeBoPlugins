@@ -1,6 +1,5 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
-using AIChara;
 
 namespace TranslationHelperPlugin
 {

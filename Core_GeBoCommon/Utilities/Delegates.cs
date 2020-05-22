@@ -1,9 +1,7 @@
 ﻿using BepInEx.Logging;
 using HarmonyLib;
 using System;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 
 namespace GeBoCommon.Utilities
 {
@@ -21,10 +19,10 @@ namespace GeBoCommon.Utilities
         public static Func<T> LazyReflectionGetter<T>(Func<Type> typeLoader, Func<object> objLoader, string fieldName)
         {
             Logger.LogDebug($"{nameof(LazyReflectionGetter)}<{typeof(T).Name}>({typeLoader}, {objLoader}, {fieldName}");
-            SimpleLazy<FieldInfo> fieldInfo = new SimpleLazy<FieldInfo>(() => AccessTools.Field(typeLoader(), fieldName));
+            var fieldInfo = new SimpleLazy<FieldInfo>(() => AccessTools.Field(typeLoader(), fieldName));
 
-            SimpleLazy<object> instance = new SimpleLazy<object>(objLoader);
-            return new Func<T>(() => (T)fieldInfo.Value?.GetValue(instance.Value));
+            var instance = new SimpleLazy<object>(objLoader);
+            return () => (T)fieldInfo.Value?.GetValue(instance.Value);
         }
     }
 }

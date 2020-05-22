@@ -1,9 +1,6 @@
-﻿using ActionGame.Communication;
+﻿using System.Linq;
+using ActionGame.Communication;
 using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace GameDialogHelperPlugin
 {
@@ -12,14 +9,16 @@ namespace GameDialogHelperPlugin
         internal static class Hooks
         {
             [HarmonyPrefix]
-            [HarmonyPatch(typeof(Info), "CreateSelectADV", new Type[] { typeof(Info.SelectInfo), typeof(ChangeValueSelectInfo) })]
-            [HarmonyPatch(typeof(Info), "CreateSelectADV", new Type[] { typeof(Info.SelectInfo), typeof(int) })]
-            internal static void Info_CreateSelectADV_Prefix(Info __instance, ref Info.SelectInfo _info)
+            [HarmonyPatch(typeof(Info), "CreateSelectADV", typeof(Info.SelectInfo), typeof(ChangeValueSelectInfo))]
+            [HarmonyPatch(typeof(Info), "CreateSelectADV", typeof(Info.SelectInfo), typeof(int))]
+            // ReSharper disable once InconsistentNaming
+            //internal static void Info_CreateSelectADV_Prefix(Info __instance, ref Info.SelectInfo _info)
+            internal static void Info_CreateSelectADV_Prefix(Info __instance, Info.SelectInfo _info)
             {
                 if (EnabledForCurrentHeroine())
                 {
                     var id = _info.GetQuestionId();
-                    Logger.LogError($"{_info.row} {_info.introduction.file} {_info.GetQuestionId()}");
+                    Logger.LogError($"{_info.row} {_info.introduction.file} {id}");
                     SetCurrentDialog(_info.GetQuestionId(), InfoCheckSelectConditions(__instance, _info.conditions), _info.choice.Length);
 
                     if (CurrentDialog.QuestionInfo.Id == -1)
@@ -45,13 +44,17 @@ namespace GameDialogHelperPlugin
 
             [HarmonyPrefix]
             [HarmonyPatch(typeof(ADV.Program.Transfer), nameof(ADV.Program.Transfer.Create))]
-            internal static void Transfer_Create_Prefix(bool multi, ADV.Command command, ref string[] args)
+            internal static bool Transfer_Create_Prefix(bool multi, ADV.Command command, string[] args)
             {
                 _ = multi;
+                var myargs = args.Select(a => new string(a.ToCharArray())).ToArray();
                 if (CurrentlyEnabled && command == ADV.Command.Choice)
                 {
-                    HighlightSelections(ref args);
+                    HighlightSelections(ref myargs);
+                    return new Program.Transfer(new ScenarioData.Param(multi, command, args));
                 }
+
+                return true;
             }
 
             [HarmonyPostfix]

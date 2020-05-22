@@ -16,13 +16,13 @@ namespace StudioMultiSelectCharaPlugin
         public delegate void AddSelectNodeOpenDelegate(TreeNodeCtrl obj, TreeNodeObject treeNodeObject, bool multiple);
         public delegate void DeselectNodeOpenDelegate(TreeNodeCtrl obj, TreeNodeObject _node);
 
-        private static readonly SimpleLazy<AddSelectNodeOpenDelegate> _addSelectNode = new SimpleLazy<Extensions.AddSelectNodeOpenDelegate>(() =>
+        private static readonly SimpleLazy<AddSelectNodeOpenDelegate> _addSelectNode = new SimpleLazy<AddSelectNodeOpenDelegate>(() =>
         {
             var AddSelectNode = AccessTools.Method(typeof(TreeNodeCtrl), "AddSelectNode");
             return (AddSelectNodeOpenDelegate)Delegate.CreateDelegate(typeof(AddSelectNodeOpenDelegate), null, AddSelectNode);
         });
 
-        private static readonly SimpleLazy<DeselectNodeOpenDelegate> _deselectNode = new SimpleLazy<Extensions.DeselectNodeOpenDelegate>(() =>
+        private static readonly SimpleLazy<DeselectNodeOpenDelegate> _deselectNode = new SimpleLazy<DeselectNodeOpenDelegate>(() =>
         {
             var DeselectNode = AccessTools.Method(typeof(TreeNodeCtrl), "DeselectNode");
             return (DeselectNodeOpenDelegate)Delegate.CreateDelegate(typeof(DeselectNodeOpenDelegate), null, DeselectNode);
@@ -50,7 +50,7 @@ namespace StudioMultiSelectCharaPlugin
 
         internal static TResult CacheWrapper<T, TResult>(this T obj, Dictionary<T, TResult> cache, Func<T, TResult> loader)
         {
-            if (cache.TryGetValue(obj, out TResult cachedResult))
+            if (cache.TryGetValue(obj, out var cachedResult))
             {
                 return cachedResult;
             }

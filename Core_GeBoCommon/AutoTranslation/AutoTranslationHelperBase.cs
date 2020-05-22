@@ -5,7 +5,7 @@ namespace GeBoCommon.AutoTranslation
 {
     internal class AutoTranslationHelperBase
     {
-        private readonly SimpleLazy<ManualLogSource> _logger = null;
+        private readonly SimpleLazy<ManualLogSource> _logger;
         protected ManualLogSource Logger => _logger.Value;
 
         public AutoTranslationHelperBase()

@@ -17,7 +17,7 @@ namespace TranslationHelperPlugin
 {
     internal class CardNameTranslationManager
     {
-        private static ManualLogSource _Logger = null;
+        private static ManualLogSource _Logger;
 
         internal static ManualLogSource Logger => _Logger ?? (_Logger = TranslationHelper.Logger);
 
@@ -106,10 +106,10 @@ namespace TranslationHelperPlugin
                     NameParts = new List<string>(OriginalName.Split(TranslationHelper.SpaceSplitter, StringSplitOptions.RemoveEmptyEntries));
                 }
 
-                List<Coroutine> jobs = new List<Coroutine>();
-                foreach (KeyValuePair<int, string> namePart in NameParts.Enumerate().ToArray())
+                var jobs = new List<Coroutine>();
+                foreach (var namePart in NameParts.Enumerate().ToArray())
                 {
-                    int i = namePart.Key;
+                    var i = namePart.Key;
                     JobStarted();
                     var job = TranslationHelper.Instance.StartCoroutine(Instance.TranslateName(namePart.Value, Gender, (result) =>
                     {
@@ -151,23 +151,23 @@ namespace TranslationHelperPlugin
             protected override IEnumerator StartJobs()
             {
                 //Logger.LogDebug($"CardJob.StartJobs: {this}");
-                List<Coroutine> jobs = new List<Coroutine>();
+                var jobs = new List<Coroutine>();
 
-                string fullName = ChaFile.GetFullName();
+                var fullName = ChaFile.GetFullName();
 
-                foreach (KeyValuePair<int, string> name in ChaFile.IterNames())
+                foreach (var name in ChaFile.EnumerateNames())
                 {
                     FullNameHandled = FullNameHandled || name.Value == fullName;
                     //Logger.LogDebug($"CardJob.StartJobs: {this}: {name.Key}, {name.Value}");
-                    int i = name.Key;
-                    ChaFile chaFile = ChaFile;
+                    var i = name.Key;
+                    var chaFile = ChaFile;
 
                     if (noTranslate.Contains(name.Value))
                     {
                         continue;
                     }
 
-                    if (recentTranslationsByName.TryGetValue(name.Value, out string cachedName))
+                    if (recentTranslationsByName.TryGetValue(name.Value, out var cachedName))
                     {
                         //Logger.LogDebug($"StartJobs: {this}: cache hit: {name.Value} => {cachedName}");
                         chaFile.SetName(i, cachedName);
@@ -220,7 +220,8 @@ namespace TranslationHelperPlugin
         private readonly IEnumerable<string> SuffixFormats = new string[] { "[{0}]", "-{0}", "{0}" };
 
         private static readonly Regex ContainsJapaneseCharRegex = new Regex(
-            @"([\u3000-\u303F]|[\u3040-\u309F]|[\u30A0-\u30FF]|[\uFF00-\uFFEF]|[\u4E00-\u9FAF]|[\u2605-\u2606]|[\u2190-\u2195]|\u203B)", Constants.SupportedRegexComplitationOption);
+            @"([\u3000-\u303F]|[\u3040-\u309F]|[\u30A0-\u30FF]|[\uFF00-\uFFEF]|[\u4E00-\u9FAF]|[\u2605-\u2606]|[\u2190-\u2195]|\u203B)",
+            Constants.SupportedRegexCompilationOption);
 
         private static readonly char[] SpaceSplitter = new char[] { ' ' };
 
@@ -241,12 +242,12 @@ namespace TranslationHelperPlugin
 
         public bool CardNeedsTranslation(ChaFile file)
         {
-            return file.IterNames().Select((n) => n.Value).Any((n) => !noTranslate.Contains(n) && ContainsJapaneseCharRegex.IsMatch(n));
+            return file.EnumerateNames().Select((n) => n.Value).Any((n) => !noTranslate.Contains(n) && ContainsJapaneseCharRegex.IsMatch(n));
         }
 
         public IEnumerator WaitOnCard(ChaFile file)
         {
-            string regId = file.GetRegistrationID();
+            var regId = file.GetRegistrationID();
             while (cardsInProgress.Contains(regId))
             {
                 yield return new WaitForSeconds(1f);
@@ -257,7 +258,7 @@ namespace TranslationHelperPlugin
 
         public IEnumerator TranslateCardNames(ChaFile file)
         {
-            string regId = file.GetRegistrationID();
+            var regId = file.GetRegistrationID();
             if (!cardsInProgress.Contains(regId))
             {
                 cardsInProgress.Add(regId);
@@ -294,22 +295,22 @@ namespace TranslationHelperPlugin
 
         private void CardComplete(ChaFile chaFile)
         {
-            string regId = chaFile.GetRegistrationID();
+            var regId = chaFile.GetRegistrationID();
             //Logger.LogDebug($"CardComplete: {regId}");
             cardsInProgress.Remove(regId);
         }
 
         public IEnumerator TranslateCardName(string originalName, byte gender, Action<KeyValuePair<string, string>> callback)
         {
-            if (recentTranslationsByName.TryGetValue(originalName, out string cachedName))
+            if (recentTranslationsByName.TryGetValue(originalName, out var cachedName))
             {
                 //Logger.LogDebug($"TranslateCardName: {originalName}: cache hit: {cachedName}");
                 callback(new KeyValuePair<string, string>(originalName, cachedName));
             }
 
             //Logger.LogDebug($"TranslateCardName: {originalName}: start");
-            bool newRequest = false;
-            if (!nameTracker.TryGetValue(originalName, out List<Action<KeyValuePair<string, string>>> actions))
+            var newRequest = false;
+            if (!nameTracker.TryGetValue(originalName, out var actions))
             {
                 //Logger.LogDebug($"TranslateCardName: {originalName}: add to tracker");
                 actions = nameTracker[originalName] = new List<Action<KeyValuePair<string, string>>>();
@@ -371,11 +372,11 @@ namespace TranslationHelperPlugin
         public IEnumerator TranslateName(string originalName, byte gender, Action<KeyValuePair<string, string>> callback)
         {
             var cardTranslationMode = TranslationHelper.Instance.CurrentCardLoadTranslationMode;
-            string suffixedName = originalName;
+            var suffixedName = originalName;
 
-            bool done = false;
+            var done = false;
 
-            KeyValuePair<string, string> activeSuffix = new KeyValuePair<string, string>(string.Empty, string.Empty);
+            var activeSuffix = new KeyValuePair<string, string>(string.Empty, string.Empty);
 
             if (cardTranslationMode == CardLoadTranslationMode.Disabled || !GeBoAPI.Instance.AutoTranslationHelper.IsTranslatable(suffixedName))
             {
@@ -387,7 +388,7 @@ namespace TranslationHelperPlugin
             if (!done && cardTranslationMode >= CardLoadTranslationMode.CacheOnly)
             {
                 //Logger.LogDebug($"TranslateName: attempting translation (cached): {originalName}");
-                if (GeBoAPI.Instance.AutoTranslationHelper.TryTranslate(originalName, out string translatedName))
+                if (GeBoAPI.Instance.AutoTranslationHelper.TryTranslate(originalName, out var translatedName))
                 {
                     translatedName = CleanTranslationResult(translatedName, string.Empty);
                     if (originalName != translatedName)
@@ -403,7 +404,7 @@ namespace TranslationHelperPlugin
                     activeSuffix = Suffixes[gender];
                     suffixedName = string.Concat(originalName, activeSuffix.Key);
                     //Logger.LogDebug($"TranslateName: attempting translation (cached): {suffixedName}");
-                    if (GeBoAPI.Instance.AutoTranslationHelper.TryTranslate(suffixedName, out string translatedName2))
+                    if (GeBoAPI.Instance.AutoTranslationHelper.TryTranslate(suffixedName, out var translatedName2))
                     {
                         translatedName2 = CleanTranslationResult(translatedName2, activeSuffix.Value);
                         if (suffixedName != translatedName2)
@@ -426,7 +427,7 @@ namespace TranslationHelperPlugin
                     {
                         if (result.Succeeded)
                         {
-                            string translatedName = CleanTranslationResult(result.TranslatedText, activeSuffix.Value);
+                            var translatedName = CleanTranslationResult(result.TranslatedText, activeSuffix.Value);
                             if (suffixedName != translatedName)
                             {
                                 //Logger.LogInfo($"TranslateName: Translated card name (async): {originalName} -> {translatedName}");
@@ -452,17 +453,17 @@ namespace TranslationHelperPlugin
 
         private string CleanTranslationResultSection(string input, string suffix)
         {
-            string output = input;
-            string preClean = string.Empty;
+            var output = input;
+            var preClean = string.Empty;
             //Logger.LogDebug($"Cleaning: '{input}'");
             while (preClean != output)
             {
                 preClean = output;
                 if (!suffix.IsNullOrEmpty())
                 {
-                    foreach (string format in SuffixFormats)
+                    foreach (var format in SuffixFormats)
                     {
-                        string testSuffix = string.Format(format, suffix);
+                        var testSuffix = string.Format(format, suffix);
                         if (output.TrimEnd().EndsWith(testSuffix))
                         {
                             //Logger.LogDebug($"Cleaning: '{input}': suffix match: {testSuffix} <= '{output}'");

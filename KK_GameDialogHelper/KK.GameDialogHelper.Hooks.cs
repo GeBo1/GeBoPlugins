@@ -51,7 +51,7 @@ namespace GameDialogHelperPlugin
                 if (CurrentlyEnabled && command == ADV.Command.Choice)
                 {
                     HighlightSelections(ref myargs);
-                    return new Program.Transfer(new ScenarioData.Param(multi, command, args));
+                    //return new ADV.Program.Transfer(new ADV.ScenarioData.Param(multi, command, args));
                 }
 
                 return true;

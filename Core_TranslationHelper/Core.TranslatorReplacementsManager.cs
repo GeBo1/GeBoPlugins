@@ -23,6 +23,7 @@ namespace TranslationHelperPlugin
             regCounter = new Dictionary<string, HashSet<string>>();
             currentRegistrations = new HashSet<string>();
             trackedRegistrationIDs = new HashSet<string>();
+
         }
 
         private Dictionary<string, string> GetReplacements() => GeBoAPI.Instance.AutoTranslationHelper.GetReplacements();

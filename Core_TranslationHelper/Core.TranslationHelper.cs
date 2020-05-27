@@ -10,6 +10,7 @@ using HarmonyLib;
 using KKAPI;
 using KKAPI.Chara;
 using UnityEngine.SceneManagement;
+using GeBoCommon.Utilities;
 #if AI
 using AIChara;
 #endif
@@ -26,7 +27,9 @@ namespace TranslationHelperPlugin
         public const string PluginName = "Translation Helper";
         public const string Version = "0.8.0";
 
-        internal new static ManualLogSource Logger;
+        private readonly SimpleLazy<NameTranslator> _nameTransator = new SimpleLazy<NameTranslator>(() => new NameTranslator());
+
+        internal static new ManualLogSource Logger;
         public static TranslationHelper Instance;
 
         #region ConfigMgr
@@ -38,6 +41,10 @@ namespace TranslationHelperPlugin
         public static ConfigEntry<bool> TranslateNameWithSuffix { get; private set; }
         public static ConfigEntry<string> NameTrimChars { get; private set; }
 
+        public static ConfigEntry<bool> EnableOverrideNameTranslationScope { get; private set; }
+        public static ConfigEntry<int> OverrideNameTranslationScope { get; private set; }
+
+
         #endregion ConfigMgr
 
         internal static bool SplitNamesBeforeTranslate;
@@ -48,30 +55,48 @@ namespace TranslationHelperPlugin
 
         internal static readonly char[] SpaceSplitter = new char[] { ' ' };
 
+        internal NameTranslator NameTranslator => _nameTransator.Value;
+
         internal void Main()
         {
             Instance = this;
-            Logger = base.Logger;
+            Logger = Logger ?? base.Logger;
 
             SplitNamesBeforeTranslate = false;
-            RegisterActiveCharacters = Config.Bind("Config", "Register Active Characters", true, "Register active character names as replacements with translator");
-            TranslateNameWithSuffix = Config.Bind("Translate Card Name Options", "Use Suffix", false, "Append suffix to names before translating to send hint they are names");
-            NameTrimChars = Config.Bind("Translate Card Name Options", "Characters to Trim", string.Empty, "Characters to trim from returned translations");
+            RegisterActiveCharacters = Config.Bind("Config", "Register Active Characters", true,
+                "Register active character names as replacements with translator");
+            TranslateNameWithSuffix = Config.Bind("Translate Card Name Options", "Use Suffix", false,
+                "Append suffix to names before translating to send hint they are names");
+            NameTrimChars = Config.Bind("Translate Card Name Options", "Characters to Trim", string.Empty,
+                "Characters to trim from returned translations");
 
             GameTranslateCardNameOnLoad = InitializeGameModeConfig(GameMode.MainGame, CardLoadTranslationMode.Disabled);
             MakerTranslateCardNameOnLoad = InitializeGameModeConfig(GameMode.Maker, CardLoadTranslationMode.Disabled);
-            StudioTranslateCardNameOnLoad = InitializeGameModeConfig(GameMode.Studio, CardLoadTranslationMode.CacheOnly);
+            StudioTranslateCardNameOnLoad =
+                InitializeGameModeConfig(GameMode.Studio, CardLoadTranslationMode.CacheOnly);
+
+            EnableOverrideNameTranslationScope = Config.Bind("Override Translation Scope", "Enable", true,
+                "Attempt to translate names with a specific scope active");
+            OverrideNameTranslationScope = Config.Bind("Override Translation Scope", "Scope", 9999,
+                "Scope ID to use (should not already be in use by game)");
         }
 
-        private ConfigEntry<CardLoadTranslationMode> InitializeGameModeConfig(GameMode mode, CardLoadTranslationMode defaultValue)
+        private ConfigEntry<CardLoadTranslationMode> InitializeGameModeConfig(GameMode mode,
+            CardLoadTranslationMode defaultValue)
         {
-            return Config.Bind("Translate Card Name Modes", mode.ToString(), defaultValue, $"Attempt to translate card names when they are loaded in {mode}");
+            return Config.Bind("Translate Card Name Modes", mode.ToString(), defaultValue,
+                $"Attempt to translate card names when they are loaded in {mode}");
         }
 
         internal void Awake()
         {
-            HarmonyWrapper.PatchAll(typeof(TranslationHelper));
+            Instance = this;
+            Logger = Logger ?? base.Logger;
+            Hooks.SetupHooks();
+
             GameSpecificAwake();
+
+
         }
 
         internal void OnDestroy()
@@ -123,7 +148,7 @@ namespace TranslationHelperPlugin
             return CardNameManager.TranslateCardNames(file);
         }
 
-        private void ExtendedSave_CardBeingLoaded(ChaFile file)
+        internal void ExtendedSave_CardBeingLoaded(ChaFile file)
         {
             if (file != null && CurrentCardLoadTranslationMode != CardLoadTranslationMode.Disabled)
             {
@@ -151,32 +176,7 @@ namespace TranslationHelperPlugin
             }
         }
 
-        [HarmonyPostfix, HarmonyPatch(typeof(ChaControl), nameof(ChaControl.Reload))]
-        public static void ChaControl_Reload(ChaControl __instance)
-        {
-            if (RegisterActiveCharacters.Value)
-            {
-                Instance.StartCoroutine(Instance.RegisterReplacementsWrapper(__instance?.chaFile));
-            }
-        }
-
-        [HarmonyPostfix, HarmonyPatch(typeof(ChaControl), nameof(ChaControl.Load))]
-        public static void ChaControl_Load(ChaControl __instance)
-        {
-            if (RegisterActiveCharacters.Value)
-            {
-                Instance.StartCoroutine(Instance.RegisterReplacementsWrapper(__instance?.chaFile));
-            }
-        }
-
-        [HarmonyPostfix, HarmonyPatch(typeof(ChaControl), nameof(ChaControl.OnDestroy))]
-        public static void ChaControl_OnDestroy(ChaControl __instance)
-        {
-            if (Instance)
-            {
-                Instance.StartCoroutine(Instance.UnregisterReplacements(__instance?.chaFile));
-            }
-        }
+        
 
         internal void AddTranslatedNameToCache(string origName, string translatedName)
         {
@@ -185,252 +185,35 @@ namespace TranslationHelperPlugin
 
         internal IEnumerator RegisterReplacements(ChaFile file)
         {
-            if (file != null)
-            {
-                if (RegistrationGameModes.Contains(KoikatuAPI.GetCurrentGameMode()) && !RegistrationManager.IsTracked(file))
-                {
-                    yield return CardNameManager.WaitOnCard(file);
-                    RegistrationManager.Track(file);
-                }
-            }
+            if (file == null) yield break;
+            if (!RegistrationGameModes.Contains(KoikatuAPI.GetCurrentGameMode()) ||
+                RegistrationManager.IsTracked(file)) yield break;
+            yield return CardNameManager.WaitOnCard(file);
+            RegistrationManager.Track(file);
         }
 
         internal IEnumerator RegisterReplacementsWrapper(ChaFile file)
         {
-            if (file != null)
+            if (file == null) yield break;
+            // handle card translation BEFORE registering replacements
+            if (CurrentCardLoadTranslationMode != CardLoadTranslationMode.Disabled)
             {
-                // handle card translation BEFORE registering replacements
-                if (CurrentCardLoadTranslationMode != CardLoadTranslationMode.Disabled)
-                {
-                    StartCoroutine(CardNameManager.TranslateCardNames(file));
-                    yield return null;
-                }
-
-                //StartCoroutine(RegisterReplacements(file));
-                yield return
-                StartCoroutine(KKAPI.Utilities.CoroutineUtils.ComposeCoroutine(
-                    CardNameManager.WaitOnCard(file),
-                    RegisterReplacements(file)));
+                StartCoroutine(CardNameManager.TranslateCardNames(file));
+                yield return null;
             }
+
+            //StartCoroutine(RegisterReplacements(file));
+            yield return StartCoroutine(KKAPI.Utilities.CoroutineUtils.ComposeCoroutine(
+                CardNameManager.WaitOnCard(file),
+                RegisterReplacements(file)));
         }
 
         internal IEnumerator UnregisterReplacements(ChaFile file)
         {
-            if (file != null)
-            {
-                if (RegistrationGameModes.Contains(KoikatuAPI.GetCurrentGameMode()))
-                {
-                    yield return null;
-                    RegistrationManager.Untrack(file);
-                }
-            }
+            if (file == null) yield break;
+            if (!RegistrationGameModes.Contains(KoikatuAPI.GetCurrentGameMode())) yield break;
+            yield return null;
+            RegistrationManager.Untrack(file);
         }
-
-#if false
-        private string CleanTranslationResult(string input, string suffix)
-        {
-            return string.Join(" ", input.Split(SpaceSplitter, StringSplitOptions.RemoveEmptyEntries).Select((s) => CleanTranslationResultSection(s, suffix)).ToArray());
-        }
-
-        private string CleanTranslationResultSection(string input, string suffix)
-        {
-            string output = input;
-            string preClean = string.Empty;
-            //Logger.LogDebug($"Cleaning: '{input}'");
-            while (preClean != output)
-            {
-                preClean = output;
-                if (!suffix.IsNullOrEmpty())
-                {
-                    foreach (string format in SuffixFormats)
-                    {
-                        string testSuffix = string.Format(format, suffix);
-                        if (output.TrimEnd().EndsWith(testSuffix))
-                        {
-                            //Logger.LogDebug($"Cleaning: '{input}': suffix match: {testSuffix} <= '{output}'");
-                            output = output.Remove(output.LastIndexOf(testSuffix)).TrimEnd();
-                            //Logger.LogDebug($"Cleaning: '{input}': suffix match: {testSuffix} => '{output}'");
-                            break;
-                        }
-                    }
-                }
-                output = output.Trim().Trim(NameTrimChars.Value.ToCharArray()).Trim();
-                //Logger.LogDebug($"Cleaning: '{input}': trimmed: => '{output}");
-            }
-            //Logger.LogDebug($"Cleaning: '{input}': result: '{output}'");
-            return output;
-        }
-
-        private void TranslateName(string name, byte gender, Action<string> onCompleted)
-        {
-            string origName = name;
-            string suffixedName = origName;
-
-            KeyValuePair<string, string> activeSuffix = new KeyValuePair<string, string>(string.Empty, string.Empty);
-
-            if (CurrentCardLoadTranslationMode >= CardLoadTranslationMode.CacheOnly)
-            {
-                //Logger.LogDebug($"TranslateName: attempting translation (cached): {origName}");
-                if (AutoTranslator.Default.TryTranslate(origName, out string translatedName))
-                {
-                    translatedName = CleanTranslationResult(translatedName, activeSuffix.Value);
-                    if (origName != translatedName)
-                    {
-                        //Logger.LogInfo($"TranslateName: Translated card name: {origName} -> {translatedName}");
-                        onCompleted(translatedName);
-                        return;
-                    }
-                }
-
-                if (TranslateNameWithSuffix.Value)
-                {
-                    activeSuffix = Suffixes[gender];
-                    suffixedName = string.Join("", new string[] { origName, activeSuffix.Key });
-                    //Logger.LogDebug($"TranslateName: attempting translation (cached): {suffixedName}");
-                    if (AutoTranslator.Default.TryTranslate(suffixedName, out string translatedName2))
-                    {
-                        translatedName2 = CleanTranslationResult(translatedName2, activeSuffix.Value);
-                        if (suffixedName != translatedName2)
-                        {
-                            //Logger.LogInfo($"TranslateName: Translated card name: {origName} -> {translatedName2}");
-                            onCompleted(translatedName2);
-                            return;
-                        }
-                    }
-                }
-            }
-
-            if (CurrentCardLoadTranslationMode == CardLoadTranslationMode.FullyEnabled)
-            {
-                // suffixedName will be origName if TranslateNameWithSuffix is off, so just use it here
-                //Logger.LogDebug($"TranslateName: attempting translation (async): {suffixedName}");
-                AutoTranslator.Default.TranslateAsync(suffixedName, (result) =>
-                {
-                    if (result.Succeeded)
-                    {
-                        string translatedName = CleanTranslationResult(result.TranslatedText, activeSuffix.Value);
-                        if (suffixedName != translatedName)
-                        {
-                            //Logger.LogInfo($"TranslateName: Translated card name: {origName} -> {translatedName}");
-                            onCompleted(translatedName);
-                            return;
-                        }
-                    }
-                    onCompleted(string.Empty);
-                });
-            }
-            else
-            {
-                onCompleted(string.Empty);
-            }
-        }
-
-        public IEnumerator TranslateCardName(ChaFile file)
-        {
-            string charaFileName = file.charaFileName;
-            byte gender = file.parameter.sex;
-
-            //Logger.LogDebug($"TranslateCardName: attempting to translated name(s): {charaFileName}");
-
-            int jobs = 0;
-            foreach (KeyValuePair<int, string> name in file.EnumerateNames())
-            {
-                string origName = name.Value;
-                int nameKey = name.Key;
-
-                if (origName.IsNullOrEmpty() || !LanguageHelper.IsTranslatable(origName) || !ContainsJapaneseCharRegex.IsMatch(origName))
-                {
-                    continue;
-                }
-
-                // check the cache with raw name to start
-                if (AutoTranslator.Default.TryTranslate(name.Value, out string cachedName))
-                {
-                    if (origName != cachedName)
-                    {
-                        //Logger.LogInfo($"TranslateCardName: Translated card name (from cache): {charaFileName}[{nameKey}]:  {origName} -> {cachedName}");
-                        file.SetName(nameKey, cachedName);
-                        continue;
-                    }
-                }
-
-                // not cached already
-                Interlocked.Increment(ref jobs);
-
-                //Logger.LogDebug($"TranslateCardName: attempting to translate: {charaFileName}[{nameKey}]: {origName}");
-                List<string> names = new List<string>(new string[] { name.Value });
-                int remain = 0;
-
-                if (SplitNamesBeforeTranslate)
-                {
-                    names = new List<string>(name.Value.Split(SpaceSplitter, StringSplitOptions.RemoveEmptyEntries));
-                }
-
-                Interlocked.Add(ref remain, names.Count);
-
-                int namePart = 0;
-                bool changed = false;
-                foreach (string subName in names.ToArray())
-                {
-                    int resultPart = namePart;
-                    namePart++;
-
-                    //Logger.LogDebug($"TranslateCardName: attempting to translate (subName): {charaFileName}[{nameKey}][{resultPart}]: {subName}");
-
-                    TranslateName(subName, gender, (result) =>
-                    {
-                        if (!result.IsNullOrEmpty())
-                        {
-                            //Logger.LogDebug($"TranslateCardName: partial name translation: {charaFileName}[{nameKey}][{resultPart}]: {names[resultPart]} => {result}");
-                            names[resultPart] = result;
-                            changed = true;
-                        }
-
-                        Interlocked.Decrement(ref remain);
-
-                        if (remain == 0)
-                        {
-                            if (changed)
-                            {
-                                string translatedName = names.Join(delimiter: " ");
-                                if (translatedName != origName)
-                                {
-                                    //Logger.LogInfo($"TranslateCardName: Translated card name: {charaFileName}[{nameKey}]: {origName} -> {translatedName}");
-                                    file.SetName(nameKey, translatedName);
-                                    if (CurrentCardLoadTranslationMode > CardLoadTranslationMode.CacheOnly)
-                                    {
-                                        AddTranslatedNameToCache(origName, translatedName);
-                                    }
-                                }
-                                else
-                                {
-                                    changed = false;
-                                }
-                            }
-
-                            if (!changed)
-                            {
-                                //Logger.LogDebug($"TranslateCardName: Translated card name unchanged: {charaFileName}[{nameKey}]: {origName}");
-                            }
-
-                            Interlocked.Decrement(ref jobs);
-                        }
-                    });
-                }
-                yield return null;
-            }
-            int count = 0;
-            while (jobs > 0)
-            {
-                if (count == 0)
-                {
-                    //Logger.LogDebug($"TranslateCardName: waiting for translation jobs to finish: {charaFileName}: {jobs}");
-                }
-                count = (count + 1) % 100;
-                yield return null;
-            }
-            //Logger.LogDebug($"TranslateCardName: translation complete: {charaFileName}");
-        }
-#endif
     }
 }

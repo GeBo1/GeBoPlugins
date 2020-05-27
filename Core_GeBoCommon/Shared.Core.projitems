@@ -19,6 +19,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GeBoAPIBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IGeBoAPI.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\SimpleTranslationResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\Delegates.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\HookedSimpleCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\IHookedCache.cs" />

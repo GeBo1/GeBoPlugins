@@ -7,9 +7,9 @@ using Manager;
 namespace GameDressForSuccessPlugin
 {
     [BepInPlugin(GUID, PluginName, Version)]
-    [BepInProcess(Constants.GameProcessName)]
+    [BepInProcess(Constants.MainGameProcessName)]
 #if KK
-    [BepInProcess(Constants.AltGameProcessName)]
+    [BepInProcess(Constants.MainGameProcessNameSteam)]
 #endif
     public partial class GameDressForSuccess : BaseUnityPlugin
     {

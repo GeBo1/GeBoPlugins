@@ -2,6 +2,7 @@
 #if (HS || PH || KK)
 using System.Runtime.CompilerServices;
 using System.Threading;
+
 #endif
 
 namespace GeBoCommon.Utilities
@@ -9,19 +10,14 @@ namespace GeBoCommon.Utilities
 #if (HS || PH || KK)
     public class SimpleLazy<T>
     {
-        private object _value;
-        private readonly Func<T> _valueFactory;
         private readonly object _basicLock;
+        private readonly Func<T> _valueFactory;
+        private object _value;
 
         public SimpleLazy(Func<T> valueFactory)
         {
-            this._valueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
+            _valueFactory = valueFactory ?? throw new ArgumentNullException(nameof(valueFactory));
             _basicLock = new object();
-        }
-
-        public override string ToString()
-        {
-            return IsValueCreated ? Value.ToString() : "Value is not created.";
         }
 
         public bool IsValueCreated => _value is StrongBox<T>;
@@ -35,6 +31,7 @@ namespace GeBoCommon.Utilities
                 {
                     throw new MemberAccessException("Unexpected error", tmpException);
                 }
+
                 try
                 {
                     if (!IsValueCreated)
@@ -47,6 +44,7 @@ namespace GeBoCommon.Utilities
                             }
                         }
                     }
+
                     realBox = _value as StrongBox<T>;
                 }
                 catch (Exception e)
@@ -60,6 +58,11 @@ namespace GeBoCommon.Utilities
                 _value = error;
                 throw error;
             }
+        }
+
+        public override string ToString()
+        {
+            return IsValueCreated ? Value.ToString() : "Value is not created.";
         }
     }
 #else

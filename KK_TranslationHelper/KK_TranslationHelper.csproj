@@ -76,6 +76,7 @@
   <ItemGroup>
     <Compile Include="KK.TranslationHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="KK.TranslationHelper.Hooks.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

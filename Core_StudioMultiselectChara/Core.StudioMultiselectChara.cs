@@ -21,7 +21,7 @@ namespace StudioMultiSelectCharaPlugin
     [BepInProcess(Constants.StudioProcessName)]
     public partial class StudioMultiSelectChara
     {
-        internal new static ManualLogSource Logger;
+        internal static new ManualLogSource Logger;
         public const string GUID = "com.gebo.BepInEx.studiomultiselectchara";
         public const string PluginName = "Studio Multiselect Chara";
         public const string Version = "0.9.0";

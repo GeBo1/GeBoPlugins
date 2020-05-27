@@ -31,7 +31,7 @@ namespace GameDialogHelperPlugin
         public const string PluginName = "Game Dialog Helper";
         public const string Version = "0.9.1";
 
-        internal new static ManualLogSource Logger;
+        internal static new ManualLogSource Logger;
         internal static GameDialogHelper Instance;
 
         private static readonly SimpleLazy<InfoCheckSelectConditionsDelegate> InfoCheckSelectConditionsLoader =

@@ -13,6 +13,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Core.Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Core.TranslatorReplacementsManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Core.TranslationHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core.Delegates.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NameTranslator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core.TranslationHelper.Hooks.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TranslationHelperCharaExtensions.cs" />
   </ItemGroup>
 </Project>

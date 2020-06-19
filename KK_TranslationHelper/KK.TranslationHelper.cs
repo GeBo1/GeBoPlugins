@@ -3,14 +3,16 @@ using KKAPI;
 using UnityEngine.SceneManagement;
 using Manager;
 using System;
+using System.Linq;
+using BepInEx.Configuration;
+using ExtensibleSaveFormat;
 
 namespace TranslationHelperPlugin
 {
     [BepInPlugin(GUID, PluginName, Version)]
     public partial class TranslationHelper : BaseUnityPlugin
     {
-        private WeakReference RegisteredPlayer;
-
+        public static ConfigEntry<bool> KK_GivenNameFirst { get; private set; }
         internal void GameSpecificAwake()
         {
             SplitNamesBeforeTranslate = false;
@@ -19,29 +21,18 @@ namespace TranslationHelperPlugin
         internal void GameSpecificStart()
         {
             SplitNamesBeforeTranslate = false;
-            if (KoikatuAPI.GetCurrentGameMode() == GameMode.MainGame)
-            {
-                SceneManager.activeSceneChanged += RegisterPlayer;
-            }
+
+            KK_GivenNameFirst = Config.Bind("Translate Card Name Options", "Show given name first",
+                false, "Reverses the order of names to be Given Family instead of Family Given");
+            
         }
 
-        private void RegisterPlayer(UnityEngine.SceneManagement.Scene arg0, UnityEngine.SceneManagement.Scene arg1)
+        internal static string ProcessFullnameString(string input)
         {
-            var player = Singleton<Game>.Instance?.Player;
-            if (RegisteredPlayer != null && RegisteredPlayer.Target != player)
-            {
-                if (RegisteredPlayer.IsAlive)
-                {
-                    var oldPlayer = RegisteredPlayer.Target as SaveData.Player;
-                    StartCoroutine(UnregisterReplacements(oldPlayer?.charFile));
-                }
-                RegisteredPlayer = null;
-            }
-
-            if (player == null || !RegistrationGameModes.Contains(KoikatuAPI.GetCurrentGameMode())) return;
-
-            StartCoroutine(RegisterReplacementsWrapper(player.charFile));
-            RegisteredPlayer = new WeakReference(player);
+            if (!KK_GivenNameFirst.Value) return input;
+            if (string.IsNullOrEmpty(input)) return input;
+            var parts = input.Split();
+            return parts.Length != 2 ? input : string.Join(" ", parts.Reverse().ToArray());
         }
     }
 }

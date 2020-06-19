@@ -22,12 +22,12 @@ namespace TranslationCacheCleanerPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationcachecleaner";
         public const string PluginName = "Translation Cache Cleaner";
-        public const string Version = "0.5.1";
+        public const string Version = "0.5.2";
 
         private const float NotifySeconds = 10f;
         private const float YieldSeconds = 0.1f;
 
-        internal new static ManualLogSource Logger;
+        internal static new ManualLogSource Logger;
 
         public static ConfigEntry<KeyboardShortcut> CleanCacheHotkey { get; private set; }
 
@@ -109,7 +109,12 @@ namespace TranslationCacheCleanerPlugin
             }
 
             var translations = GeBoAPI.Instance.AutoTranslationHelper.GetTranslations();
-            Logger.LogWarning($"{translations} {translations?.Count}");
+            if (translations == null)
+            {
+                Logger.LogError("Unable to access translation cache");
+                yield break;
+            }
+            
             var regexes = new List<Regex>();
 
             var tmp = GeBoAPI.Instance.AutoTranslationHelper.GetRegisteredRegexes();//(HashSet<string>)cache?.GetType().GetField("_registeredRegexes", AccessTools.all)?.GetValue(cache);
@@ -243,7 +248,6 @@ namespace TranslationCacheCleanerPlugin
                 using (var inStream = File.Open(backupFile, FileMode.Open, FileAccess.Read))
                 using (var reader = new StreamReader(inStream, Encoding.UTF8))
                 {
-                    Logger.LogWarning($"{outStream}, {writer}, {inStream}, {reader}");
                     string line;
                     while ((line = reader.ReadLine()) != null)
                     {

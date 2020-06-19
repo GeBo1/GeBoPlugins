@@ -9,10 +9,16 @@ using GeBoCommon;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
+using TranslationHelperPlugin.Chara;
+using TranslationHelperPlugin.Translation;
 using UnityEngine;
 
-#if AI
+#if AI || HS2
 using AIChara;
+#endif
+
+#if HS2
+using Illusion.Extensions;
 #endif
 
 namespace TranslationHelperPlugin
@@ -29,9 +35,7 @@ namespace TranslationHelperPlugin
             new KeyValuePair<string, string>("君", "kun"), new KeyValuePair<string, string>("ちゃん", "chan")
         };
 
-        private static readonly Regex ContainsJapaneseCharRegex = new Regex(
-            @"([\u3000-\u303F]|[\u3040-\u309F]|[\u30A0-\u30FF]|[\uFF00-\uFFEF]|[\u4E00-\u9FAF]|[\u2605-\u2606]|[\u2190-\u2195]|\u203B)",
-            Constants.SupportedRegexCompilationOption);
+
 
         private static readonly char[] SpaceSplitter = {' '};
         private readonly Dictionary<string, List<TranslationResultHandler>> _nameTracker;
@@ -65,57 +69,64 @@ namespace TranslationHelperPlugin
         public bool CardNeedsTranslation(ChaFile file)
         {
             return file.EnumerateNames().Select(n => n.Value)
-                .Any(n => !noTranslate.Contains(n) && ContainsJapaneseCharRegex.IsMatch(n));
+                .Any(n => !noTranslate.Contains(n) && StringUtils.ContainsJapaneseChar(n));
         }
 
         public IEnumerator WaitOnCard(ChaFile file)
         {
+            if (file == null) yield break;
             var regId = file.GetRegistrationID();
+            // delay once if card does not appear active yet
+            if (!cardsInProgress.Contains(regId)) yield return null;
+            /*
             while (cardsInProgress.Contains(regId))
             {
                 yield return new WaitForSeconds(1f);
             }
-
+            */
             yield return new WaitWhile(() => cardsInProgress.Contains(regId));
+
+            ApplyTranslations(file);
             //Logger.LogDebug($"TranslateCardNames: {file}: card done: {regId}");
         }
 
+        private void ApplyTranslations(ChaFile file)
+        {
+            if (file.TryGetTranslationHelperController(out var controller))
+            {
+                controller.ApplyTranslations();
+                return;
+            }
+
+            // partially loaded, no controller available
+            foreach (var entry in file.EnumerateNames())
+            {
+                if (noTranslate.Contains(entry.Value)) continue;
+                if (recentTranslationsByName.TryGetValue(entry.Value, out var translatedName))
+                {
+                    file.SetName(entry.Key, translatedName);
+                }
+            }
+        }
         public IEnumerator TranslateCardNames(ChaFile file)
         {
             var regId = file.GetRegistrationID();
-            if (!cardsInProgress.Contains(regId))
+
+            // if it's in progress and the controller is available then
+            // the outstanding job will handle things
+            if (cardsInProgress.Contains(regId)) yield break;
+
+            cardsInProgress.Add(regId);
+            //Logger.LogDebug($"TranslateCardNames: {file}: start");
+
+
+            if (CardNeedsTranslation(file))
             {
-                cardsInProgress.Add(regId);
-                Logger.LogDebug($"TranslateCardNames: {file}: start");
-                if (CardNeedsTranslation(file))
-                {
-                    Logger.LogDebug($"TranslateCardNames: {file}: adding new card: {regId}");
-                    /*yield return */
-                    TranslationHelper.Instance.StartCoroutine(new CardJob(file, CardComplete).Start());
-                }
-                else
-                {
-                    cardsInProgress.Remove(regId);
-                }
-
-                yield return null;
-
-#if false
-                //float cutoff = 0;
-                while (cardsInProgress.Contains(regId))
-                {
-                    //Logger.LogDebug($"TranslateCardNames: {file}: waiting on card: {regId}");
-                    yield return new WaitForSecondsRealtime(1f);
-
-                    if (Time.time > cutoff)
-                    {
-                        //Logger.LogDebug($"TranslateCardNames: {file}: waiting on card: {regId}");
-                        cutoff
- = Time.time + 60f;
-                    }
-                    yield return null;
+                file.StartMonitoredCoroutine(new CardJob(file, CardComplete).Start());
             }
-#endif
+            else
+            {
+                CardComplete(file);
             }
         }
 
@@ -126,30 +137,41 @@ namespace TranslationHelperPlugin
             cardsInProgress.Remove(regId);
         }
 
-        public IEnumerator TranslateCardName(string originalName, byte gender, TranslationResultHandler callback)
+        public IEnumerator TranslateCardName(string originalName, NameScope scope,
+            params TranslationResultHandler[] callbacks)
+        {
+            return TranslateCardName(originalName, scope, false, callbacks);
+        }
+
+
+        public IEnumerator TranslateCardName(string originalName, NameScope scope, bool forceSplit,
+            params TranslationResultHandler[] callbacks)
         {
             if (recentTranslationsByName.TryGetValue(originalName, out var cachedName))
             {
-                //Logger.LogDebug($"TranslateCardName: {originalName}: cache hit: {cachedName}");
-                callback(new SimpleTranslationResult(true, cachedName));
+                //Logger.DebugLogDebug($"TranslateCardName: {originalName}: cache hit: {cachedName}");
+                callbacks.CallHandlers(new SimpleTranslationResult(true, cachedName));
+                yield break;
             }
 
-            //Logger.LogDebug($"TranslateCardName: {originalName}: start");
+            //Logger.DebugLogDebug($"TranslateCardName: {originalName}: start");
             var newRequest = false;
             if (!_nameTracker.TryGetValue(originalName, out var actions))
             {
-                //Logger.LogDebug($"TranslateCardName: {originalName}: add to tracker");
+                //Logger.DebugLogDebug($"TranslateCardName: {originalName}: add to tracker");
                 actions = _nameTracker[originalName] = new List<TranslationResultHandler>();
                 newRequest = true;
             }
 
-            //Logger.LogDebug($"TranslateCardName: {originalName}: add callback {callback}");
-            actions.Add(callback);
+
+            //Logger.DebugLogDebug($"TranslateCardName: {originalName}: adding {callbacks.Length} callbacks");
+            actions.AddRange(callbacks);
             if (newRequest)
             {
                 //Logger.LogDebug($"TranslateCardName: {originalName}: start new request");
-                yield return TranslationHelper.Instance.StartCoroutine(new NameJob(originalName, gender,
-                    TranslationHelper.SplitNamesBeforeTranslate, CardNameComplete).Start());
+                /*yield return*/
+                TranslationHelper.Instance.StartCoroutine(new NameJob(originalName, scope,
+                    TranslationHelper.SplitNamesBeforeTranslate || forceSplit, CardNameComplete).Start());
             }
 
             yield return new WaitWhile(() => _nameTracker.ContainsKey(originalName));
@@ -185,20 +207,16 @@ namespace TranslationHelperPlugin
                 }
             }
 
-            if (_nameTracker.TryGetValue(names.Key, out var actions))
-            {
-                _nameTracker.Remove(names.Key);
-                //Logger.LogDebug($"Processing {actions}");
-                var result = new SimpleTranslationResult(true, names.Value);
-                foreach (var action in actions.ToArray())
-                {
-                    //Logger.LogDebug($"Invoking {action}");
-                    action(result);
-                }
-            }
+            if (!_nameTracker.TryGetValue(names.Key, out var actions)) return;
+
+            _nameTracker.Remove(names.Key);
+            //Logger.LogDebug($"Processing {actions} for {names.Key}");
+            
+            var result = new SimpleTranslationResult(names.Value != null && names.Value != names.Key, names.Value);
+            actions.CallHandlers(result);
         }
 
-        private IEnumerator TranslateName(string originalName, byte gender,
+        private IEnumerator TranslateName(string originalName, NameScope nameScope,
             TranslationResultHandler callback)
         {
             var cardTranslationMode = TranslationHelper.Instance.CurrentCardLoadTranslationMode;
@@ -218,7 +236,7 @@ namespace TranslationHelperPlugin
             if (cardTranslationMode >= CardLoadTranslationMode.CacheOnly)
             {
                 //Logger.LogDebug($"TranslateName: attempting translation (cached): {originalName}");
-                if (NameTranslator.TryTranslateName(originalName, out var translatedName))
+                if (NameTranslator.TryTranslateName(originalName, nameScope, out var translatedName))
                 {
                     translatedName = CleanTranslationResult(translatedName, string.Empty);
                     if (originalName != translatedName)
@@ -229,12 +247,12 @@ namespace TranslationHelperPlugin
                     }
                 }
 
-                if (TranslationHelper.TranslateNameWithSuffix.Value)
+                if (TranslationHelper.TranslateNameWithSuffix.Value && nameScope.Sex != CharacterSex.Unspecified)
                 {
-                    activeSuffix = Suffixes[gender];
+                    activeSuffix = Suffixes[(int)nameScope.Sex];
                     suffixedName = string.Concat(originalName, activeSuffix.Key);
                     //Logger.LogDebug($"TranslateName: attempting translation (cached): {suffixedName}");
-                    if (NameTranslator.TryTranslateName(suffixedName, out var translatedName2))
+                    if (NameTranslator.TryTranslateName(suffixedName, nameScope, out var translatedName2))
                     {
                         translatedName2 = CleanTranslationResult(translatedName2, activeSuffix.Value);
                         if (suffixedName != translatedName2)
@@ -252,7 +270,7 @@ namespace TranslationHelperPlugin
             {
                 // suffixedName will be origName if TranslateNameWithSuffix is off, so just use it here
                 //Logger.LogDebug($"TranslateName: attempting translation (async): {suffixedName}");
-                NameTranslator.TranslateNameAsync(suffixedName, result =>
+                NameTranslator.TranslateNameAsync(suffixedName, nameScope, result =>
                 {
                     if (result.Succeeded)
                     {
@@ -287,6 +305,8 @@ namespace TranslationHelperPlugin
             var output = input;
             var preClean = string.Empty;
             //Logger.LogDebug($"Cleaning: '{input}'");
+            var toRemove = TranslationHelper.NameTrimChars.Value.ToCharArray();
+
             while (preClean != output)
             {
                 preClean = output;
@@ -306,7 +326,7 @@ namespace TranslationHelperPlugin
                     }
                 }
 
-                output = output.Trim().Trim(TranslationHelper.NameTrimChars.Value.ToCharArray()).Trim();
+                output = output.Trim(toRemove).Trim();
                 //Logger.LogDebug($"Cleaning: '{input}': trimmed: => '{output}");
             }
 
@@ -330,16 +350,21 @@ namespace TranslationHelperPlugin
             protected abstract IEnumerator StartJobs();
             protected abstract T GetResult();
 
+            protected virtual Coroutine StartCoroutine(IEnumerator enumerator)
+            {
+                return TranslationHelper.Instance.StartCoroutine(enumerator);
+            }
+
             internal IEnumerator Start()
             {
                 //Logger.LogDebug($"Start: {this}");
-                yield return TranslationHelper.Instance.StartCoroutine(Execute());
+                yield return StartCoroutine(Execute());
             }
 
-            private IEnumerator Execute()
+            protected IEnumerator Execute()
             {
                 //Logger.LogDebug($"Start: {this}");
-                yield return TranslationHelper.Instance.StartCoroutine(StartJobs());
+                yield return StartCoroutine(StartJobs());
                 while (jobCount > 0)
                 {
                     yield return null;
@@ -355,13 +380,13 @@ namespace TranslationHelperPlugin
                 Callback(GetResult());
             }
 
-            internal void JobStarted()
+            internal virtual void JobStarted()
             {
                 //Logger.LogDebug($"Starting job: {this}");
                 Interlocked.Increment(ref jobCount);
             }
 
-            internal void JobComplete()
+            internal virtual void JobComplete()
             {
                 Interlocked.Decrement(ref jobCount);
                 //Logger.LogDebug($"Finished job: {this}");
@@ -370,17 +395,22 @@ namespace TranslationHelperPlugin
 
         internal class NameJob : BaseJob<KeyValuePair<string, string>>
         {
-            internal NameJob(string originalName, byte gender, bool splitNames,
+            internal NameJob(string originalName, NameScope nameScope, bool splitNames,
                 Action<KeyValuePair<string, string>> callback) : base(callback)
             {
                 OriginalName = originalName;
-                Gender = gender;
+                NameScope = nameScope;
                 SplitNames = splitNames;
             }
 
+            internal NameScope NameScope { get; }
             internal string OriginalName { get; }
             internal string TranslatedName { get; private set; }
-            internal byte Gender { get; }
+
+            internal int TranslationScope => NameScope?.TranslationScope ?? NameScope.BaseScope;
+            internal CharacterSex Sex => NameScope?.Sex ?? CharacterSex.Unspecified;
+
+            internal NameType NameType => NameScope?.NameType ?? NameType.Unclassified;
             private bool SplitNames { get; }
 
             private List<string> NameParts { get; set; }
@@ -406,7 +436,7 @@ namespace TranslationHelperPlugin
                 {
                     var i = namePart.Key;
                     JobStarted();
-                    var job = TranslationHelper.Instance.StartCoroutine(Instance.TranslateName(namePart.Value, Gender,
+                    var job = StartCoroutine(Instance.TranslateName(namePart.Value, NameScope,
                         result =>
                         {
                             if (result.Succeeded) NameParts[i] = result.TranslatedText;
@@ -441,10 +471,35 @@ namespace TranslationHelperPlugin
 
             public bool FullNameHandled { get; private set; }
 
+            protected override Coroutine StartCoroutine(IEnumerator enumerator)
+            {
+                Controller controller = null;
+                ChaFile.SafeProc(cf => cf.GetTranslationHelperController().SafeProcObject(c => controller = c));
+
+                return controller != null
+                    ? controller.StartMonitoredCoroutine(enumerator)
+                    : base.StartCoroutine(enumerator);
+            }
+
             protected override ChaFile GetResult()
             {
                 return ChaFile;
             }
+
+            internal void JobCompleteHandler(ITranslationResult _)
+            {
+                if (!FullNameHandled)
+                {
+                    var orig = ChaFile.GetOriginalFullName();
+                    var current = ChaFile.GetFullName();
+                    if (orig != current)
+                    {
+                        TranslationHelper.Instance.AddTranslatedNameToCache(orig, current);
+                    }
+                }
+                JobComplete();
+            }
+
 
             protected override IEnumerator StartJobs()
             {
@@ -467,12 +522,12 @@ namespace TranslationHelperPlugin
 
                     if (recentTranslationsByName.TryGetValue(name.Value, out var cachedName))
                     {
-                        //Logger.LogDebug($"StartJobs: {this}: cache hit: {name.Value} => {cachedName}");
-                        chaFile.SetName(i, cachedName);
+                        Logger.LogDebug($"StartJobs: {this}: cache hit: {name.Value} => {cachedName}");
+                        chaFile.SetTranslatedName(i, cachedName);
                         continue;
                     }
 
-                    if (!ContainsJapaneseCharRegex.IsMatch(name.Value))
+                    if (!StringUtils.ContainsJapaneseChar(name.Value))
                     {
                         noTranslate.Add(name.Value);
                         continue;
@@ -480,22 +535,13 @@ namespace TranslationHelperPlugin
 
                     JobStarted();
 
-                    var job = TranslationHelper.Instance.StartCoroutine(Instance.TranslateCardName(name.Value,
-                        ChaFile.parameter.sex, result =>
-                        {
-                            if (result.Succeeded && name.Value != result.TranslatedText)
-                            {
-                                chaFile.SetName(i, result.TranslatedText);
-                                if (TranslationHelper.Instance.CurrentCardLoadTranslationMode >
-                                    CardLoadTranslationMode.CacheOnly)
-                                {
-                                    TranslationHelper.Instance.AddTranslatedNameToCache(name.Value,
-                                        result.TranslatedText);
-                                }
-                            }
+                    var job = StartCoroutine(Instance.TranslateCardName(name.Value,
+                        new NameScope(ChaFile.GetSex(), ChaFile.GetNameType(i)),
+                        Handlers.UpdateCardName(ChaFile, i),
+                        Handlers.AddNameToCache(name.Value),
+                        JobCompleteHandler));
 
-                            JobComplete();
-                        }));
+                       
 
                     jobs.Add(job);
                 }

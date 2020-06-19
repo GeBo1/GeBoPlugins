@@ -127,6 +127,9 @@ namespace GameDialogHelperPlugin
             Instance = this;
             Logger = base.Logger;
 
+            Logger.LogError($"Not configuring {nameof(GameDialogHelper)} because it's broken");
+            return;
+
             CharacterApi.RegisterExtraBehaviour<GameDialogHelperController>(GUID);
 
             HarmonyWrapper.PatchAll(typeof(Hooks));

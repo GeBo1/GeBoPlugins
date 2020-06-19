@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using GeBoCommon.Utilities;
 
-#if AI
+#if AI||HS2
 using AIChara;
 #endif
 

@@ -15,18 +15,21 @@
     <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\Implementation\StubAutoTranslationHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\Implementation\XUnityAutoTranslationHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\ITranslationResult.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Chara\Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Chara\Extensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GeBoAPIBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IGeBoAPI.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\SimpleTranslationResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\Delegates.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\EnumerableUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\HookedSimpleCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\IHookedCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\OtherExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\PathUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleLazy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\StringUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\WeakCache.cs" />
   </ItemGroup>
 </Project>

@@ -18,7 +18,7 @@ namespace GeBoCommon.Utilities
 
         public static Func<T> LazyReflectionGetter<T>(Func<Type> typeLoader, Func<object> objLoader, string fieldName)
         {
-            Logger.LogDebug($"{nameof(LazyReflectionGetter)}<{typeof(T).Name}>({typeLoader}, {objLoader}, {fieldName}");
+            Logger.DebugLogDebug($"{nameof(LazyReflectionGetter)}<{typeof(T).Name}>({typeLoader}, {objLoader}, {fieldName}");
             var fieldInfo = new SimpleLazy<FieldInfo>(() => AccessTools.Field(typeLoader(), fieldName));
 
             var instance = new SimpleLazy<object>(objLoader);

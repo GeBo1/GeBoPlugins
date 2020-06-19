@@ -24,6 +24,12 @@ namespace GeBoCommon
         public const string StudioProcessName = "StudioNEO_64";
         public const string Prefix = "HS";
         public const RegexOptions SupportedRegexCompilationOption = RegexOptions.None;
+#elif HS2
+        public const string GameName = "Honey Select 2";
+        public const string MainGameProcessName = "HoneySelect2";
+        public const string StudioProcessName = "StudioNEOV2";
+        public const string Prefix = "HS2";
+        public const RegexOptions SupportedRegexCompilationOption = RegexOptions.Compiled;
 #elif KK
         public const string GameName = "Koikatsu";
         public const string MainGameProcessName = "Koikatu";

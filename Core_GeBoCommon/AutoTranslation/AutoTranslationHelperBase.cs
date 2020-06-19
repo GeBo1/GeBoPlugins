@@ -21,7 +21,7 @@ namespace GeBoCommon.AutoTranslation
 
         protected void FallbackAddTranslationToCache(string key, string value, bool persistToDisk, int translationType, int scope)
         {
-            _ = (persistToDisk || translationType == scope || (key ?? value).IsNullOrEmpty());
+            _ = (persistToDisk || translationType == scope || string.IsNullOrEmpty(key ?? value));
         }
 
         protected bool FallbackIsTranslatable(string _) => false;

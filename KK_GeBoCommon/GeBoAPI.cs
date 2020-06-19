@@ -1,15 +1,25 @@
 ﻿using Illusion.Game;
 using System;
 using System.Collections.Generic;
+using GeBoCommon.Chara;
+using KKAPI.Utilities;
 
 namespace GeBoCommon
 {
     public partial class GeBoAPI
     {
+
+        private static readonly IList<KeyValuePair<string, Chara.NameType>> ChaFileNamesInternal =
+            new List<KeyValuePair<string, Chara.NameType>>
+            {
+                new KeyValuePair<string, Chara.NameType>("firstname", Chara.NameType.Given),
+                new KeyValuePair<string, NameType>("lastname", Chara.NameType.Family),
+                new KeyValuePair<string, NameType>("nickname", NameType.Unclassified)
+            }.AsReadOnly();
+
         public IEnumerable<KeyValuePair<int, string>> ChaFileEnumerateNames(ChaFile chaFile)
         {
             if (chaFile == null) yield break;
-            Logger.LogDebug($"ChaFileEnumerateNames({chaFile}) [{chaFile.parameter}]");
             var i = -1;
             yield return new KeyValuePair<int, string>(++i, chaFile.parameter?.firstname);
             yield return new KeyValuePair<int, string>(++i, chaFile.parameter?.lastname);

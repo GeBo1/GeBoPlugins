@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using GeBoCommon.Utilities;
 using HarmonyLib;
 using Studio;
-#if AI
+#if AI||HS2
 using AIChara;
 #endif
 

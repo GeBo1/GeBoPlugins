@@ -9,13 +9,26 @@
     <Import_RootNamespace>TranslationHelperPlugin</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Core.CardNameTranslationManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core.Enums.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core.TranslatorReplacementsManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core.TranslationHelper.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core.Delegates.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)NameTranslator.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core.TranslationHelper.Hooks.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)TranslationHelperCharaExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Chara\Controller.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Chara\Extensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Chara\Hooks.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Chara\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CardNameTranslationManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Chara\Handlers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NameScope.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TranslatorReplacementsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TranslationHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Delegates.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Maker\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Maker\Hooks.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MainGame\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MainGame\Hooks.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Studio\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Studio\Hooks.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Translation\NameTranslator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Translation\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Translation\Hooks.cs" />
   </ItemGroup>
 </Project>

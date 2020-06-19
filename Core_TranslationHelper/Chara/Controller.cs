@@ -1,0 +1,243 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using BepInEx.Logging;
+using GeBoCommon;
+using GeBoCommon.Chara;
+using GeBoCommon.Utilities;
+using KKAPI;
+using KKAPI.Chara;
+using KKAPI.Maker;
+using KKAPI.Utilities;
+using UnityEngine;
+
+#if HS2 || AI
+using AIChara;
+#endif
+
+namespace TranslationHelperPlugin.Chara
+{
+    public class Controller : CharaCustomFunctionController
+    {
+        private readonly SimpleLazy<string[]> _originalNames =
+            new SimpleLazy<string[]>(() => new string[GeBoAPI.Instance.ChaFileNameCount]);
+
+        private readonly SimpleLazy<string[]> _translatedNames =
+            new SimpleLazy<string[]>(() => new string[GeBoAPI.Instance.ChaFileNameCount]);
+
+        private readonly List<IEnumerator> _monitoredCoroutines = new List<IEnumerator>();
+        internal static ManualLogSource Logger => TranslationHelper.Logger;
+
+        private static bool RestoreNamesOnSave =>
+            !MakerAPI.InsideAndLoaded || !TranslationHelper.MakerSaveWithTranslatedNames.Value;
+
+        public string[] TranslatedNames => _translatedNames.Value;
+        public string[] OriginalNames => _originalNames.Value;
+
+        private string RegistrationID => ChaFileControl != null ? ChaFileControl.GetRegistrationID() : null;
+
+        public bool IsTranslated { get; private set; }
+        public bool TranslationInProgress { get; private set; }
+
+        internal Coroutine StartMonitoredCoroutine(IEnumerator routine)
+        {
+            _monitoredCoroutines.Add(routine);
+            return StartCoroutine(routine.AppendCo(() =>
+            {
+                //Logger.LogWarning($"Finished {routine}");
+                _monitoredCoroutines.Remove(routine);
+            }));
+        }
+
+        internal void SetTranslatedName(int index, string name)
+        {
+            IsTranslated = IsTranslated || OriginalNames[index] != name;
+            TranslatedNames[index] = name;
+            ChaFileControl.SetName(index, name);
+        }
+
+        internal void OnNameChanged(int index, string value)
+        {
+            TranslatedNames[index] = null;
+            OriginalNames[index] = value;
+        }
+
+        protected override void OnCardBeingSaved(GameMode currentGameMode)
+        {
+            //TranslationHelper.Logger?.LogDebug($"Controller.OnCardBeingSaved: {RegistrationID}");
+            if (RestoreNamesOnSave) RestoreCardNames();
+            SetExtendedData(null);
+        }
+
+        internal void OnCardSaveComplete(GameMode _)
+        {
+            //TranslationHelper.Logger?.LogDebug($"Controller.OnCardSaveComplete: {RegistrationID}");
+            if (!RestoreNamesOnSave) return;
+            IsTranslated = false;
+            for (var i = 0; i < GeBoAPI.Instance.ChaFileNameCount; i++)
+            {
+                OriginalNames[i] = TranslatedNames[i] = null;
+            }
+
+            TranslateCardNames();
+        }
+
+        private void DoReload(bool cardFullyLoaded = true)
+        {
+            TranslationHelper.Logger?.LogDebug($"Controller.DoReload({cardFullyLoaded}): {RegistrationID}");
+            IsTranslated = false;
+            for (var i = 0; i < GeBoAPI.Instance.ChaFileNameCount; i++)
+            {
+                OriginalNames[i] = TranslatedNames[i] = null;
+            }
+
+            TranslateCardNames(cardFullyLoaded);
+        }
+        protected override void OnReload(GameMode currentGameMode)
+        {
+           DoReload();
+        }
+
+        internal void OnAlternateReload()
+        {
+           DoReload(true);
+        }
+
+        protected override void OnDestroy()
+        {
+            //TranslationHelper.Logger?.LogDebug($"Controller.OnDestroy: {RegistrationID}");
+            UnregisterReplacements();
+            RestoreCardNames();
+            StopMonitoredCoroutines();
+            base.OnDestroy();
+        }
+
+        private void StopMonitoredCoroutines()
+        {
+            var toStop = _monitoredCoroutines.ToList();
+            toStop.Reverse();
+
+            foreach (var routine in toStop)
+            {
+                //Logger.LogWarning($"Stopping {routine}");
+                try
+                {
+                    StopCoroutine(routine);
+                }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch (Exception err)
+                {
+                    Logger.LogWarning($"{GetType().FullName}: error stopping {routine}: {err}");
+                }
+#pragma warning restore CA1031 // Do not catch general exception types
+            }
+
+            _monitoredCoroutines.Clear();
+        }
+
+        private void RestoreCardNames()
+        {
+            //TranslationHelper.Logger?.LogDebug($"Controller.RestoreCardNames: {RegistrationID}");
+            if (!IsTranslated) return;
+            IsTranslated = false;
+            for (var i = 0; i < GeBoAPI.Instance.ChaFileNames.Count; i++)
+            {
+                // only restore name if it hasn't been changed
+                if (OriginalNames[i] == null) continue;
+
+                var current = ChaFileControl.GetName(i);
+                if (current == TranslatedNames[i])
+                {
+                    ChaFileControl.SetName(i, OriginalNames[i]);
+                }
+                else
+                {
+                    // name has changed, so dump the translation and update original
+                    TranslatedNames[i] = null;
+                    OriginalNames[i] = current;
+                }
+            }
+        }
+        public void TranslateCardNames(bool cardFullyLoaded=true)
+        {
+            //TranslationHelper.Logger?.LogDebug($"Controller.TranslateCardNames: {RegistrationID} {IsTranslated}");
+            if (TranslationHelper.Instance.CurrentCardLoadTranslationMode == CardLoadTranslationMode.Disabled) return;
+            if (!IsTranslated)
+            {
+                foreach (var entry in ChaFileControl.EnumerateNames())
+                {
+                    OriginalNames[entry.Key] = entry.Value;
+                }
+            }
+
+            TranslationInProgress = true;
+
+            StartMonitoredCoroutine(TranslationHelper.CardNameManager.TranslateCardNames(ChaFileControl));
+
+            StartMonitoredCoroutine(TranslationHelper.CardNameManager.WaitOnCard(ChaFileControl).AppendCo(
+                () => OnTranslationComplete(cardFullyLoaded)));
+        }
+
+        public void RegisterReplacements()
+        {
+            //TranslationHelper.Logger?.LogDebug($"Controller.RegisterReplacements: {RegistrationID}");
+            if (!TranslationHelper.RegisterActiveCharacters.Value ||
+                KoikatuAPI.GetCurrentGameMode() == GameMode.Maker)
+            {
+                return;
+            }
+
+            StartMonitoredCoroutine(TranslationHelper.Instance.RegisterReplacementsWrapper(ChaFileControl));
+        }
+
+        public void UnregisterReplacements()
+        {
+            //TranslationHelper.Logger?.LogDebug($"Controller.UnregisterReplacements: {RegistrationID}");
+            if (KoikatuAPI.GetCurrentGameMode() == GameMode.Maker) return;
+            TranslationHelper.Instance.UnregisterReplacements(ChaFileControl).RunImmediately();
+        }
+
+        public void OnTranslationComplete(bool cardFullyLoaded = false)
+        {
+            //TranslationHelper.Logger?.LogDebug($"Controller.OnTranslationComplete: {RegistrationID}");
+            TranslationInProgress = false;
+            if (!cardFullyLoaded) return;
+
+            RegisterReplacements();
+        }
+
+        
+
+        internal void ApplyTranslations()
+        {
+            if (!IsTranslated) return;
+            for (var i = 0; i < TranslatedNames.Length; i++)
+            {
+                var translatedName = TranslatedNames[i];
+                if (string.IsNullOrEmpty(translatedName)) continue;
+                ChaFileControl.SetName(i, translatedName);
+            }
+        }
+
+        public string GetOriginalFullName()
+        {
+#if KK
+            var givenIdx = GeBoAPI.Instance.ChaFileNameToIndex("firstname");
+            var givenName = IsTranslated && !string.IsNullOrEmpty(OriginalNames[givenIdx])
+                ? OriginalNames[givenIdx]
+                : ChaFileControl.GetName(givenIdx);
+                
+            var familyIdx = GeBoAPI.Instance.ChaFileNameToIndex("lastname");
+            var familyName = IsTranslated && !string.IsNullOrEmpty(OriginalNames[familyIdx])
+                ? OriginalNames[familyIdx]
+                : ChaFileControl.GetName(familyIdx);
+            return string.Concat(familyName, " ", givenName);
+#else
+            if (!IsTranslated) return ChaFileControl.GetFullName();
+            var idx = GeBoAPI.Instance.ChaFileNameToIndex("fullname");
+            return string.IsNullOrEmpty(OriginalNames[idx]) ? ChaFileControl.GetFullName() : OriginalNames[idx];
+#endif
+        }
+    }
+}

@@ -42,7 +42,7 @@ namespace TranslationHelperPlugin.MainGame
             typeof(ChaFileControl))]
         [HarmonyPatch(typeof(CharaHInfoComponent), nameof(CharaHInfoComponent.SetCharaInfo),
             typeof(ChaFileControl))]
-        private static void RosterSetCharaInfoPrefix(Component __instance, ChaFileControl chaFileCtrl)
+        internal static void RosterSetCharaInfoPrefix(Component __instance, ChaFileControl chaFileCtrl)
         {
             if (!ShouldProcess(__instance, chaFileCtrl) ||
                 !GeBoAPI.Instance.AutoTranslationHelper.IsTranslatable(chaFileCtrl.GetFullName()))
@@ -58,7 +58,7 @@ namespace TranslationHelperPlugin.MainGame
             typeof(ChaFileControl))]
         [HarmonyPatch(typeof(CharaHInfoComponent), nameof(CharaHInfoComponent.SetCharaInfo),
             typeof(ChaFileControl))]
-        private static void RosterSetCharaInfoPostfix(Component __instance, ChaFileControl chaFileCtrl)
+        internal static void RosterSetCharaInfoPostfix(Component __instance, ChaFileControl chaFileCtrl)
         {
             if (!ShouldProcess(__instance, chaFileCtrl)) return;
 

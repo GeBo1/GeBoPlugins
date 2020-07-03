@@ -1,7 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
-using BepInEx.Harmony;
 using GeBoCommon;
+using HarmonyLib;
 using Manager;
 
 namespace GameDressForSuccessPlugin
@@ -15,7 +15,7 @@ namespace GameDressForSuccessPlugin
     {
         public const string GUID = "com.gebo.BepInEx.GameDressForSuccess";
         public const string PluginName = "Dress for Success";
-        public const string Version = "1.0";
+        public const string Version = "1.0.1";
 
         internal static GameDressForSuccess Instance;
 
@@ -34,7 +34,7 @@ namespace GameDressForSuccessPlugin
         internal void Awake()
         {
             Instance = this;
-            HarmonyWrapper.PatchAll(typeof(Hooks));
+            Harmony.CreateAndPatchAll(typeof(Hooks));
         }
 
 

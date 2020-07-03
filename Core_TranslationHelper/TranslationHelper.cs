@@ -29,7 +29,7 @@ namespace TranslationHelperPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationhelper";
         public const string PluginName = "Translation Helper";
-        public const string Version = "0.8.1";
+        public const string Version = "0.9";
 
         internal static new ManualLogSource Logger;
         public static TranslationHelper Instance;
@@ -105,8 +105,8 @@ namespace TranslationHelperPlugin
             NameTrimChars = Config.Bind("Translate Card Name Options", "Characters to Trim", string.Empty,
                 "Characters to trim from returned translations");
 
-            GameTranslateCardNameOnLoad = InitializeGameModeConfig(GameMode.MainGame, CardLoadTranslationMode.Disabled);
-            MakerTranslateCardNameOnLoad = InitializeGameModeConfig(GameMode.Maker, CardLoadTranslationMode.Disabled);
+            GameTranslateCardNameOnLoad = InitializeGameModeConfig(GameMode.MainGame, CardLoadTranslationMode.CacheOnly);
+            MakerTranslateCardNameOnLoad = InitializeGameModeConfig(GameMode.Maker, CardLoadTranslationMode.CacheOnly);
             StudioTranslateCardNameOnLoad =
                 InitializeGameModeConfig(GameMode.Studio, CardLoadTranslationMode.CacheOnly);
 
@@ -175,7 +175,7 @@ namespace TranslationHelperPlugin
             }
         }
 
-        private void CharacterApi_CharacterReloaded(object sender, CharaReloadEventArgs e)
+        private void CharacterApi_CharacterReloaded(object dummy, CharaReloadEventArgs e)
         {
             if (e.ReloadedCharacter != null && e.ReloadedCharacter.chaFile != null &&
                 CurrentCardLoadTranslationMode != CardLoadTranslationMode.Disabled)

@@ -1,11 +1,6 @@
 ﻿using BepInEx;
-using KKAPI;
-using UnityEngine.SceneManagement;
-using Manager;
-using System;
 using System.Linq;
 using BepInEx.Configuration;
-using ExtensibleSaveFormat;
 
 namespace TranslationHelperPlugin
 {

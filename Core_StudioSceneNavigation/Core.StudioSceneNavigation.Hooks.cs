@@ -12,7 +12,7 @@ namespace StudioSceneNavigationPlugin
         {
             [HarmonyPatch(typeof(SceneLoadScene), "InitInfo")]
             [HarmonyPostfix]
-            public static void StudioInitInfoPost(SceneLoadScene __instance)
+            internal static void StudioInitInfoPost(SceneLoadScene __instance)
             {
 #if DEBUG
             //Logger.LogDebug( $"StudioInitInfoPost({__instance})");

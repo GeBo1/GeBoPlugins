@@ -1,8 +1,5 @@
 ﻿using BepInEx.Logging;
 using KKAPI.Chara;
-using KKAPI.Maker;
-using KKAPI.Maker.UI.Sidebar;
-using UniRx;
 
 namespace TranslationHelperPlugin.Chara
 {

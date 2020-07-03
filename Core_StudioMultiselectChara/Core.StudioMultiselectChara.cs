@@ -12,10 +12,6 @@ using Studio;
 using UnityEngine;
 using BepInLogLevel = BepInEx.Logging.LogLevel;
 
-#if AI
-using AIChara;
-#endif
-
 namespace StudioMultiSelectCharaPlugin
 {
     [BepInPlugin(GUID, PluginName, Version)]
@@ -23,7 +19,7 @@ namespace StudioMultiSelectCharaPlugin
     public partial class StudioMultiSelectChara
     {
         public const string GUID = "com.gebo.BepInEx.studiomultiselectchara";
-        public const string PluginName = "Studio Multiselect Chara";
+        public const string PluginName = "Studio MultiSelect Chara";
         public const string Version = "0.9.1";
         internal static new ManualLogSource Logger;
 
@@ -33,7 +29,7 @@ namespace StudioMultiSelectCharaPlugin
         {
             Logger = Logger ?? base.Logger;
             Enabled = Config.Bind("Config", "Enabled", true, "Whether the plugin is enabled");
-            MultiselectShortcut = Config.Bind("Keyboard Shortcuts", "Perform multiselect",
+            MultiSelectShortcut = Config.Bind("Keyboard Shortcuts", "Perform multi-select",
                 new KeyboardShortcut(KeyCode.Tab, KeyCode.LeftShift),
                 "Select all instances of the currently selected character");
             NotificationSoundsEnabled = Config.Bind("Config", "Notification Sounds", true,
@@ -43,7 +39,7 @@ namespace StudioMultiSelectCharaPlugin
 
         internal void Update()
         {
-            if (Enabled.Value && MultiselectShortcut.Value.IsDown() && !_busy)
+            if (Enabled.Value && MultiSelectShortcut.Value.IsDown() && !_busy)
             {
                 _busy = true;
                 StartCoroutine(UpdateSelectionsCoroutine().AppendCo(() => _busy = false));
@@ -165,7 +161,7 @@ namespace StudioMultiSelectCharaPlugin
         #region configuration
 
         public static ConfigEntry<bool> Enabled { get; private set; }
-        public static ConfigEntry<KeyboardShortcut> MultiselectShortcut { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> MultiSelectShortcut { get; private set; }
         public static ConfigEntry<bool> NotificationSoundsEnabled { get; private set; }
 
         #endregion configuration

@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using GeBoCommon;
 using GeBoCommon.Chara;
-using KKAPI.Utilities;
 using UnityEngine;
 
 namespace TranslationHelperPlugin.Chara
@@ -14,9 +11,7 @@ namespace TranslationHelperPlugin.Chara
     {
         public static IEnumerator TranslateFullNameCoroutine(this ChaFile chaFile, Action<string> callback)
         {
-            var jobs = new List<Coroutine>();
-            var sex = chaFile.parameter.sex;
-            var started = 0;
+            int started;
 
             var names = new List<string>
             {

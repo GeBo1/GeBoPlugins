@@ -117,8 +117,6 @@ namespace TranslationHelperPlugin
             var replacements = GetReplacements();
             if (replacements == null) return;
 
-            var handled = new HashSet<string>();
-
             //Logger.LogFatal($"fullname={chaFile.GetFullName()}");
             foreach (var name in GetNamesToRegister(chaFile).Where(n => n.Length > 2))
             {

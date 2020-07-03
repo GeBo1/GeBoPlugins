@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using HarmonyLib;
+﻿using HarmonyLib;
 using UnityEngine.Assertions;
 
 namespace TranslationHelperPlugin.Chara

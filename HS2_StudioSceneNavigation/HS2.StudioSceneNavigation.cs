@@ -1,6 +1,4 @@
-﻿using Illusion.Game;
-
-namespace StudioSceneNavigationPlugin
+﻿namespace StudioSceneNavigationPlugin
 {
     public partial class StudioSceneNavigation
     {

@@ -13,7 +13,7 @@ using KKAPI.Utilities;
 using UnityEngine;
 
 #if HS2 || AI
-using AIChara;
+
 #endif
 
 namespace TranslationHelperPlugin.Chara
@@ -35,6 +35,7 @@ namespace TranslationHelperPlugin.Chara
         public string[] TranslatedNames => _translatedNames.Value;
         public string[] OriginalNames => _originalNames.Value;
 
+        // ReSharper disable once MergeConditionalExpression
         private string RegistrationID => ChaFileControl != null ? ChaFileControl.GetRegistrationID() : null;
 
         public bool IsTranslated { get; private set; }
@@ -50,11 +51,11 @@ namespace TranslationHelperPlugin.Chara
             }));
         }
 
-        internal void SetTranslatedName(int index, string name)
+        internal void SetTranslatedName(int index, string value)
         {
-            IsTranslated = IsTranslated || OriginalNames[index] != name;
-            TranslatedNames[index] = name;
-            ChaFileControl.SetName(index, name);
+            IsTranslated = IsTranslated || OriginalNames[index] != value;
+            TranslatedNames[index] = value;
+            ChaFileControl.SetName(index, value);
         }
 
         internal void OnNameChanged(int index, string value)
@@ -101,7 +102,7 @@ namespace TranslationHelperPlugin.Chara
 
         internal void OnAlternateReload()
         {
-           DoReload(true);
+           DoReload();
         }
 
         protected override void OnDestroy()
@@ -143,7 +144,7 @@ namespace TranslationHelperPlugin.Chara
             IsTranslated = false;
             for (var i = 0; i < GeBoAPI.Instance.ChaFileNames.Count; i++)
             {
-                // only restore name if it hasn't been changed
+                // only restore value if it hasn't been changed
                 if (OriginalNames[i] == null) continue;
 
                 var current = ChaFileControl.GetName(i);
@@ -153,7 +154,7 @@ namespace TranslationHelperPlugin.Chara
                 }
                 else
                 {
-                    // name has changed, so dump the translation and update original
+                    // value has changed, so dump the translation and update original
                     TranslatedNames[i] = null;
                     OriginalNames[i] = current;
                 }

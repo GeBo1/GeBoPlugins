@@ -17,6 +17,8 @@ Contains shared code used by other plugins in this repo. Unless otherwise noted 
 
 **Note:** Requires [IllusionModdingAPI](https://github.com/IllusionMods/IllusionModdingAPI/)
 
+- AI
+- HS2
 - KK v0.9.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r2/KK_GeBoCommon.v0.9.1.zip)
 
 ### GameDialogHelper 
@@ -54,5 +56,22 @@ Removes all entries from your translation cache file that would be translated by
 
 - KK v0.5.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r2/KK_TranslationCacheCleaner.v0.5.1.zip)
 
-[//]: # (### TranslationHelper)
+### TranslationHelper
+
+Improves the experience of using XUnity.AutoTranslator in numerous ways.
+
+- Translates card names as they're loaded (for games with separate given/family names it translates them independently, for games with a single full-name field there's the option to split before translating).
+- Registers card names with XUnity.AutoTranslator as replacements.  This keeps your translation cache clean/useful for multiple characters.  Replacements are removed when cards are unloaded.
+- Uses specific translation scopes for names, so you can have a file(s) with just name translations (detailed docs to come).
+- Maker option to toggle between saving translated names or original names for any unmodified names on the card (If you edit the name, it keeps your edit always)
+- Game specific features to update lists/trees/card previews in maker/studio/roster once card translation finishes.
+- **KK only** Option to reverse fullname to return 'GivenName FamilyName' (like Party)
+
+Check plugin options to configure. Defaults to only using the translation cache, but for the best experience you may wish to set to `Fully Enabled`.
+
+- AI
+- HS2
+- KK
+
+
 

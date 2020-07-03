@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using AIChara;
 using CharaCustom;
-using ExtensibleSaveFormat;
 using GameLoadCharaFileSystem;
 using GeBoCommon.Chara;
 using HarmonyLib;
-using Illusion;
 using TranslationHelperPlugin.Chara;
 
 namespace TranslationHelperPlugin.Translation
 {
     internal partial class Hooks
     {
+        // ReSharper disable InconsistentNaming
         internal static bool HookLoadCharaFile = false;
-        private static void TranslateFileInfo(Func<string> nameGetter, Func<CharacterSex> sexGetter, Action<string> nameSetter, params TranslationResultHandler[] handlers)
+
+        private static void TranslateFileInfo(Func<string> nameGetter, Func<CharacterSex> sexGetter,
+            Action<string> nameSetter, params TranslationResultHandler[] handlers)
         {
             var origName = nameGetter();
             var innerHandlers = new List<TranslationResultHandler>
@@ -24,7 +24,7 @@ namespace TranslationHelperPlugin.Translation
                     if (!r.Succeeded) return;
                     nameSetter(r.TranslatedText);
                 },
-                Chara.Handlers.AddNameToCache(origName)
+                Handlers.AddNameToCache(origName)
             };
             if (handlers.Length > 0) innerHandlers.AddRange(handlers);
             TranslationHelper.Instance.StartCoroutine(
@@ -59,24 +59,24 @@ namespace TranslationHelperPlugin.Translation
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(GameCharaFileInfoAssist), nameof(GameCharaFileInfoAssist.CreateCharaFileInfoList))]
-        private static void CreateCharaFileInfoListPostfix(List<GameCharaFileInfo> __result)
+        internal static void CreateCharaFileInfoListPostfix(List<GameCharaFileInfo> __result)
         {
             TranslateFileInfos(__result);
         }
-        
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(GameCharaFileScrollController), nameof(GameCharaFileScrollController.Init))]
         [HarmonyPatch(typeof(LobbyCharaSelectInfoScrollController), nameof(LobbyCharaSelectInfoScrollController.Init))]
         [HarmonyPatch(typeof(LobbyCharaSelectInfoScrollController1),
             nameof(LobbyCharaSelectInfoScrollController1.Init))]
-        private static void GameCharaFileInfoListPrefix(List<GameCharaFileInfo> _lst)
+        internal static void GameCharaFileInfoListPrefix(List<GameCharaFileInfo> _lst)
         {
             TranslateFileInfos(_lst);
         }
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CustomCharaScrollController), nameof(CustomCharaScrollController.CreateList))]
-        private static void CustomCharaFileInfoListPrefix(List<CustomCharaFileInfo> _lst)
+        internal static void CustomCharaFileInfoListPrefix(List<CustomCharaFileInfo> _lst)
         {
             TranslateFileInfos(_lst);
         }
@@ -118,9 +118,5 @@ namespace TranslationHelperPlugin.Translation
                     new NameScope((CharacterSex)_data.info.sex), Handler));
         }
         */
-
-
-        
-       
     }
 }

@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using ChaCustom;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using HarmonyLib;
-using KKAPI.Maker;
 
 namespace TranslationHelperPlugin.Translation
 {
@@ -16,7 +14,7 @@ namespace TranslationHelperPlugin.Translation
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CustomFileListCtrl), nameof(CustomFileListCtrl.AddList))]
         [HarmonyPatch(typeof(ActionGame.ClassRoomFileListCtrl), nameof(ActionGame.ClassRoomFileListCtrl.AddList))]
-        private static void FileListCtrlAddListPrefix(CustomFileListCtrl __instance, int index, ref string name,
+        internal static void FileListCtrlAddListPrefix(CustomFileListCtrl __instance, int index, ref string name,
             string club, string personality)
         {
             if (TranslationHelper.Instance == null || string.IsNullOrEmpty(club) ||

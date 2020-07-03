@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using GeBoCommon.AutoTranslation;
+﻿using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 
 #if AI||HS2
@@ -10,6 +7,7 @@ using AIChara;
 
 namespace TranslationHelperPlugin.Chara
 {
+    // ReSharper disable once PartialTypeWithSinglePart
     public static partial class Handlers
     {
 

@@ -2,6 +2,7 @@
 using System.Linq;
 #if AI || HS2
 using AIChara;
+
 #endif
 
 namespace GeBoCommon.Chara
@@ -50,7 +51,6 @@ namespace GeBoCommon.Chara
             {
                 return CharacterSex.Unspecified;
             }
-
         }
     }
 }

@@ -1,7 +1,4 @@
-﻿using Illusion.Game;
-using GeBoCommon;
-
-namespace StudioSceneNavigationPlugin
+﻿namespace StudioSceneNavigationPlugin
 {
     public partial class StudioSceneNavigation
     {

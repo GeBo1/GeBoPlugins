@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Permissions;
-using System.Text;
-using GeBoCommon.Chara;
+﻿using GeBoCommon.Chara;
 
 namespace TranslationHelperPlugin
 {

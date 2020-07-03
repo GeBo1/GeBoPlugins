@@ -2,18 +2,17 @@
 using System;
 using System.Collections.Generic;
 using GeBoCommon.Chara;
-using KKAPI.Utilities;
 
 namespace GeBoCommon
 {
     public partial class GeBoAPI
     {
 
-        private static readonly IList<KeyValuePair<string, Chara.NameType>> ChaFileNamesInternal =
-            new List<KeyValuePair<string, Chara.NameType>>
+        private static readonly IList<KeyValuePair<string, NameType>> ChaFileNamesInternal =
+            new List<KeyValuePair<string, NameType>>
             {
-                new KeyValuePair<string, Chara.NameType>("firstname", Chara.NameType.Given),
-                new KeyValuePair<string, NameType>("lastname", Chara.NameType.Family),
+                new KeyValuePair<string, NameType>("firstname", NameType.Given),
+                new KeyValuePair<string, NameType>("lastname", NameType.Family),
                 new KeyValuePair<string, NameType>("nickname", NameType.Unclassified)
             }.AsReadOnly();
 

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using BepInEx.Logging;
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace TranslationHelperPlugin.Chara
 {
@@ -15,7 +10,7 @@ namespace TranslationHelperPlugin.Chara
             if (propGetter == null) return;
             var prefix = AccessTools.Method(typeof(Hooks), nameof(ChaFileParameterFullnamePrefix));
             if (prefix == null) return;
-            harmony.Patch(propGetter, new HarmonyMethod(prefix), null);
+            harmony.Patch(propGetter, new HarmonyMethod(prefix));
         }
 
         // ReSharper disable once RedundantAssignment

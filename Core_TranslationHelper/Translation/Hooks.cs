@@ -1,17 +1,16 @@
-﻿using BepInEx.Harmony;
-using BepInEx.Logging;
+﻿using BepInEx.Logging;
 using HarmonyLib;
-using XUnity.AutoTranslator.Plugin.Core;
 
 namespace TranslationHelperPlugin.Translation
 {
+    // ReSharper disable once PartialTypeWithSinglePart
     internal static partial class Hooks
     {
         internal static ManualLogSource Logger => TranslationHelper.Logger;
 
         internal static Harmony SetupHooks()
         {
-            return HarmonyWrapper.PatchAll(typeof(Hooks));
+            return Harmony.CreateAndPatchAll(typeof(Hooks));
         }
     }
 }

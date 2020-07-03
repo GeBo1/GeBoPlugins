@@ -1,8 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-using GeBoCommon.Chara;
-
-namespace TranslationHelperPlugin
+﻿namespace TranslationHelperPlugin
 {
     public enum CardLoadTranslationMode
     {

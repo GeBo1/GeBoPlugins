@@ -1,10 +1,10 @@
-﻿using BepInEx.Harmony;
-using BepInEx.Logging;
+﻿using BepInEx.Logging;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 namespace GeBoCommon.Utilities
 {
@@ -51,7 +51,7 @@ namespace GeBoCommon.Utilities
                 throw new Exception("Unable to wrap postfix");
             }
 
-            var harmony = HarmonyWrapper.PatchAll(GetType());
+            var harmony = Harmony.CreateAndPatchAll(GetType());
             harmony.Patch(hookTarget, prefix, postfix);
 
             SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
@@ -65,6 +65,7 @@ namespace GeBoCommon.Utilities
 
         private void DefaultRemovalHook(HookedSimpleCache<TKey, TValue, THookTarget> sender, HookedSimpleCacheEventArgs<TKey> e)
         {
+            Assert.IsNotNull(this);
             sender.Remove(e.Target);
             if (HookedSimpleCacheState.NeedsCleanup(typeof(THookTarget)))
             {
@@ -74,11 +75,9 @@ namespace GeBoCommon.Utilities
 
         private void SceneManager_activeSceneChanged(Scene arg0, Scene arg1)
         {
-            if (EmptyCacheOnSceneChange)
-            {
-                Logger?.LogDebug($"HookedSimpleCache: Clearing {Count} entries from {this} on activeSceneChanged");
-                Clear();
-            }
+            if (!EmptyCacheOnSceneChange) return;
+            Logger?.LogDebug($"{GetType().Name}: Clearing {Count} entries from {this} on activeSceneChanged");
+            Clear();
         }
 
         public void OnHookPrefix(HookedSimpleCacheEventArgs<TKey> e)

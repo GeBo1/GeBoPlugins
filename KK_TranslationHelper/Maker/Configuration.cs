@@ -25,11 +25,14 @@ namespace TranslationHelperPlugin.Maker
 
         private static void MakerAPI_MakerFinishedLoading(object sender, EventArgs e)
         {
+            // ReSharper disable once StringLiteralTypo
+            const string top = "CharactorTop";
             var inputFields = new List<string[]>
             {
-                new[] {"firstname", "CharactorTop", "InputName", "InpFirstName"},
-                new[] {"lastname", "CharactorTop", "InputName", "InpLastName"},
-                new[] {"nickname", "CharactorTop", "InputNickName", "InpNickName"}
+
+                new[] {"firstname", top, "InputName", "InpFirstName"},
+                new[] {"lastname", top, "InputName", "InpLastName"},
+                new[] {"nickname", top, "InputNickName", "InpNickName"}
             };
 
             foreach (var entry in inputFields)

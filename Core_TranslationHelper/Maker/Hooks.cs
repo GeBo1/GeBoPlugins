@@ -1,20 +1,20 @@
-﻿using BepInEx.Harmony;
-using BepInEx.Logging;
+﻿using BepInEx.Logging;
 using HarmonyLib;
 
 #if AI||HS2
-using CharaCustom;
+
 #endif
 
 namespace TranslationHelperPlugin.Maker
 {
+    // ReSharper disable once PartialTypeWithSinglePart
     internal partial class Hooks
     {
         internal static ManualLogSource Logger => TranslationHelper.Logger;
 
         internal static Harmony SetupHooks()
         {
-            return HarmonyWrapper.PatchAll(typeof(Hooks));
+            return Harmony.CreateAndPatchAll(typeof(Hooks));
         }
 
 #if EC || KK

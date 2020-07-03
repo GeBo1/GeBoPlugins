@@ -132,7 +132,7 @@ namespace GameDialogHelperPlugin
 
             CharacterApi.RegisterExtraBehaviour<GameDialogHelperController>(GUID);
 
-            HarmonyWrapper.PatchAll(typeof(Hooks));
+            Harmony.CreateAndPatchAll(typeof(Hooks));
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
             SceneManager.sceneUnloaded += SceneManager_sceneUnloaded;
         }

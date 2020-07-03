@@ -1,7 +1,4 @@
-﻿using CharaCustom;
-using HarmonyLib;
-
-namespace TranslationHelperPlugin.Chara
+﻿namespace TranslationHelperPlugin.Chara
 {
     internal partial class Hooks
     {

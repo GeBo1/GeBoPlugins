@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#if false
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace GeBoCommon.Utilities
@@ -33,3 +31,4 @@ namespace GeBoCommon.Utilities
         }
     }
 }
+#endif

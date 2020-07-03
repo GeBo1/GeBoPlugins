@@ -1,30 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using BepInEx.Harmony;
+﻿using System.IO;
 using BepInEx.Logging;
-using ExtensibleSaveFormat;
-using GeBoCommon;
 using HarmonyLib;
 using KKAPI;
-using TranslationHelperPlugin.Chara;
-using KKAPI.Maker;
-using UnityEngine;
+
 #if AI||HS2
 using AIChara;
 #endif
 
 namespace TranslationHelperPlugin.Chara
 {
+    // ReSharper disable once PartialTypeWithSinglePart
     internal partial class Hooks
     {
         internal static ManualLogSource Logger => TranslationHelper.Logger;
 
         internal static Harmony SetupHooks()
         {
-            var harmony = HarmonyWrapper.PatchAll(typeof(Hooks));
+            var harmony = Harmony.CreateAndPatchAll(typeof(Hooks));
             return harmony;
 
         }
@@ -80,6 +72,7 @@ namespace TranslationHelperPlugin.Chara
 #endif
         internal static void ChaFile_SaveFile_Postfix(ChaFile __instance)
         {
+            // ReSharper disable once UseNullPropagation
             if (__instance == null) return;
             __instance.GetTranslationHelperController()
                 .SafeProcObject(c => c.OnCardSaveComplete(KoikatuAPI.GetCurrentGameMode()));

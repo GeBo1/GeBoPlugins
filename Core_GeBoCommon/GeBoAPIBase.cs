@@ -11,9 +11,6 @@ using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
 using XUnity.AutoTranslator.Plugin.Core.Constants;
 
-#if AI
-using AIChara;
-#endif
 
 namespace GeBoCommon
 {

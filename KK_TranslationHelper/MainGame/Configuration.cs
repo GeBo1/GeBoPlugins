@@ -1,8 +1,5 @@
-﻿using System;
-using HarmonyLib;
-using KKAPI.MainGame;
+﻿using HarmonyLib;
 using UnityEngine.Assertions;
-using UnityEngine.SceneManagement;
 
 
 namespace TranslationHelperPlugin.MainGame

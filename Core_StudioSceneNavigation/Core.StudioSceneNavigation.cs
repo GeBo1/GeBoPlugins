@@ -7,8 +7,6 @@ using System.Text;
 using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
-using BepInEx.Harmony;
-using BepInEx.Logging;
 using ExtensibleSaveFormat;
 using GeBoCommon;
 using GeBoCommon.Studio;
@@ -47,7 +45,7 @@ namespace StudioSceneNavigationPlugin
 
 
         private static readonly string TrackLastLoadedSceneFile = PathUtils.CombinePaths(
-            "BepinEx", "config", StringUtils.JoinStrings(".", GUID, "LastLoadedScene", "data"));
+            "BepInEx", "config", StringUtils.JoinStrings(".", GUID, "LastLoadedScene", "data"));
 
         private readonly SimpleLazy<Func<string, bool>> _isSceneValid;
 
@@ -128,7 +126,7 @@ namespace StudioSceneNavigationPlugin
         {
             if (_currentSceneFolder.IsNullOrEmpty()) _currentSceneFolder = SceneUtils.StudioSceneRootFolder;
 
-            HarmonyWrapper.PatchAll(typeof(Hooks));
+            Harmony.CreateAndPatchAll(typeof(Hooks));
             ExtendedSave.SceneBeingLoaded += ExtendedSave_SceneBeingLoaded;
             StudioSaveLoadApi.SceneLoad += StudioSaveLoadApi_SceneLoad;
         }
@@ -419,7 +417,8 @@ namespace StudioSceneNavigationPlugin
                             index -= offset;
                             if (index < 0 || index >= paths.Count)
                             {
-                                Logger.Log(BepInLogLevel.Info | BepInLogLevel.Message, "No further scenes to navigate to.");
+                                Logger.Log(BepInLogLevel.Info | BepInLogLevel.Message,
+                                    "No further scenes to navigate to.");
                                 return;
                             }
 

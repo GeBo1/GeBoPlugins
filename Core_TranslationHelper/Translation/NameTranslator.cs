@@ -2,7 +2,6 @@
 using System.Diagnostics.CodeAnalysis;
 using BepInEx.Logging;
 using GeBoCommon;
-using GeBoCommon.Chara;
 using GeBoCommon.AutoTranslation;
 
 namespace TranslationHelperPlugin.Translation

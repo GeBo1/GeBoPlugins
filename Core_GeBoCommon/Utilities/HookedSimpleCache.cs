@@ -1,10 +1,10 @@
-﻿using BepInEx.Harmony;
-using BepInEx.Logging;
+﻿using BepInEx.Logging;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 namespace GeBoCommon.Utilities
 {
@@ -16,7 +16,7 @@ namespace GeBoCommon.Utilities
         public event HookEventHandler HookPrefix;
         public event HookEventHandler HookPostfix;
 
-        private readonly HookConverter ConvertTargetToKey;
+        private readonly HookConverter _convertTargetToKey;
 
         // if true clear instance on activeSceneChanged
         public bool EmptyCacheOnSceneChange { get; }
@@ -28,7 +28,7 @@ namespace GeBoCommon.Utilities
 
         public HookedSimpleCache(CacheDataLoader loader, HookConverter converter, bool useDefaultRemovalHook = false, bool emptyCacheOnSceneChange = false) : base(loader)
         {
-            ConvertTargetToKey = converter;
+            _convertTargetToKey = converter;
             EmptyCacheOnSceneChange = emptyCacheOnSceneChange;
             UseDefaultRemovalHook = useDefaultRemovalHook;
 
@@ -51,7 +51,7 @@ namespace GeBoCommon.Utilities
                 throw new Exception("Unable to wrap postfix");
             }
 
-            var harmony = HarmonyWrapper.PatchAll(GetType());
+            var harmony = Harmony.CreateAndPatchAll(GetType());
             harmony.Patch(hookTarget, prefix, postfix);
 
             SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
@@ -65,6 +65,7 @@ namespace GeBoCommon.Utilities
 
         private void DefaultRemovalHook(HookedSimpleCache<TKey, TValue, THookTarget> sender, HookedSimpleCacheEventArgs<TKey> e)
         {
+            Assert.IsNotNull(this);
             sender.Remove(e.Target);
             if (HookedSimpleCacheState.NeedsCleanup(typeof(THookTarget)))
             {
@@ -74,11 +75,9 @@ namespace GeBoCommon.Utilities
 
         private void SceneManager_activeSceneChanged(Scene arg0, Scene arg1)
         {
-            if (EmptyCacheOnSceneChange)
-            {
-                Logger?.LogDebug($"HookedSimpleCache: Clearing {Count} entries from {this} on activeSceneChanged");
-                Clear();
-            }
+            if (!EmptyCacheOnSceneChange) return;
+            Logger?.LogDebug($"{GetType().Name}: Clearing {Count} entries from {this} on activeSceneChanged");
+            Clear();
         }
 
         public void OnHookPrefix(HookedSimpleCacheEventArgs<TKey> e)
@@ -93,7 +92,7 @@ namespace GeBoCommon.Utilities
 
         internal static void PrefixHook(THookTarget __instance)
         {
-            foreach (IHookedCache cache in HookedSimpleCacheState.GetRegisteredCaches(typeof(THookTarget)))
+            foreach (var cache in HookedSimpleCacheState.GetRegisteredCaches(typeof(THookTarget)))
             {
                 var key = cache.ConvertTargetToKey(__instance);
                 cache.OnHookPrefix(new HookedSimpleCacheEventArgs<TKey>((TKey)key));
@@ -102,7 +101,7 @@ namespace GeBoCommon.Utilities
 
         internal static void PostfixHook(THookTarget __instance)
         {
-            foreach (IHookedCache cache in HookedSimpleCacheState.GetRegisteredCaches(typeof(THookTarget)))
+            foreach (var cache in HookedSimpleCacheState.GetRegisteredCaches(typeof(THookTarget)))
             {
                 var key = cache.ConvertTargetToKey(__instance);
                 cache.OnHookPostfix(new HookedSimpleCacheEventArgs<TKey>((TKey)key));
@@ -111,7 +110,7 @@ namespace GeBoCommon.Utilities
 
         object IHookedCache.ConvertTargetToKey(object obj)
         {
-            return (object)ConvertTargetToKey((THookTarget)obj);
+            return _convertTargetToKey((THookTarget)obj);
         }
 
         public void OnHookPrefix(IHookedCacheEventArgs e)
@@ -127,8 +126,8 @@ namespace GeBoCommon.Utilities
 
     public class HookedSimpleCacheEventArgs<TEventTarget> : CancelEventArgs, IHookedCacheEventArgs
     {
-        public TEventTarget Target { get; private set; }
-        object IHookedCacheEventArgs.Target => (object)Target;
+        public TEventTarget Target { get; }
+        object IHookedCacheEventArgs.Target => Target;
 
         public HookedSimpleCacheEventArgs(TEventTarget target)
         {
@@ -139,8 +138,8 @@ namespace GeBoCommon.Utilities
 
     internal static class HookedSimpleCacheState
     {
-        internal static readonly Dictionary<string, List<WeakReference>> cacheRegistry = new Dictionary<string, List<WeakReference>>();
-        internal static readonly HashSet<string> needsCleanup = new HashSet<string>();
+        internal static readonly Dictionary<string, List<WeakReference>> CacheRegistry = new Dictionary<string, List<WeakReference>>();
+        internal static readonly HashSet<string> NeedsCleanupSet = new HashSet<string>();
 
         private static string TypeToKey(Type typ)
         {
@@ -154,33 +153,32 @@ namespace GeBoCommon.Utilities
 
         private static IEnumerable<IHookedCache> GetRegisteredCaches(string key)
         {
-            if (cacheRegistry.TryGetValue(key, out List<WeakReference> registeredCaches))
+            if (!CacheRegistry.TryGetValue(key, out var registeredCaches)) yield break;
+
+            var dirty = false;
+            foreach (var cache in registeredCaches)
             {
-                bool dirty = false;
-                foreach (WeakReference cache in registeredCaches)
+                if (cache.IsAlive)
                 {
-                    if (cache.IsAlive)
-                    {
-                        yield return (IHookedCache)cache.Target;
-                    }
-                    else
-                    {
-                        dirty = true;
-                    }
+                    yield return (IHookedCache)cache.Target;
                 }
-                if (dirty)
+                else
                 {
-                    needsCleanup.Add(key);
+                    dirty = true;
                 }
+            }
+            if (dirty)
+            {
+                NeedsCleanupSet.Add(key);
             }
         }
 
         internal static void RegisterCache(Type typ, IHookedCache cache)
         {
-            string key = TypeToKey(typ);
-            if (!cacheRegistry.TryGetValue(key, out List<WeakReference> registeredCaches))
+            var key = TypeToKey(typ);
+            if (!CacheRegistry.TryGetValue(key, out var registeredCaches))
             {
-                cacheRegistry[key] = registeredCaches = new List<WeakReference>();
+                CacheRegistry[key] = registeredCaches = new List<WeakReference>();
             }
             registeredCaches.Add(new WeakReference(cache));
         }
@@ -192,7 +190,7 @@ namespace GeBoCommon.Utilities
 
         private static bool IsRegistered(string key)
         {
-            return cacheRegistry.ContainsKey(key);
+            return CacheRegistry.ContainsKey(key);
         }
 
         internal static bool NeedsCleanup(Type typ)
@@ -202,7 +200,7 @@ namespace GeBoCommon.Utilities
 
         private static bool NeedsCleanup(string key)
         {
-            return IsRegistered(key) && needsCleanup.Contains(key);
+            return IsRegistered(key) && NeedsCleanupSet.Contains(key);
         }
 
         internal static void Cleanup(Type typ)
@@ -217,8 +215,8 @@ namespace GeBoCommon.Utilities
                 return;
             }
 
-            cacheRegistry[key].RemoveAll((c) => !c.IsAlive);
-            needsCleanup.Remove(key);
+            CacheRegistry[key].RemoveAll((c) => !c.IsAlive);
+            NeedsCleanupSet.Remove(key);
         }
     }
 }

@@ -11,8 +11,18 @@ function Zip-Plugin {
     $plugin_bin_dir = $plugin_dir + "\bin\Release"
     $dll_name = $plugin + ".dll"
     
-    $dll = (Get-ChildItem -Path ($plugin_bin_dir) -Filter $dll_name -Recurse -Force)[0]
+    $dlls = (Get-ChildItem -Path ($plugin_bin_dir) -Filter $dll_name -Recurse -Force)
+    if (!$dlls) {
+        return
+    }
+    $dll = $dlls[0];
+
     $version = $dll.VersionInfo.FileVersion.ToString() 
+
+    if (!$version) {
+        return
+    }
+
     
     $workdir = $topdir + "\work"
     $destdir = $workdir + "\BepInEx\plugins\GeBo_Plugins"

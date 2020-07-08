@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-#if AI
+using GeBoCommon.Utilities;
+
+#if AI||HS2
 using AIChara;
 #endif
 
@@ -9,15 +11,15 @@ namespace StudioMultiSelectCharaPlugin
 {
     public class CharaId : IEquatable<CharaId>, IComparable<CharaId>, IComparable
     {
-        private readonly byte[] value;
+        private readonly byte[] _value;
 
-        private int? hashCode = null;
-
-        private string sortKey = null;
-
+        private readonly SimpleLazy<string> _sortKey;
+        private readonly SimpleLazy<int> _hashCode;
         public CharaId(byte[] bytes)
         {
-            value = bytes;
+            _value = bytes;
+            _sortKey = new SimpleLazy<string>(() => Convert.ToBase64String(_value));
+            _hashCode = new SimpleLazy<int>(() => GetSortKey().GetHashCode());
         }
 
         public CharaId(IEnumerable<byte> bytes) : this(bytes.ToArray())
@@ -36,43 +38,29 @@ namespace StudioMultiSelectCharaPlugin
                 return false;
             }
 
-            for (int i = 0; i < arr1.Length; i++)
-            {
-                if (arr1[i] != arr2[i])
-                {
-                    return false;
-                }
-            }
-            return true;
+            return !arr1.Where((t, i) => t != arr2[i]).Any();
         }
 
         public bool Equals(CharaId other)
         {
-            return other is object && IsByteArrayEqual(value, other.value);
+            return !(other is null) && IsByteArrayEqual(_value, other._value);
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is object)
+            if (obj != null)
             {
                 return ReferenceEquals(this, obj) || Equals(obj as CharaId);
             }
             return false;
         }
 
-        internal string GetSortKey()
-        {
-            return sortKey ?? (sortKey = Convert.ToBase64String(value));
-        }
+        internal string GetSortKey() => _sortKey.Value;
 
-        public override int GetHashCode()
-        {
-            return (hashCode ?? (hashCode = new int?(GetSortKey().GetHashCode()))).Value;
-        }
-
+        public override int GetHashCode() => _hashCode.Value;
         public int CompareTo(CharaId other)
         {
-            return GetSortKey().CompareTo(other.GetSortKey());
+            return string.Compare(GetSortKey(), other.GetSortKey(), StringComparison.Ordinal);
         }
 
         public int CompareTo(object obj)
@@ -82,7 +70,7 @@ namespace StudioMultiSelectCharaPlugin
 
         public static bool operator ==(CharaId left, CharaId right)
         {
-            return left is null ? right is null : left.Equals(right);
+            return left?.Equals(right) ?? right is null;
         }
 
         public static bool operator !=(CharaId left, CharaId right)
@@ -92,7 +80,7 @@ namespace StudioMultiSelectCharaPlugin
 
         public static bool operator <(CharaId left, CharaId right)
         {
-            return left is null ? right is object : left.CompareTo(right) < 0;
+            return left is null ? (right != null) : left.CompareTo(right) < 0;
         }
 
         public static bool operator <=(CharaId left, CharaId right)
@@ -102,7 +90,7 @@ namespace StudioMultiSelectCharaPlugin
 
         public static bool operator >(CharaId left, CharaId right)
         {
-            return left is object && left.CompareTo(right) > 0;
+            return left != null && left.CompareTo(right) > 0;
         }
 
         public static bool operator >=(CharaId left, CharaId right)

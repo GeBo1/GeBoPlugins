@@ -1,104 +1,92 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using ActionGame.Communication;
 
 namespace GameDialogHelperPlugin
 {
     public static class Extensions
     {
-        public static GameDialogHelperController GetGameDialogHelperControler(this ChaControl chaControl)
+        #region ChaControl
+        public static GameDialogHelperController GetGameDialogHelperController(this ChaControl chaControl)
         {
-            if (chaControl != null && chaControl.gameObject != null)
-            {
-                return chaControl.gameObject.GetComponent<GameDialogHelperController>();
-            }
-            return null;
+            return chaControl?.gameObject?.GetComponent<GameDialogHelperController>();
         }
 
         public static void Remember(this ChaControl chaControl, int question, int answer)
         {
-            if (chaControl != null)
-            {
-                var controller = chaControl.GetGameDialogHelperControler();
-                if (controller != null)
-                {
-                    controller.Remember(question, answer);
-                }
-            }
+            chaControl?.GetGameDialogHelperController()?.Remember(question, answer);
         }
 
         public static bool CanRecallQuestion(this ChaControl chaControl, int question)
         {
-            if (chaControl != null)
-            {
-                var controller = chaControl.GetGameDialogHelperControler();
-                if (controller != null)
-                {
-                    return controller.CanRecallQuestion(question);
-                }
-            }
-            return false;
+            return chaControl?.GetGameDialogHelperController()?.CanRecallQuestion(question) ?? false;
         }
 
         public static bool CanRecallAnswer(this ChaControl chaControl, int question, int answer)
         {
-            if (chaControl != null)
-            {
-                var controller = chaControl.GetGameDialogHelperControler();
-                if (controller != null)
-                {
-                    return controller.CanRecallAnswer(question, answer);
-                }
-            }
-            return false;
+            return chaControl?.GetGameDialogHelperController()?.CanRecallAnswer(question, answer) ?? false;
         }
 
-        public static int GetQuestionId(this Info.SelectInfo selectInfo)
+        public static int TimesQuestionAnswered(this ChaControl chaControl, int question)
         {
-            if (selectInfo != null && selectInfo.introduction != null)
-            {
-                var tmp = selectInfo.introduction.file?.Split('_');
-                if (tmp?.Length == 4)
-                {
-                    try
-                    {
-                        return int.Parse(tmp[3], NumberStyles.Integer);
-                    }
-                    catch (OverflowException) { }
-                    catch (FormatException) { }
-                    catch (ArgumentException) { }
-                }
-            }
-            return -1;
+            return chaControl?.GetGameDialogHelperController()?.TimesQuestionAnswered(question) ?? 0;
         }
 
+        public static int TimesAnswerSelected(this ChaControl chaControl, int question, int answer)
+        {
+            return chaControl?.GetGameDialogHelperController()?.TimesAnswerSelected(question, answer) ?? 0;
+        }
+
+        #endregion ChaControl
+
+        #region Heroine
         public static void Remember(this SaveData.Heroine heroine, int question, int answer)
         {
-            if (heroine != null && heroine.chaCtrl != null)
-            {
-                heroine.chaCtrl.Remember(question, answer);
-            }
+            heroine?.chaCtrl?.Remember(question, answer);
         }
 
         public static bool CanRecallQuestion(this SaveData.Heroine heroine, int question)
         {
-            if (heroine != null && heroine.chaCtrl != null)
-            {
-                return heroine.chaCtrl.CanRecallQuestion(question);
-            }
-            return false;
+            return heroine?.chaCtrl?.CanRecallQuestion(question) ?? false;
         }
 
         public static bool CanRecallAnswer(this SaveData.Heroine heroine, int question, int answer)
         {
-            if (heroine != null && heroine.chaCtrl != null)
-            {
-                return heroine.chaCtrl.CanRecallAnswer(question, answer);
-            }
-            return false;
+            return heroine?.chaCtrl?.CanRecallAnswer(question, answer) ?? false;
         }
+
+        public static int TimesQuestionAnswered(this SaveData.Heroine heroine, int question)
+        {
+            return heroine?.chaCtrl?.TimesQuestionAnswered(question) ?? 0;
+        }
+
+        public static int TimesAnswerSelected(this SaveData.Heroine heroine, int question, int answer)
+        {
+            return heroine?.chaCtrl?.TimesAnswerSelected(question, answer) ?? 0;
+        }
+
+        #endregion Heroine
+
+        #region SelectInfo
+        public static int GetQuestionId(this Info.SelectInfo selectInfo)
+        {
+            if (selectInfo?.introduction == null) return -1;
+            var tmp = selectInfo.introduction.file?.Split('_');
+            if (tmp?.Length != 4) return -1;
+            try
+            {
+                return int.Parse(tmp[3], NumberStyles.Integer);
+            }
+#pragma warning disable CA1031 // Do not catch general exception types
+            catch (OverflowException) { }
+            catch (FormatException) { }
+            catch (ArgumentException) { }
+#pragma warning restore CA1031 // Do not catch general exception types
+
+            return -1;
+        }
+
+        #endregion SelectInfo
+
     }
 }

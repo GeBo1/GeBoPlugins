@@ -1,20 +1,16 @@
-﻿using BepInEx;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using GeBoCommon;
-using HarmonyLib;
+using GeBoCommon.Utilities;
 using KKAPI.Studio;
 using KKAPI.Utilities;
 using Studio;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using BepinLogLevel = BepInEx.Logging.LogLevel;
-using KeyboardShortcut = BepInEx.Configuration.KeyboardShortcut;
-#if AI
-using AIChara;
-#endif
+using BepInLogLevel = BepInEx.Logging.LogLevel;
 
 namespace StudioMultiSelectCharaPlugin
 {
@@ -22,36 +18,31 @@ namespace StudioMultiSelectCharaPlugin
     [BepInProcess(Constants.StudioProcessName)]
     public partial class StudioMultiSelectChara
     {
-        internal static new ManualLogSource Logger;
         public const string GUID = "com.gebo.BepInEx.studiomultiselectchara";
-        public const string PluginName = "Studio Multiselect Chara";
-        public const string Version = "0.9.0";
+        public const string PluginName = "Studio MultiSelect Chara";
+        public const string Version = "0.9.1";
+        internal static new ManualLogSource Logger;
 
-        private bool busy = false;
-
-        #region configuration
-
-        public static ConfigEntry<bool> Enabled { get; private set; }
-        public static ConfigEntry<KeyboardShortcut> MultiselectShortcut { get; private set; }
-        public static ConfigEntry<bool> NotificationSoundsEnabled { get; private set; }
-
-        #endregion configuration
+        private bool _busy;
 
         internal void Main()
         {
             Logger = Logger ?? base.Logger;
             Enabled = Config.Bind("Config", "Enabled", true, "Whether the plugin is enabled");
-            MultiselectShortcut = Config.Bind("Keyboard Shortcuts", "Navigate Next", new KeyboardShortcut(KeyCode.Tab, KeyCode.LeftShift), "Perform multiselect");
-            NotificationSoundsEnabled = Config.Bind("Config", "Notification Sounds", true, "When enabled, notification sounds will play when selection is complete");
+            MultiSelectShortcut = Config.Bind("Keyboard Shortcuts", "Perform multi-select",
+                new KeyboardShortcut(KeyCode.Tab, KeyCode.LeftShift),
+                "Select all instances of the currently selected character");
+            NotificationSoundsEnabled = Config.Bind("Config", "Notification Sounds", true,
+                "When enabled, notification sounds will play when selection is complete");
             GeBoAPI.Instance.SetupNotificationSoundConfig(GUID, NotificationSoundsEnabled);
         }
 
         internal void Update()
         {
-            if (Enabled.Value && MultiselectShortcut.Value.IsDown() && !busy)
+            if (Enabled.Value && MultiSelectShortcut.Value.IsDown() && !_busy)
             {
-                busy = true;
-                StartCoroutine(UpdateSelectionsCoroutine().AppendCo(() => busy = false));
+                _busy = true;
+                StartCoroutine(UpdateSelectionsCoroutine().AppendCo(() => _busy = false));
             }
         }
 
@@ -62,12 +53,12 @@ namespace StudioMultiSelectCharaPlugin
 
         public static IEnumerable<CharaId> GetSelectedMatchIds()
         {
-            return StudioAPI.GetSelectedCharacters().Select((c) => c.GetMatchId()).Distinct();
+            return StudioAPI.GetSelectedCharacters().Select(c => c.GetMatchId()).Distinct();
         }
 
         private IEnumerable<TreeNodeObject> EnumerateTreeNodeObjects(TreeNodeObject root = null)
         {
-            List<TreeNodeObject> roots = new List<TreeNodeObject>();
+            var roots = new List<TreeNodeObject>();
             if (root != null)
             {
                 roots.Add(root);
@@ -80,12 +71,13 @@ namespace StudioMultiSelectCharaPlugin
                     roots.AddRange(root.GetTreeNodeCtrl().GetTreeNodeObjects());
                 }
             }
-            foreach (TreeNodeObject entry in roots)
+
+            foreach (var entry in roots)
             {
                 yield return entry;
-                foreach (TreeNodeObject childNode in entry.child)
+                foreach (var childNode in entry.child)
                 {
-                    foreach (TreeNodeObject tnObj in EnumerateTreeNodeObjects(childNode))
+                    foreach (var tnObj in EnumerateTreeNodeObjects(childNode))
                     {
                         yield return tnObj;
                     }
@@ -100,9 +92,10 @@ namespace StudioMultiSelectCharaPlugin
             {
                 tnRoot = root.treeNodeObject;
             }
-            foreach (TreeNodeObject tnObj in EnumerateTreeNodeObjects(tnRoot))
+
+            foreach (var tnObj in EnumerateTreeNodeObjects(tnRoot))
             {
-                if (Singleton<Studio.Studio>.Instance.dicInfo.TryGetValue(tnObj, out ObjectCtrlInfo result))
+                if (Singleton<Studio.Studio>.Instance.dicInfo.TryGetValue(tnObj, out var result))
                 {
                     yield return result;
                 }
@@ -111,12 +104,12 @@ namespace StudioMultiSelectCharaPlugin
 
         private void SelectCharasById(CharaId matchId)
         {
-            int selected = 0;
-            int origCharCount = StudioAPI.GetSelectedCharacters().Count();
-            int origObjCount = StudioAPI.GetSelectedObjects().Count() - origCharCount;
-            foreach (ObjectCtrlInfo objectCtrlInfo in EnumerateObjects())
+            var selected = 0;
+            var origCharCount = StudioAPI.GetSelectedCharacters().Count();
+            var origObjCount = StudioAPI.GetSelectedObjects().Count() - origCharCount;
+            foreach (var objectCtrlInfo in EnumerateObjects())
             {
-                Logger.Log(BepinLogLevel.Debug, $"SelectCharasById: {objectCtrlInfo}");
+                Logger.DebugLogDebug($"SelectCharasById: {objectCtrlInfo}");
                 if (objectCtrlInfo is OCIChar ociChar)
                 {
                     if (DoesCharaMatch(matchId, ociChar))
@@ -137,28 +130,40 @@ namespace StudioMultiSelectCharaPlugin
                     objectCtrlInfo.UnselectInWorkarea();
                 }
             }
-            Logger.Log(BepinLogLevel.Info | BepinLogLevel.Message, $"characters selected: {selected} ({selected - origCharCount} new selections, {origObjCount} non-characters unselected)");
+
+            Logger.Log(BepInLogLevel.Info | BepInLogLevel.Message,
+                $"characters selected: {selected} ({selected - origCharCount} new selections, {origObjCount} non-characters unselected)");
             GeBoAPI.Instance.PlayNotificationSound(NotificationSound.Success);
         }
 
         private IEnumerator UpdateSelectionsCoroutine()
         {
-            var selectedIds = GetSelectedMatchIds();
-            int selectedCount = selectedIds.Count();
+            var selectedIds = GetSelectedMatchIds().ToList();
+            var selectedCount = selectedIds.Count;
             if (selectedCount == 0)
             {
-                Logger.Log(BepinLogLevel.Warning | BepinLogLevel.Message, "No characters selected");
+                Logger.Log(BepInLogLevel.Warning | BepInLogLevel.Message, "No characters selected");
                 GeBoAPI.Instance.PlayNotificationSound(NotificationSound.Error);
             }
             else if (selectedCount != 1)
             {
-                Logger.Log(BepinLogLevel.Warning | BepinLogLevel.Message, "Select only instances of a single character.");
+                Logger.Log(BepInLogLevel.Warning | BepInLogLevel.Message,
+                    "Select only instances of a single character.");
                 GeBoAPI.Instance.PlayNotificationSound(NotificationSound.Error);
             }
             else
             {
-                yield return StartCoroutine(CoroutineUtils.CreateCoroutine(() => SelectCharasById(selectedIds.First())));
+                yield return
+                    StartCoroutine(CoroutineUtils.CreateCoroutine(() => SelectCharasById(selectedIds.First())));
             }
         }
+
+        #region configuration
+
+        public static ConfigEntry<bool> Enabled { get; private set; }
+        public static ConfigEntry<KeyboardShortcut> MultiSelectShortcut { get; private set; }
+        public static ConfigEntry<bool> NotificationSoundsEnabled { get; private set; }
+
+        #endregion configuration
     }
 }

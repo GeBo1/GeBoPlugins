@@ -10,9 +10,13 @@ namespace GeBoCommon.AutoTranslation
         object DefaultCache { get; }
 
         bool TryTranslate(string untranslatedText, out string translatedText);
+        bool TryTranslate(string untranslatedText, int scope, out string translatedText);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "RCS1047", Justification = "Inherited naming")]
         void TranslateAsync(string untranslatedText, Action<ITranslationResult> onCompleted);
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "RCS1047", Justification = "Inherited naming")]
+        void TranslateAsync(string untranslatedText, int scope, Action<ITranslationResult> onCompleted);
 
         void AddTranslationToCache(string key, string value, bool persistToDisk, int translationType, int scope);
         void ReloadTranslations();

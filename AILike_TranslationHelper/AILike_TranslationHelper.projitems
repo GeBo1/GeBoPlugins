@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>7a0f3c5c-2ebc-4cd3-9fa8-e827d0e787d6</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>AI_HS2_TranslationHelper</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AILike.TranslationHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Chara\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Chara\Extensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MainGame\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Maker\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Studio\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Translation\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Translation\Hooks.cs" />
+  </ItemGroup>
+</Project>

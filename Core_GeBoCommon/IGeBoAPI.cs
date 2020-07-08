@@ -1,20 +1,31 @@
 ﻿using System.Collections.Generic;
-#if AI
+using GeBoCommon.AutoTranslation;
+using GeBoCommon.Chara;
+#if AI || HS2
 using AIChara;
+
 #endif
 
 namespace GeBoCommon
 {
     public interface IGeBoAPI
     {
-        IEnumerable<KeyValuePair<int, string>> ChaFileIterNames(ChaFile chaFile);
+        IAutoTranslationHelper AutoTranslationHelper { get; }
+        IEnumerable<KeyValuePair<int, string>> ChaFileEnumerateNames(ChaFile chaFile);
 
         string ChaFileFullName(ChaFile chaFile);
 
-        void ChaFileSetName(ChaFile chaFile, int index, string name);
+        void ChaFileSetName(ChaFile chaFile, int index, string chaName);
 
         void PlayNotification(NotificationSound notificationSound);
 
-        AutoTranslation.IAutoTranslationHelper AutoTranslationHelper { get; }
+        int ChaFileNameToIndex(string name);
+        string ChaFileIndexToName(int index);
+
+        NameType ChaFileIndexToNameType(int index);
+
+        int ChaFileNameCount { get; }
+
+        IList<string> ChaFileNames { get; }
     }
 }

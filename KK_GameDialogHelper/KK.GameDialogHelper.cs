@@ -21,9 +21,9 @@ namespace GameDialogHelperPlugin
     [BepInDependency(KoikatuAPI.GUID, KoikatuAPI.VersionConst)]
     [BepInDependency(GeBoAPI.GUID, GeBoAPI.Version)]
     [BepInPlugin(GUID, PluginName, Version)]
-    [BepInProcess(Constants.GameProcessName)]
-#if KK
-    [BepInProcess(Constants.AltGameProcessName)]
+    [BepInProcess(Constants.MainGameProcessName)]
+#if KK || AI
+    [BepInProcess(Constants.MainGameProcessNameSteam)]
 #endif
     public partial class GameDialogHelper : BaseUnityPlugin
     {
@@ -34,20 +34,20 @@ namespace GameDialogHelperPlugin
         internal static new ManualLogSource Logger;
         internal static GameDialogHelper Instance;
 
-        private static readonly SimpleLazy<InfoCheckSelectConditionsDelegate> _infoCheckSelectConditions =
+        private static readonly SimpleLazy<InfoCheckSelectConditionsDelegate> InfoCheckSelectConditionsLoader =
             new SimpleLazy<InfoCheckSelectConditionsDelegate>(() =>
             {
                 var csc = AccessTools.Method(typeof(Info), "CheckSelectConditions");
-                return (InfoCheckSelectConditionsDelegate)Delegate.CreateDelegate(
+                return (InfoCheckSelectConditionsDelegate) Delegate.CreateDelegate(
                     typeof(InfoCheckSelectConditionsDelegate), csc);
             });
 
-        private static readonly string[] splitter = {",tag"};
+        private static readonly string[] Splitter = {",tag"};
         private static SaveData.Heroine _targetHeroine;
 
-        private static IPluginModeLogic Logic;
+        private static IPluginModeLogic _logic;
 
-        private readonly HashSet<string> SupportedSceneNames = new HashSet<string>(new[] {"Talk"});
+        private readonly HashSet<string> _supportedSceneNames = new HashSet<string>(new[] {"Talk"});
         internal static DialogInfo CurrentDialog { get; private set; }
 
         public static ConfigEntry<PluginMode> CurrentPluginMode { get; private set; }
@@ -63,7 +63,8 @@ namespace GameDialogHelperPlugin
                 ? _targetHeroine ?? (_targetHeroine = FindObjectOfType<TalkScene>()?.targetHeroine)
                 : null;
 
-        internal static InfoCheckSelectConditionsDelegate InfoCheckSelectConditions => _infoCheckSelectConditions.Value;
+        internal static InfoCheckSelectConditionsDelegate InfoCheckSelectConditions =>
+            InfoCheckSelectConditionsLoader.Value;
 
         internal static void SetCurrentDialog(int questionId, int correctAnswerId, int numChoices)
         {
@@ -75,7 +76,7 @@ namespace GameDialogHelperPlugin
             CurrentDialog = null;
         }
 
-        internal void Main()
+        public void Main()
         {
             Instance = this;
             Logger = base.Logger;
@@ -102,15 +103,15 @@ namespace GameDialogHelperPlugin
             switch (pluginMode)
             {
                 case PluginMode.RelationshipBased:
-                    Logic = new RelationshipBased();
+                    _logic = new RelationshipBased();
                     break;
 
                 case PluginMode.Advanced:
-                    Logic = new Advanced();
+                    _logic = new Advanced();
                     break;
 
                 default:
-                    Logic = new Disabled();
+                    _logic = new Disabled();
                     break;
             }
         }
@@ -121,21 +122,24 @@ namespace GameDialogHelperPlugin
             SetupPluginModeLogic(sender is ConfigEntry<PluginMode> configMode ? configMode.Value : PluginMode.Disabled);
         }
 
-        internal void Awake()
+        public void Awake()
         {
             Instance = this;
             Logger = base.Logger;
 
+            Logger.LogError($"Not configuring {nameof(GameDialogHelper)} because it's broken");
+            return;
+
             CharacterApi.RegisterExtraBehaviour<GameDialogHelperController>(GUID);
 
-            HarmonyWrapper.PatchAll(typeof(Hooks));
+            Harmony.CreateAndPatchAll(typeof(Hooks));
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
             SceneManager.sceneUnloaded += SceneManager_sceneUnloaded;
         }
 
         private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
         {
-            if (SupportedSceneNames.Contains(arg0.name))
+            if (_supportedSceneNames.Contains(arg0.name))
             {
                 CurrentlyEnabled = true;
                 _targetHeroine = null;
@@ -144,7 +148,7 @@ namespace GameDialogHelperPlugin
 
         private void SceneManager_sceneUnloaded(Scene arg0)
         {
-            if (SupportedSceneNames.Contains(arg0.name))
+            if (_supportedSceneNames.Contains(arg0.name))
             {
                 CurrentlyEnabled = false;
                 _targetHeroine = null;
@@ -154,18 +158,24 @@ namespace GameDialogHelperPlugin
 
         internal static bool EnabledForCurrentHeroine()
         {
-            return CurrentlyEnabled && Logic.EnabledForHeroine(TargetHeroine);
+            var result = CurrentlyEnabled && _logic.EnabledForHeroine(TargetHeroine);
+            Logger.LogDebug($"EnabledForCurrentHeroine => {result}");
+            return result;
         }
 
         internal static bool EnabledForCurrentQuestion()
         {
-            return CurrentlyEnabled && CurrentDialog != null && Logic.EnabledForQuestion(TargetHeroine, CurrentDialog);
+            var result = CurrentlyEnabled && CurrentDialog != null && _logic.EnabledForQuestion(TargetHeroine, CurrentDialog);
+            Logger.LogDebug($"EnabledForCurrentQuestion => {result}");
+            return result;
         }
 
         internal static bool EnabledForCurrentQuestionAnswer(int answer)
         {
-            return CurrentlyEnabled && CurrentDialog != null &&
-                   Logic.EnableForAnswer(TargetHeroine, CurrentDialog, answer);
+            var result =  CurrentlyEnabled && CurrentDialog != null &&
+                   _logic.EnableForAnswer(TargetHeroine, CurrentDialog, answer);
+            Logger.LogDebug($"EnabledForCurrentQuestionAnswer({answer}) => {result}");
+            return result;
         }
 
         /*
@@ -185,47 +195,37 @@ namespace GameDialogHelperPlugin
 
         internal static void HighlightSelections(ref string[] args)
         {
-            Logger.LogDebug($"HighlightSelection for {CurrentDialog.QuestionInfo}");
+            Logger.LogDebug($"HighlightSelections for {CurrentDialog.QuestionInfo}");
             if (EnabledForCurrentQuestion())
             {
                 // skip first entry in array
                 for (var i = 1; i < args.Length; i++)
                 {
                     var answerId = i - 1;
-                    if (!EnabledForCurrentQuestionAnswer(answerId))
-                    {
-                        continue;
-                    }
+                    if (!EnabledForCurrentQuestionAnswer(answerId)) continue;
 
                     var suffix = answerId == CurrentDialog.CorrectAnswerId
-                        ? Logic.CorrectHighlight
-                        : Logic.IncorrectHighlight;
-                    if (string.IsNullOrEmpty(suffix))
-                    {
-                        continue;
-                    }
+                        ? _logic.CorrectHighlight
+                        : _logic.IncorrectHighlight;
+                    if (string.IsNullOrEmpty(suffix)) continue;
 
-                    var tmp = args[i].Split(splitter, 2, StringSplitOptions.None);
-                    if (tmp.Length != 2)
-                    {
-                        continue;
-                    }
+                    var tmp = args[i].Split(Splitter, 2, StringSplitOptions.None);
+                    if (tmp.Length != 2) continue;
+                    Logger.LogDebug($"HighlightSelections: {i}: {args[i]}");
 
                     if (AutoTranslator.TryTranslate(tmp[0], out var translatedText))
                     {
                         tmp[0] = translatedText;
                     }
 
-                    args[i] = string.Join(string.Empty, new[] {tmp[0], suffix, splitter[0], tmp[1]});
+                    args[i] = string.Join(string.Empty, new[] {tmp[0], suffix, Splitter[0], tmp[1]});
                 }
             }
         }
 
-        internal static void ProcessDialogAnswered()
-        {
-            Logic.ProcessDialogAnswered(TargetHeroine, CurrentDialog);
-        }
+        internal static void ProcessDialogAnswered() => _logic.ProcessDialogAnswered(TargetHeroine, CurrentDialog);
+        
 
-        internal delegate int InfoCheckSelectConditionsDelegate(Info obj, int _conditions);
+        internal delegate int InfoCheckSelectConditionsDelegate(Info obj, int conditions);
     }
 }

@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Xml.Serialization;
+﻿using System.ComponentModel;
+// ReSharper disable UnusedMember.Global
 
 namespace GameDialogHelperPlugin
 {
-    public enum PluginMode : int
+    public enum PluginMode
     {
         [Description("Highlight answers based on relationships level")]
         RelationshipBased = 1,
@@ -19,7 +15,7 @@ namespace GameDialogHelperPlugin
         Disabled = int.MinValue
     }
 
-    public enum RelationshipLevel : int
+    public enum RelationshipLevel
     {
         [Description("Always show correct answers")]
         Anyone = -1,
@@ -37,7 +33,7 @@ namespace GameDialogHelperPlugin
         Disabled = int.MinValue
     }
 
-    public enum QuestionType : int
+    public enum QuestionType
     {
         Unknown = 0,
         Likes,
@@ -46,7 +42,7 @@ namespace GameDialogHelperPlugin
         Invitation
     }
 
-    public enum PhysicalAttribute : int
+    public enum PhysicalAttribute
     {
         None = 0,
         BustSize,
@@ -54,7 +50,7 @@ namespace GameDialogHelperPlugin
         Figure
     }
 
-    public enum LikeTarget : int
+    public enum LikeTarget
     {
         None = 0,
         Animal,
@@ -69,7 +65,7 @@ namespace GameDialogHelperPlugin
     }
 
     // almost the same as ActionGame.Communication.ResultEnum
-    public enum InvitationTarget : int
+    public enum InvitationTarget
     {
         None = 0,
         Chase = 1,

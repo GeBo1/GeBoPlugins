@@ -17,9 +17,9 @@ Contains shared code used by other plugins in this repo. Unless otherwise noted 
 
 **Note:** Requires [IllusionModdingAPI](https://github.com/IllusionMods/IllusionModdingAPI/)
 
-- AI
-- HS2
-- KK v0.9.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r2/KK_GeBoCommon.v0.9.1.zip)
+- AI v1.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/AI_GeBoCommon.v1.0.zip)
+- HS2 v1.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/HS2_GeBoCommon.v1.0.zip
+- KK v1.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/KK_GeBoCommon.v1.0.zip)
 
 ### GameDialogHelper 
 
@@ -31,14 +31,16 @@ Highlights correct dialog choice in KK main game. You can configure level of rel
 
 Fixes it so when player invites (or is invited) to swim/exercise with a girl he remembers to change his clothes rather than going in what he's already wearing. By default only applies if player clothes are already set to automatic, but can be configured to always be applied.
 
-- KK v1.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r5/KK_GameDressForSuccess.v1.0.zip)
+- KK v1.0.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/KK_GameDressForSuccess.v1.0.1.zip)
 
 
 ### StudioMultiselectChara
 
 If you select a character in studio and press the hotkey, all other instances of that character in the scene will also be selected. Useful for replacing all instances of a given character.
 
-- KK v0.9.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r3/KK_StudioMultiselectChara.v0.9.0.zip)
+- AI v0.9.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/AI_StudioMultiselectChara.v0.9.1.zip)
+- HS2 v0.9.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/HS2_StudioMultiselectChara.v0.9.1.zip)
+- KK v0.9.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/KK_StudioMultiselectChara.v0.9.1.zip)
 
 [//]: # (### StudioSceneCharaInfo)
 
@@ -46,7 +48,9 @@ If you select a character in studio and press the hotkey, all other instances of
 
 Provides hotkeys for loading the next/previous scene from the scenes folder. Supports [Illusion BrowserFolders](https://github.com/ManlyMarco/Illusion_BrowserFolders). Tracks last loaded image so it can pick up where it left off between sessions (or if you change folders).
 
-- KK v0.8.5 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r4/KK_StudioSceneNavigation.v0.8.5.zip)
+- AI v0.8.6 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/AI_StudioSceneNavigation.v0.8.6.zip)
+- HS2 v0.8.6 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/HS2_StudioSceneNavigation.v0.8.6.zip)
+- KK v0.8.6 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/KK_StudioSceneNavigation.v0.8.6.zip)
 
 ### TranslationCacheCleaner
 
@@ -54,7 +58,9 @@ Removes all entries from your translation cache file that would be translated by
 
 **Note:** Requires [XUnity.AutoTranslator](https://github.com/bbepis/XUnity.AutoTranslator)
 
-- KK v0.5.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r2/KK_TranslationCacheCleaner.v0.5.1.zip)
+- AI v0.5.2 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/AI_TranslationCacheCleaner.v0.5.2.zip)
+- HS2 v0.5.2 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/HS2_TranslationCacheCleaner.v0.5.2.zip)
+- KK v0.5.2 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/KK_TranslationCacheCleaner.v0.5.2.zip)
 
 ### TranslationHelper
 
@@ -65,13 +71,13 @@ Improves the experience of using XUnity.AutoTranslator in numerous ways.
 - Uses specific translation scopes for names, so you can have a file(s) with just name translations (detailed docs to come).
 - Maker option to toggle between saving translated names or original names for any unmodified names on the card (If you edit the name, it keeps your edit always)
 - Game specific features to update lists/trees/card previews in maker/studio/roster once card translation finishes.
-- **KK only** Option to reverse fullname to return 'GivenName FamilyName' (like Party)
+- (*KK Only*) Option to reverse fullname to return 'GivenName FamilyName' 
 
 Check plugin options to configure. Defaults to only using the translation cache, but for the best experience you may wish to set to `Fully Enabled`.
 
-- AI
-- HS2
-- KK
+- AI v0.9 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/AI_TranslationHelper.v0.9.zip)
+- HS2 v0.9 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/HS2_TranslationHelper.v0.9.zip)
+- KK v0.9 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/KK_TranslationHelper.v0.9.zip)
 
 
 

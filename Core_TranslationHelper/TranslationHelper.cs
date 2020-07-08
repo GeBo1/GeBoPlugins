@@ -12,6 +12,7 @@ using KKAPI.Studio;
 using KKAPI.Utilities;
 using TranslationHelperPlugin.Chara;
 using TranslationHelperPlugin.Translation;
+using UnityEngine;
 using Configuration = TranslationHelperPlugin.Translation.Configuration;
 using PluginData = XUnity.AutoTranslator.Plugin.Core.Constants.PluginData;
 
@@ -185,39 +186,43 @@ namespace TranslationHelperPlugin
             }
         }
 
-        internal void AddTranslatedNameToCache(string origName, string translatedName)
+        internal void AddTranslatedNameToCache(string origName, string translatedName, bool allowPersistToDisk=false)
         {
-            GeBoAPI.Instance.AutoTranslationHelper.AddTranslationToCache(origName, translatedName, true, 0x01, -1);
+            if (origName == translatedName || StringUtils.ContainsJapaneseChar(translatedName)) return;
+            // only persist if network translation enabled
+            var persistToDisk = allowPersistToDisk && CurrentCardLoadTranslationMode > CardLoadTranslationMode.CacheOnly;
+
+            GeBoAPI.Instance.AutoTranslationHelper.AddTranslationToCache(origName, translatedName, persistToDisk, 0x01, -1);
         }
 
         internal IEnumerator RegisterReplacements(ChaFile file)
         {
             if (file == null) yield break;
             //Logger.LogDebug($"RegisterReplacements {file} {file.parameter.fullname}");
-            if (!RegistrationGameModes.Contains(KoikatuAPI.GetCurrentGameMode()) ||
-                RegistrationManager.IsTracked(file))
-            {
-                yield break;
-            }
+            if (!RegistrationGameModes.Contains(KoikatuAPI.GetCurrentGameMode())) yield break;
 
             yield return CardNameManager.WaitOnCard(file);
+            if (RegistrationManager.IsTracked(file))
+            {
+                if (!RegistrationManager.HaveNamesChanged(file)) yield break;
+                Logger.LogFatal($"RegisterReplacements({file}): names changed!");
+                RegistrationManager.Untrack(file);
+            }
             RegistrationManager.Track(file);
         }
 
-        internal IEnumerator RegisterReplacementsWrapper(ChaFile file)
+        internal IEnumerator RegisterReplacementsWrapper(ChaFile file, bool alreadyTranslated=false)
         {
             if (file == null) yield break;
             // handle card translation BEFORE registering replacements
-            if (CurrentCardLoadTranslationMode != CardLoadTranslationMode.Disabled)
+            if (!alreadyTranslated && CurrentCardLoadTranslationMode != CardLoadTranslationMode.Disabled)
             {
                 file.StartMonitoredCoroutine(CardNameManager.TranslateCardNames(file));
                 yield return null;
             }
 
             //StartCoroutine(RegisterReplacements(file));
-            yield return file.StartMonitoredCoroutine(CoroutineUtils.ComposeCoroutine(
-                CardNameManager.WaitOnCard(file),
-                RegisterReplacements(file)));
+            /*yield return*/ file.StartMonitoredCoroutine(RegisterReplacements(file));
         }
 
         internal IEnumerator UnregisterReplacements(ChaFile file)

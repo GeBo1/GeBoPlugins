@@ -100,13 +100,9 @@ namespace TranslationHelperPlugin.Studio
                     HandleResult(entry, result);
                 }
 
-                // if name splits cleanly to 2 parts split before translating
-                var forceSplit =
-                    entry.name.Split(TranslationHelper.SpaceSplitter, StringSplitOptions.RemoveEmptyEntries).Length ==
-                    2;
                 TranslationHelper.Instance.StartCoroutine(
                     TranslationHelper.CardNameManager.TranslateCardName(entry.name, new NameScope((CharacterSex)sex),
-                        forceSplit, Handler));
+                        CardNameTranslationManager.CanForceSplitNameString(entry.name), Handler));
             }
         }
     }

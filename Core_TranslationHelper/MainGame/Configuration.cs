@@ -12,10 +12,8 @@ namespace TranslationHelperPlugin.MainGame
         internal static void Setup()
         {
             if (StudioAPI.InsideStudio) return;
-            Logger.LogInfo($"{typeof(Configuration).FullName}.{nameof(Setup)}");
+            Logger.LogDebug($"{typeof(Configuration).FullName}.{nameof(Setup)}");
             var harmony = Hooks.SetupHooks();
-
-
 
             GameSpecificSetup(harmony);
         }

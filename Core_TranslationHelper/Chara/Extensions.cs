@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Globalization;
 using GeBoCommon.Chara;
+using GeBoCommon.Utilities;
 using KKAPI.Chara;
 using UnityEngine;
 
@@ -75,7 +76,7 @@ namespace TranslationHelperPlugin.Chara
 
         public static void SetTranslatedName(this ChaFile chaFile, int index, string name)
         {
-            TranslationHelper.Logger?.LogDebug($"Extensions.SetTranslatedName: {chaFile} {index} {name}");
+            TranslationHelper.Logger?.DebugLogDebug($"Extensions.SetTranslatedName: {chaFile} {index} {name}");
             chaFile.SafeProc(cf =>
                 cf.GetTranslationHelperController().SafeProcObject(c => c.SetTranslatedName(index, name)));
         }

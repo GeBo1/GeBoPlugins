@@ -19,106 +19,24 @@ namespace TranslationHelperPlugin.Maker
         internal static void GameSpecificSetup(Harmony harmony)
         {
             Assert.IsNotNull(harmony);
-            MakerAPI.MakerFinishedLoading += MakerAPI_MakerFinishedLoading;
-            MakerAPI.MakerExiting += MakerAPI_MakerExiting;
         }
 
-        private static void MakerAPI_MakerFinishedLoading(object sender, EventArgs e)
+        private static IEnumerable<KeyValuePair<string, string[]>> GetNameInputFieldInfos()
         {
             // ReSharper disable once StringLiteralTypo
             const string top = "CharactorTop";
-            var inputFields = new List<string[]>
-            {
-
-                new[] {"firstname", top, "InputName", "InpFirstName"},
-                new[] {"lastname", top, "InputName", "InpLastName"},
-                new[] {"nickname", top, "InputNickName", "InpNickName"}
-            };
-
-            foreach (var entry in inputFields)
-            {
-                try
-                {
-                    SetupNameInputField(entry[0], entry.Skip(1).ToArray());
-                }
-#pragma warning disable CA1031 // Do not catch general exception types
-                catch (Exception err)
-                {
-                    Logger.LogError($"Unable to monitor {entry[0]} InputField for changes: {err}");
-                }
-#pragma warning restore CA1031 // Do not catch general exception types
-            }
-
-            CharacterApi.CharacterReloaded += CharacterApi_CharacterReloaded;
-
-            MakerAPI.GetCharacterControl().SafeProcObject(UpdateUIForChara);
+            yield return new KeyValuePair<string, string[]>("firstname", new[] {top, "InputName", "InpFirstName"});
+            yield return new KeyValuePair<string, string[]>("lastname", new[] {top, "InputName", "InpLastName"});
+            yield return new KeyValuePair<string, string[]>("nickname", new[] {top, "InputNickName", "InpNickName"});
         }
-
-        private static void CharacterApi_CharacterReloaded(object sender, CharaReloadEventArgs e)
+        private static IEnumerator GameSpecificUpdateUICoroutine(Controller controller)
         {
-            e?.ReloadedCharacter.SafeProcObject(UpdateUIForChara);
-        }
-
-        private static void MakerAPI_MakerExiting(object sender, EventArgs e)
-        {
-            CharacterApi.CharacterReloaded -= CharacterApi_CharacterReloaded;
-        }
-
-
-        private static void UpdateUIForChara(ChaControl chaControl)
-        {
-            chaControl.SafeProcObject(cc => cc.GetTranslationHelperController().SafeProcObject(
-                ctrl => ctrl.StartMonitoredCoroutine(UpdateUICoroutine(ctrl))));
-        }
-
-        private static IEnumerator UpdateUICoroutine(Controller controller)
-        {
-            if (controller == null) yield break;
-
-            yield return TranslationHelper.WaitOnCard(controller.ChaFileControl);
-
+            Assert.IsNotNull(controller);
             var makerBase = MakerAPI.GetMakerBase();
             if (makerBase == null) yield break;
 
             makerBase.GetComponentInChildren<CvsChara>().SafeProcObject(o => o.UpdateCustomUI());
             makerBase.GetComponentInChildren<CvsCharaEx>().SafeProcObject(o => o.UpdateCustomUI());
-        }
-
-
-        private static void SetupNameInputField(string name, params string[] inputFieldPath)
-        {
-            InputField nameField = null;
-            var index = GeBoAPI.Instance.ChaFileNameToIndex(name);
-            if (index == -1) throw new ArgumentException($"Unknown name: {name}", nameof(name));
-
-            Component top = MakerAPI.GetMakerBase();
-            foreach (var fieldName in inputFieldPath)
-            {
-                if (top == null) break;
-                top = top.GetComponentsInChildren<Component>()
-                    .FirstOrDefault(r => r.name == fieldName);
-            }
-
-
-            if (top != null) nameField = top.GetComponent<InputField>();
-
-            if (nameField == null)
-            {
-                Logger.LogDebug(
-                    $"Unable to find {typeof(InputField).FullName} {string.Join("/", inputFieldPath)} (might be NPC)");
-                return;
-            }
-
-            void Listener(string value)
-            {
-                var chaCtrl = MakerAPI.GetCharacterControl();
-                if (chaCtrl == null) return;
-                chaCtrl.GetTranslationHelperController().SafeProcObject(c => c.OnNameChanged(index, value));
-            }
-
-            nameField.onValueChanged.AddListener(Listener);
-            MakerAPI.MakerExiting += (sender, e) => nameField.onValueChanged.RemoveListener(Listener);
-            Logger.LogDebug($"Monitoring {nameField} for changes");
         }
     }
 }

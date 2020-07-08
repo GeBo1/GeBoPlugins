@@ -111,22 +111,5 @@ namespace TranslationHelperPlugin.MainGame
             if (label.text == "???") yield break;
             label.text = value;
         }
-
-
-        /*
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(Config.ConfigCharaSelectUI), "CreateList")]
-        [HarmonyPatch(typeof(CustomCharaFileInfoAssist), nameof(CustomCharaFileInfoAssist.CreateCharaFileInfoList))]
-        [HarmonyPatch(typeof(CoordinateFileInfoAssist), nameof(CoordinateFileInfoAssist.CreateCharaFileInfoList))]
-        internal static void CreateListPrefix() => TranslationHelper.AlternateLoadEventsEnabled = true;
-        */
-
-        /*
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(Config.ConfigCharaSelectUI), "CreateList")]
-        [HarmonyPatch(typeof(CustomCharaFileInfoAssist), nameof(CustomCharaFileInfoAssist.CreateCharaFileInfoList))]
-        [HarmonyPatch(typeof(CoordinateFileInfoAssist), nameof(CoordinateFileInfoAssist.CreateCharaFileInfoList))]
-        internal static void CreateListPostfix() => TranslationHelper.AlternateLoadEventsEnabled = false;
-        */
     }
 }

@@ -17,13 +17,12 @@ namespace TranslationHelperPlugin.Studio
 {
     internal static partial class Configuration
     {
-        internal const string GUID = TranslationHelper.GUID + ".translationscope";
         internal static ManualLogSource Logger => TranslationHelper.Logger;
 
         internal static void Setup()
         {
             if (!StudioAPI.InsideStudio) return;
-            Logger.LogInfo($"{typeof(Configuration).FullName}.{nameof(Setup)}");
+            Logger.LogDebug($"{typeof(Configuration).FullName}.{nameof(Setup)}");
             var harmony = Hooks.SetupHooks();
 
             CharacterApi.CharacterReloaded += CharacterApi_CharacterReloaded;

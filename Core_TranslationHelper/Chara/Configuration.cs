@@ -10,7 +10,7 @@ namespace TranslationHelperPlugin.Chara
 
         internal static void Setup()
         {
-            Logger.LogInfo($"{typeof(Configuration).FullName}.{nameof(Setup)}");
+            Logger.LogDebug($"{typeof(Configuration).FullName}.{nameof(Setup)}");
             var harmony = Hooks.SetupHooks();
             CharacterApi.RegisterExtraBehaviour<Controller>(GUID);
             GameSpecificSetup(harmony);

@@ -1,5 +1,6 @@
 ﻿using ActionGame;
 using BepInEx.Logging;
+using GeBoCommon.Utilities;
 using KKAPI.MainGame;
 
 namespace TranslationHelperPlugin.MainGame
@@ -18,14 +19,14 @@ namespace TranslationHelperPlugin.MainGame
 
         protected override void OnPeriodChange(Cycle.Type period)
         {
-            Logger.LogDebug($"{GetType().FullName}.{nameof(OnPeriodChange)}");
+            Logger.DebugLogDebug($"{GetType().FullName}.{nameof(OnPeriodChange)}");
             TranslationHelper.RegistrationManager.Cleanup();
             base.OnPeriodChange(period);
         }
 
         protected override void OnEnterNightMenu()
         {
-            Logger.LogDebug($"{GetType().FullName}.{nameof(OnEnterNightMenu)}");
+            Logger.DebugLogDebug($"{GetType().FullName}.{nameof(OnEnterNightMenu)}");
             TranslationHelper.RegistrationManager.Cleanup(true);
             base.OnEnterNightMenu();
         }
@@ -40,14 +41,14 @@ namespace TranslationHelperPlugin.MainGame
 
         protected override void OnEndH(HSceneProc proc, bool freeH)
         {
-            Logger.LogDebug($"{GetType().FullName}.{nameof(OnEndH)}");
+            Logger.DebugLogDebug($"{GetType().FullName}.{nameof(OnEndH)}");
             TranslationHelper.RegistrationManager.Cleanup();
             base.OnEndH(proc, freeH);
         }
 
         protected override void OnDayChange(Cycle.Week day)
         {
-            Logger.LogDebug($"{GetType().FullName}.{nameof(OnDayChange)}");
+            Logger.DebugLogDebug($"{GetType().FullName}.{nameof(OnDayChange)}");
             TranslationHelper.RegistrationManager.Cleanup(true);
             base.OnDayChange(day);
         }

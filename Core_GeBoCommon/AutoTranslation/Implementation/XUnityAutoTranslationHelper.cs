@@ -81,27 +81,6 @@ namespace GeBoCommon.AutoTranslation.Implementation
         }
 
         ManualLogSource IAutoTranslationHelper.Logger => Logger;
-
-        /*
-        private Func<object> DefaultCacheGetterLoader()
-        {
-            Func<object> _defaultCacheGetter = null;
-
-            var textCacheFieldInfo = AccessTools.Field(DefaultTranslator.GetType(), "TextCache");
-            if (textCacheFieldInfo != null)
-            {
-                _defaultCacheGetter = () => textCacheFieldInfo.GetValue(DefaultTranslator);
-            }
-            else
-            {
-                Logger.LogError("Unable to access DefaultCache");
-                _defaultCacheGetter = () => null;
-            }
-
-            return _defaultCacheGetter;
-        }
-        */
-
         public Dictionary<string, string> GetReplacements()
         {
             return _getReplacements();
@@ -141,8 +120,8 @@ namespace GeBoCommon.AutoTranslation.Implementation
                 }
                 catch (ArgumentException e)
                 {
-                    Logger.LogWarning(
-                        $"Mono bug preventing delegate creation for {method.Name}, using workaround: {e.Message}");
+                    Logger.LogDebug(
+                        $"Mono bug preventing delegate creation for {method.Name} ({e.Message}), using workaround instead");
                     addTranslationToCache = (key, value, persistToDisk, translationType, scope) =>
                         method.Invoke(DefaultCache, new object[] {key, value, persistToDisk, translationType, scope});
                 }

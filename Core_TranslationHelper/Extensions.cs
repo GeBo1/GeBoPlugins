@@ -18,7 +18,7 @@ namespace TranslationHelperPlugin
                 }
                 catch (Exception err)
                 {
-                    Logger.LogError($"executing {handler.Method}: {err.Message}");
+                    Logger.LogError($"executing {handler.Method}: {err} {err.Message}");
                 }
             }
         }

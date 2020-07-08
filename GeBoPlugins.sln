@@ -81,6 +81,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HS2_StudioMultiselectChara"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AI_StudioSceneNavigation", "AI_StudioSceneNavigation\AI_StudioSceneNavigation.csproj", "{C2C7182A-8F3E-495F-B350-6CEF46627A2B}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "AILike_TranslationHelper", "AILike_TranslationHelper\AILike_TranslationHelper.shproj", "{65E7C5C7-24E3-49DF-A62E-51CD57350C88}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Core_StudioSceneNavigation\Core_StudioSceneNavigation.projitems*{19796e45-b2ff-4206-8901-a1821b797df8}*SharedItemsImports = 4
@@ -91,14 +93,17 @@ Global
 		Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems*{622df8ad-567c-4036-8e13-636a5bbebb43}*SharedItemsImports = 4
 		Core_GeBoCommon.Studio\Shared.CharaStudio.projitems*{622df8ad-567c-4036-8e13-636a5bbebb43}*SharedItemsImports = 4
 		Core_GeBoCommon\Shared.Core.projitems*{622df8ad-567c-4036-8e13-636a5bbebb43}*SharedItemsImports = 4
+		AILike_TranslationHelper\AILike_TranslationHelper.projitems*{65e7c5c7-24e3-49df-a62e-51cd57350c88}*SharedItemsImports = 13
 		Core_TranslationHelper\Core_TranslationHelper.projitems*{6b60025d-20de-4df7-aeb2-be76490a7386}*SharedItemsImports = 4
 		Core_StudioMultiselectChara\Core_StudioMultiselectChara.projitems*{6b983c93-3232-41dc-b844-eb96bf7897ba}*SharedItemsImports = 4
 		Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems*{7193dfae-7481-4708-bcbb-81d01ff9f413}*SharedItemsImports = 4
 		Core_StudioSceneCharaInfo\Core_StudioSceneCharaInfo.projitems*{73ece425-f128-41c7-8d24-6567ab8b4923}*SharedItemsImports = 13
 		Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems*{7c2442d2-1c58-4c20-bcb0-3a56c8dddb16}*SharedItemsImports = 13
+		AILike_TranslationHelper\AILike_TranslationHelper.projitems*{945a3640-237b-4dac-9df1-bab021a20c8e}*SharedItemsImports = 4
 		Core_TranslationHelper\Core_TranslationHelper.projitems*{945a3640-237b-4dac-9df1-bab021a20c8e}*SharedItemsImports = 4
 		Core_StudioSceneNavigation\Core_StudioSceneNavigation.projitems*{9ae3fbcf-32d1-412e-8754-dbe1d3f0eb7c}*SharedItemsImports = 4
 		Core_StudioSceneNavigation\Core_StudioSceneNavigation.projitems*{9bf51fb9-d251-492b-a0b2-35e479ed90eb}*SharedItemsImports = 13
+		AILike_TranslationHelper\AILike_TranslationHelper.projitems*{a412dd33-e3cf-4af0-9c17-9a918947b10b}*SharedItemsImports = 4
 		Core_TranslationHelper\Core_TranslationHelper.projitems*{a412dd33-e3cf-4af0-9c17-9a918947b10b}*SharedItemsImports = 4
 		Core_StudioMultiselectChara\Core_StudioMultiselectChara.projitems*{a9bb5821-ceb9-42dc-b31f-820188043eac}*SharedItemsImports = 13
 		Core_TranslationCacheCleaner\Core_TranslationCacheCleaner.projitems*{bdc74c54-2ca0-4dc7-b783-0dab04bbf16a}*SharedItemsImports = 4
@@ -229,6 +234,7 @@ Global
 		{19796E45-B2FF-4206-8901-A1821B797DF8} = {EDCAD560-423D-456F-A39A-818D3BB38290}
 		{347E78E9-4046-46C8-9569-D51D3A79FB69} = {D2FAF07E-FF83-4CD4-B96E-FA81D947C6FC}
 		{C2C7182A-8F3E-495F-B350-6CEF46627A2B} = {EDCAD560-423D-456F-A39A-818D3BB38290}
+		{65E7C5C7-24E3-49DF-A62E-51CD57350C88} = {DB633DB4-148A-452A-B5CC-957335BDA302}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ACC65545-B46C-4998-B489-9249F65FD93B}

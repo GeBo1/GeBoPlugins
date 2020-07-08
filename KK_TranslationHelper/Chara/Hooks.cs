@@ -13,7 +13,6 @@ namespace TranslationHelperPlugin.Chara
             harmony.Patch(propGetter, new HarmonyMethod(prefix));
         }
 
-        // ReSharper disable once RedundantAssignment
         private static bool ChaFileParameterFullnamePrefix(ChaFileParameter __instance, ref string __result)
         {
             if (!TranslationHelper.KK_GivenNameFirst.Value) return true;

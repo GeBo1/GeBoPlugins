@@ -10,7 +10,7 @@ namespace GeBoCommon.AutoTranslation
 
         public AutoTranslationHelperBase()
         {
-            _logger = new SimpleLazy<ManualLogSource>(() => BepInEx.Logging.Logger.CreateLogSource(GetType().Name));
+            _logger = new SimpleLazy<ManualLogSource>(() => BepInEx.Logging.Logger.CreateLogSource(GetType().FullName));
         }
 
         protected bool FallbackTryTranslate(string _, out string translatedText)

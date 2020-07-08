@@ -18,7 +18,7 @@ using UnityEngine;
 
 namespace TranslationHelperPlugin.Chara
 {
-    public class Controller : CharaCustomFunctionController
+    public partial class Controller : CharaCustomFunctionController
     {
         private readonly SimpleLazy<string[]> _originalNames =
             new SimpleLazy<string[]>(() => new string[GeBoAPI.Instance.ChaFileNameCount]);
@@ -46,7 +46,6 @@ namespace TranslationHelperPlugin.Chara
             _monitoredCoroutines.Add(routine);
             return StartCoroutine(routine.AppendCo(() =>
             {
-                //Logger.LogWarning($"Finished {routine}");
                 _monitoredCoroutines.Remove(routine);
             }));
         }
@@ -71,7 +70,7 @@ namespace TranslationHelperPlugin.Chara
             SetExtendedData(null);
         }
 
-        internal void OnCardSaveComplete(GameMode _)
+        internal void OnCardSaveComplete(GameMode gameMode)
         {
             //TranslationHelper.Logger?.LogDebug($"Controller.OnCardSaveComplete: {RegistrationID}");
             if (!RestoreNamesOnSave) return;
@@ -80,13 +79,11 @@ namespace TranslationHelperPlugin.Chara
             {
                 OriginalNames[i] = TranslatedNames[i] = null;
             }
-
             TranslateCardNames();
         }
 
         private void DoReload(bool cardFullyLoaded = true)
         {
-            TranslationHelper.Logger?.LogDebug($"Controller.DoReload({cardFullyLoaded}): {RegistrationID}");
             IsTranslated = false;
             for (var i = 0; i < GeBoAPI.Instance.ChaFileNameCount; i++)
             {
@@ -139,7 +136,7 @@ namespace TranslationHelperPlugin.Chara
 
         private void RestoreCardNames()
         {
-            //TranslationHelper.Logger?.LogDebug($"Controller.RestoreCardNames: {RegistrationID}");
+            TranslationHelper.Logger?.DebugLogDebug($"Controller.RestoreCardNames: {RegistrationID}");
             if (!IsTranslated) return;
             IsTranslated = false;
             for (var i = 0; i < GeBoAPI.Instance.ChaFileNames.Count; i++)
@@ -162,7 +159,7 @@ namespace TranslationHelperPlugin.Chara
         }
         public void TranslateCardNames(bool cardFullyLoaded=true)
         {
-            //TranslationHelper.Logger?.LogDebug($"Controller.TranslateCardNames: {RegistrationID} {IsTranslated}");
+            TranslationHelper.Logger?.DebugLogDebug($"Controller.TranslateCardNames: {RegistrationID} {IsTranslated}");
             if (TranslationHelper.Instance.CurrentCardLoadTranslationMode == CardLoadTranslationMode.Disabled) return;
             if (!IsTranslated)
             {
@@ -180,7 +177,7 @@ namespace TranslationHelperPlugin.Chara
                 () => OnTranslationComplete(cardFullyLoaded)));
         }
 
-        public void RegisterReplacements()
+        public void RegisterReplacements(bool alreadyTranslated = false)
         {
             //TranslationHelper.Logger?.LogDebug($"Controller.RegisterReplacements: {RegistrationID}");
             if (!TranslationHelper.RegisterActiveCharacters.Value ||
@@ -189,7 +186,8 @@ namespace TranslationHelperPlugin.Chara
                 return;
             }
 
-            StartMonitoredCoroutine(TranslationHelper.Instance.RegisterReplacementsWrapper(ChaFileControl));
+            StartMonitoredCoroutine(
+                TranslationHelper.Instance.RegisterReplacementsWrapper(ChaFileControl, alreadyTranslated));
         }
 
         public void UnregisterReplacements()
@@ -201,11 +199,11 @@ namespace TranslationHelperPlugin.Chara
 
         public void OnTranslationComplete(bool cardFullyLoaded = false)
         {
-            //TranslationHelper.Logger?.LogDebug($"Controller.OnTranslationComplete: {RegistrationID}");
+            TranslationHelper.Logger?.DebugLogDebug($"Controller.OnTranslationComplete: {RegistrationID}");
             TranslationInProgress = false;
             if (!cardFullyLoaded) return;
 
-            RegisterReplacements();
+            RegisterReplacements(true);
         }
 
         

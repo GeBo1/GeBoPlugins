@@ -23,25 +23,27 @@ namespace TranslationHelperPlugin.Chara
             for (var i = 0; i < names.Count; i++)
             {
                 var dest = i;
-                
-                chaFile.StartMonitoredCoroutine(
-                    CardNameTranslationManager.Instance.TranslateCardName(names[i], new NameScope(chaFile.GetSex(), chaFile.GetNameType(i)), (r) =>
-                    {
-                        if (r.Succeeded)
-                        {
-                            names[dest] = r.TranslatedText;
-                        }
 
-                        started--;
-                    }));
+                chaFile.StartMonitoredCoroutine(
+                    CardNameTranslationManager.Instance.TranslateCardName(names[i],
+                        new NameScope(chaFile.GetSex(), chaFile.GetNameType(i)), r =>
+                        {
+                            if (r.Succeeded)
+                            {
+                                names[dest] = r.TranslatedText;
+                            }
+
+                            started--;
+                        }));
             }
 
-            yield return new WaitUntil(()=>started == 0);
+            yield return new WaitUntil(() => started == 0);
 
             if (TranslationHelper.KK_GivenNameFirst.Value)
             {
                 names.Reverse();
             }
+
             callback(string.Join(" ", names.ToArray()));
         }
     }

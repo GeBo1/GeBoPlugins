@@ -142,6 +142,8 @@ namespace TranslationHelperPlugin
         public IEnumerator TranslateCardName(string originalName, NameScope scope, bool forceSplit,
             params TranslationResultHandler[] callbacks)
         {
+            Logger.DebugLogDebug($"TranslateCardName: {originalName}: scope={scope}, forceSplit={forceSplit}");
+
             if (RecentTranslationsByName.TryGetValue(originalName, out var cachedName))
             {
                 Logger.DebugLogDebug($"TranslateCardName: {originalName}: cache hit: {cachedName}");

@@ -4,6 +4,7 @@ using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using HarmonyLib;
 using Studio;
+using TranslationHelperPlugin.Chara;
 using IllusionStudio = Studio.Studio;
 #if AI || HS2
 
@@ -33,7 +34,12 @@ namespace TranslationHelperPlugin.Studio
                 return;
             }
 
-            var name = oChar.charInfo?.chaFile?.parameter?.fullname;
+            var chaFile = oChar.charInfo?.chaFile;
+            if (chaFile == null) return;
+
+            Configuration.UpdateTreeForChar(chaFile);
+
+            var name = chaFile.GetFullName();
             if (string.IsNullOrEmpty(name)) return;
             _source.textName = name;
         }

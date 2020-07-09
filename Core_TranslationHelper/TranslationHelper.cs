@@ -30,7 +30,7 @@ namespace TranslationHelperPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationhelper";
         public const string PluginName = "Translation Helper";
-        public const string Version = "0.9";
+        public const string Version = "0.9.1";
 
         internal static new ManualLogSource Logger;
         public static TranslationHelper Instance;
@@ -205,7 +205,6 @@ namespace TranslationHelperPlugin
             if (RegistrationManager.IsTracked(file))
             {
                 if (!RegistrationManager.HaveNamesChanged(file)) yield break;
-                Logger.LogFatal($"RegisterReplacements({file}): names changed!");
                 RegistrationManager.Untrack(file);
             }
             RegistrationManager.Track(file);

@@ -64,6 +64,7 @@ namespace TranslationHelperPlugin.MainGame
 
             void UpdateDisplayedCard(string name)
             {
+                if (string.IsNullOrEmpty(name)) return;
                 foreach (var textName in FindChildComponents<Text>(__instance, "textName",
                     "resize/text/name", "resize/image/chara"))
                 {

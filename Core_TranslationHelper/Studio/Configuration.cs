@@ -1,15 +1,13 @@
-﻿using System.Collections;
-using System.Linq;
+﻿using System.Linq;
 using BepInEx.Logging;
-using GeBoCommon.Chara;
 using KKAPI.Chara;
 using KKAPI.Studio;
 using Studio;
 using TranslationHelperPlugin.Chara;
 using IllusionStudio = Studio.Studio;
-
 #if AI || HS2
 using AIChara;
+
 #endif
 
 
@@ -35,25 +33,27 @@ namespace TranslationHelperPlugin.Studio
             e?.ReloadedCharacter.SafeProcObject(UpdateTreeForChar);
         }
 
-        private static void UpdateTreeForChar(ChaControl chaControl)
+        internal static void UpdateTreeForChar(ChaControl chaControl)
         {
-            //Logger.LogDebug($"UpdateTreeForChar {chaControl}");
-            chaControl.SafeProcObject(cc => cc.GetTranslationHelperController().SafeProcObject(
-                ctrl => ctrl.StartMonitoredCoroutine(UpdateTreeCoroutine(ctrl))));
+            UpdateTreeForChar(chaControl?.chaFile);
         }
 
-        private static IEnumerator UpdateTreeCoroutine(Controller controller)
+        internal static void UpdateTreeForChar(ChaFile chaFile)
         {
-            //Logger.LogDebug($"UpdateTreeCoroutine {controller}");
-            if (controller == null) yield break;
-            yield return null;
-            var match = Singleton<IllusionStudio>.Instance.dicInfo
-                .Where(e => e.Value is OCIChar ociChar && ociChar.charInfo.chaFile == controller.ChaFileControl)
-                .Select(e => e.Key).FirstOrDefault();
-            if (match == null) yield break;
-            yield return TranslationHelper.WaitOnCard(controller.ChaFileControl);
-            match.textName = controller.ChaFileControl.GetFullName();
-            //Logger.LogDebug($"UpdateTreeCoroutine {controller} DONE");
+            if (chaFile == null) return;
+
+            void Handler(string fullName)
+            {
+                if (string.IsNullOrEmpty(fullName)) return;
+                var match = Singleton<IllusionStudio>.Instance.dicInfo
+                    .Where(e => e.Value is OCIChar ociChar && ociChar.charInfo.chaFile == chaFile)
+                    .Select(e => e.Key).FirstOrDefault();
+                if (match == null) return;
+
+                match.textName = fullName;
+            }
+
+            chaFile.TranslateFullName(Handler);
         }
     }
 }

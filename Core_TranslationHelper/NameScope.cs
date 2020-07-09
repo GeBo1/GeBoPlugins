@@ -19,7 +19,9 @@ namespace TranslationHelperPlugin
         public NameScope(CharacterSex sex) : this(sex, NameType.Unclassified) { }
         public NameScope() : this(CharacterSex.Unspecified, NameType.Unclassified) { }
 
-
-
+        public override string ToString()
+        {
+            return $"NameScope({Sex},{NameType},{TranslationScope})";
+        }
     }
 }

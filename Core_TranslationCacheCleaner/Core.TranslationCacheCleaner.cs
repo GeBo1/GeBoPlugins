@@ -23,7 +23,7 @@ namespace TranslationCacheCleanerPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationcachecleaner";
         public const string PluginName = "Translation Cache Cleaner";
-        public const string Version = "0.5.2";
+        public const string Version = "0.5.3";
 
         private const float NotifySeconds = 10f;
         private const float YieldSeconds = 0.1f;
@@ -48,15 +48,12 @@ namespace TranslationCacheCleanerPlugin
 
         internal void Update()
         {
-            if (!_cleaningActive && CleanCacheHotkey.Value.IsPressed())
-            {
-                _cleaningActive = true;
-                StartCoroutine(CoroutineUtils.ComposeCoroutine(
-                    CleanTranslationCacheCoroutine(),
-                    PostCleanupCoroutine(),
-                    CoroutineUtils.CreateCoroutine(() => _cleaningActive = false)));
-                //CleanTranslationCache();
-            }
+            if (_cleaningActive || !CleanCacheHotkey.Value.IsPressed()) return;
+            _cleaningActive = true;
+            StartCoroutine(CoroutineUtils.ComposeCoroutine(
+                CleanTranslationCacheCoroutine(),
+                PostCleanupCoroutine(),
+                CoroutineUtils.CreateCoroutine(() => _cleaningActive = false)));
         }
 
         private void ReloadTranslations()
@@ -66,7 +63,7 @@ namespace TranslationCacheCleanerPlugin
 
         private static string GetWorkFileName(string path, string prefix, string extension)
         {
-            var timestamp = DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss");
+            var timestamp = DateTime.Now.ToString("yyyy-MM-dd--HH-mm-ss");
             var result = string.Empty;
             for (var i = 0; string.IsNullOrEmpty(result) || File.Exists(result); i++)
             {
@@ -117,15 +114,13 @@ namespace TranslationCacheCleanerPlugin
 
             var regexes = new List<Regex>();
 
-            var tmp = GeBoAPI.Instance.AutoTranslationHelper
-                .GetRegisteredRegexes(); //(HashSet<string>)cache?.GetType().GetField("_registeredRegexes", AccessTools.all)?.GetValue(cache);
+            var tmp = GeBoAPI.Instance.AutoTranslationHelper.GetRegisteredRegexes();
             if (tmp != null)
             {
                 regexes.AddRange(tmp.Select(s => new Regex(s)));
             }
 
-            tmp = GeBoAPI.Instance.AutoTranslationHelper
-                .GetRegisteredSplitterRegexes(); //(HashSet<string>)cache?.GetType().GetField("_registeredSplitterRegexes", AccessTools.all)?.GetValue(cache);
+            tmp = GeBoAPI.Instance.AutoTranslationHelper.GetRegisteredSplitterRegexes();
             if (tmp != null)
             {
                 regexes.AddRange(tmp.Select(s => new Regex(s)));
@@ -225,21 +220,15 @@ namespace TranslationCacheCleanerPlugin
 
             var translations = GeBoAPI.Instance.AutoTranslationHelper.GetTranslations() ??
                                new Dictionary<string, string>();
-            /*
-            (Dictionary<string, string>)cache?.GetType().GetField("_translations", AccessTools.all)?.GetValue(cache) ??
-            new Dictionary<string, string>();
-            */
             var regexes = new List<Regex>();
 
-            var tmp = GeBoAPI.Instance.AutoTranslationHelper
-                .GetRegisteredRegexes(); //(HashSet<string>)cache?.GetType().GetField("_registeredRegexes", AccessTools.all)?.GetValue(cache);
+            var tmp = GeBoAPI.Instance.AutoTranslationHelper.GetRegisteredRegexes(); 
             if (tmp != null)
             {
                 regexes.AddRange(tmp.Select(s => new Regex(s)));
             }
 
-            tmp = GeBoAPI.Instance.AutoTranslationHelper
-                .GetRegisteredSplitterRegexes(); //(HashSet<string>)cache?.GetType().GetField("_registeredSplitterRegexes", AccessTools.all)?.GetValue(cache);
+            tmp = GeBoAPI.Instance.AutoTranslationHelper.GetRegisteredSplitterRegexes();
             if (tmp != null)
             {
                 regexes.AddRange(tmp.Select(s => new Regex(s)));

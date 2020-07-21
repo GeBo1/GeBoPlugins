@@ -1,13 +1,13 @@
 
 $topdir = $PSScriptRoot
 if ($topdir -eq "") {
-    $topdir = "."
+    $topdir = "src"
 }
 
 
 function Zip-Plugin {
-    param([string]$plugin)
-    $plugin_dir = $topdir + "\" + $plugin
+    param([string]$plugin_dir)
+    $plugin = (Get-Item $plugin_dir).Basename
     $plugin_bin_dir = $plugin_dir + "\bin\Release"
     $dll_name = $plugin + ".dll"
     
@@ -55,11 +55,13 @@ function Zip-Plugin {
     Remove-Item -Force -Path $workdir -Recurse
 }
 
-$plugins = Get-ChildItem -Path ($topdir) -Depth 1 -Name
-foreach ($plugin in $plugins) {
-    $plugin_bin_dir = $plugin + "\bin\Release"
+$plugins = Get-ChildItem -Path ($topdir) -Depth 2 -Name
+foreach ($plugin_dir in $plugins) {
+    $plugin_bin_dir = $plugin_dir + "\bin\Release"
+
     if (Test-Path $plugin_bin_dir) {
-        Zip-Plugin $plugin
+       
+        Zip-Plugin $plugin_dir $plugin
     }
 }
 

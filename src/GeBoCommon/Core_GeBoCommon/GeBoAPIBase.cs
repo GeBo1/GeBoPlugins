@@ -9,17 +9,23 @@ using GeBoCommon.AutoTranslation;
 using GeBoCommon.AutoTranslation.Implementation;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
-using XUnity.AutoTranslator.Plugin.Core.Constants;
+using XUAPluginData = XUnity.AutoTranslator.Plugin.Core.Constants.PluginData;
 
 
 namespace GeBoCommon
 {
-    [BepInDependency(PluginData.Identifier, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(XUAPluginData.Identifier, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(GUID, PluginName, Version)]
     [BepInProcess(Constants.StudioProcessName)]
     [BepInProcess(Constants.MainGameProcessName)]
 #if KK || AI
     [BepInProcess(Constants.MainGameProcessNameSteam)]
+#endif
+#if KK || HS2
+    [BepInProcess(Constants.MainGameProcessNameVR)]
+#endif
+#if KK
+    [BepInProcess(Constants.MainGameProcessNameVRSteam)]
 #endif
 #if HS
     [BepInProcess(Constants.BattleArenaProcessName)]
@@ -28,7 +34,7 @@ namespace GeBoCommon
     {
         public const string GUID = "com.gebo.BepInEx.GeBoAPI";
         public const string PluginName = "GeBo Modding API";
-        public const string Version = "1.0";
+        public const string Version = "1.0.1";
 
         private static readonly Dictionary<string, bool> NotificationSoundsEnabled = new Dictionary<string, bool>();
         public static GeBoAPI Instance { get; private set; }
@@ -59,7 +65,7 @@ namespace GeBoCommon
 
         private IAutoTranslationHelper AutoTranslationHelperLoader()
         {
-            if (Chainloader.PluginInfos.ContainsKey(PluginData.Identifier))
+            if (Chainloader.PluginInfos.ContainsKey(XUAPluginData.Identifier))
             {
                 return new XUnityAutoTranslationHelper();
             }

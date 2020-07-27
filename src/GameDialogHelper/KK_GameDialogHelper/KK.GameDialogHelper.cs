@@ -22,9 +22,9 @@ namespace GameDialogHelperPlugin
     [BepInDependency(GeBoAPI.GUID, GeBoAPI.Version)]
     [BepInPlugin(GUID, PluginName, Version)]
     [BepInProcess(Constants.MainGameProcessName)]
-#if KK || AI
     [BepInProcess(Constants.MainGameProcessNameSteam)]
-#endif
+    [BepInProcess(Constants.MainGameProcessNameVR)]
+    [BepInProcess(Constants.MainGameProcessNameVRSteam)]
     public partial class GameDialogHelper : BaseUnityPlugin
     {
         public const string GUID = "com.gebo.BepInEx.GameDialogHelper";

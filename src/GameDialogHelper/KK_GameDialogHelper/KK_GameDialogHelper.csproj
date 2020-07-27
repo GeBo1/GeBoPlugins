@@ -90,7 +90,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\KK_GeBoCommon\KK_GeBoCommon.csproj">
+    <ProjectReference Include="..\..\GeBoCommon\KK_GeBoCommon\KK_GeBoCommon.csproj">
       <Project>{ed839651-4764-420e-97fc-a40d7d98449b}</Project>
       <Name>KK_GeBoCommon</Name>
     </ProjectReference>

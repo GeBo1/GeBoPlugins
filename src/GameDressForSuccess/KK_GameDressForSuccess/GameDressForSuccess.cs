@@ -8,14 +8,14 @@ namespace GameDressForSuccessPlugin
 {
     [BepInPlugin(GUID, PluginName, Version)]
     [BepInProcess(Constants.MainGameProcessName)]
-#if KK
     [BepInProcess(Constants.MainGameProcessNameSteam)]
-#endif
+    [BepInProcess(Constants.MainGameProcessNameVR)]
+    [BepInProcess(Constants.MainGameProcessNameVRSteam)]
     public partial class GameDressForSuccess : BaseUnityPlugin
     {
         public const string GUID = "com.gebo.BepInEx.GameDressForSuccess";
         public const string PluginName = "Dress for Success";
-        public const string Version = "1.0.1";
+        public const string Version = "1.0.2";
 
         internal static GameDressForSuccess Instance;
 

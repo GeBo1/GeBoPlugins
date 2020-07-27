@@ -27,7 +27,7 @@ namespace TranslationHelperPlugin
             if (!KK_GivenNameFirst.Value) return input;
             if (string.IsNullOrEmpty(input)) return input;
             var parts = input.Split();
-            return parts.Length != 2 ? input : string.Join(" ", parts.Reverse().ToArray());
+            return parts.Length != 2 ? input : string.Join(SpaceJoiner, parts.Reverse().ToArray());
         }
     }
 }

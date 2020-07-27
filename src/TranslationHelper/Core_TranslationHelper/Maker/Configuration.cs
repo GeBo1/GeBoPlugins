@@ -101,7 +101,6 @@ namespace TranslationHelperPlugin.Maker
 
             controller.TranslateCardNames();
             yield return TranslationHelper.WaitOnCard(controller.ChaFileControl);
-
             yield return GameSpecificUpdateUICoroutine(controller);
         }
 

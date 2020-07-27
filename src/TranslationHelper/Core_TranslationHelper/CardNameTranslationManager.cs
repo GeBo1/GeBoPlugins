@@ -30,7 +30,7 @@ namespace TranslationHelperPlugin
         };
 
 
-        private static readonly char[] SpaceSplitter = {' '};
+        private static char[] SpaceSplitter => TranslationHelper.SpaceSplitter;
 
         private readonly HashSet<string> _cardsInProgress;
         private readonly Dictionary<string, List<TranslationResultHandler>> _nameTracker;
@@ -281,7 +281,7 @@ namespace TranslationHelperPlugin
 
         private string CleanTranslationResult(string input, string suffix)
         {
-            return string.Join(" ",
+            return string.Join(TranslationHelper.SpaceJoiner,
                 input.Split(SpaceSplitter, StringSplitOptions.RemoveEmptyEntries)
                     .Select(s => CleanTranslationResultSection(s, suffix)).ToArray()).Trim();
         }
@@ -446,7 +446,7 @@ namespace TranslationHelperPlugin
 
             protected override void OnComplete()
             {
-                TranslatedName = string.Join(" ", NameParts.ToArray()).Trim();
+                TranslatedName = string.Join(TranslationHelper.SpaceJoiner, NameParts.ToArray()).Trim();
                 base.OnComplete();
             }
         }

@@ -25,6 +25,7 @@ namespace TranslationHelperPlugin.Maker
             Assert.IsNotNull(controller);
             var makerBase = MakerAPI.GetMakerBase();
             if (makerBase == null) yield break;
+            makerBase.customCtrl.UpdateCharaNameText();
             foreach (var element in makerBase.GetComponentsInChildren<CvsO_Chara>())
             {
                 element.SafeProcObject(o => o.UpdateCustomUI());

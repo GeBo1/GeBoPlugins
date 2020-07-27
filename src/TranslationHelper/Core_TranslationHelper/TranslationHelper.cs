@@ -9,10 +9,8 @@ using GeBoCommon.Utilities;
 using KKAPI;
 using KKAPI.Chara;
 using KKAPI.Studio;
-using KKAPI.Utilities;
 using TranslationHelperPlugin.Chara;
 using TranslationHelperPlugin.Translation;
-using UnityEngine;
 using Configuration = TranslationHelperPlugin.Translation.Configuration;
 using PluginData = XUnity.AutoTranslator.Plugin.Core.Constants.PluginData;
 
@@ -30,7 +28,7 @@ namespace TranslationHelperPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationhelper";
         public const string PluginName = "Translation Helper";
-        public const string Version = "0.9.1";
+        public const string Version = "0.9.2";
 
         internal static new ManualLogSource Logger;
         public static TranslationHelper Instance;
@@ -53,7 +51,10 @@ namespace TranslationHelperPlugin
         internal static readonly ICollection<GameMode> RegistrationGameModes =
             new HashSet<GameMode> {GameMode.MainGame, GameMode.Studio};
 
-        internal static readonly char[] SpaceSplitter = {' '};
+        // space, middle dot (full/half-width), ideographic space
+        public static readonly char[] SpaceSplitter = {' ', '\u30FB', '\uFF65', '\u3000'};
+
+        public static readonly string SpaceJoiner = SpaceSplitter[0].ToString();
 
         private readonly SimpleLazy<NameTranslator> _nameTranslator =
             new SimpleLazy<NameTranslator>(() => new NameTranslator());
@@ -106,7 +107,8 @@ namespace TranslationHelperPlugin
             NameTrimChars = Config.Bind("Translate Card Name Options", "Characters to Trim", string.Empty,
                 "Characters to trim from returned translations");
 
-            GameTranslateCardNameOnLoad = InitializeGameModeConfig(GameMode.MainGame, CardLoadTranslationMode.CacheOnly);
+            GameTranslateCardNameOnLoad =
+                InitializeGameModeConfig(GameMode.MainGame, CardLoadTranslationMode.CacheOnly);
             MakerTranslateCardNameOnLoad = InitializeGameModeConfig(GameMode.Maker, CardLoadTranslationMode.CacheOnly);
             StudioTranslateCardNameOnLoad =
                 InitializeGameModeConfig(GameMode.Studio, CardLoadTranslationMode.CacheOnly);
@@ -186,13 +188,15 @@ namespace TranslationHelperPlugin
             }
         }
 
-        internal void AddTranslatedNameToCache(string origName, string translatedName, bool allowPersistToDisk=false)
+        internal void AddTranslatedNameToCache(string origName, string translatedName, bool allowPersistToDisk = false)
         {
             if (origName == translatedName || StringUtils.ContainsJapaneseChar(translatedName)) return;
             // only persist if network translation enabled
-            var persistToDisk = allowPersistToDisk && CurrentCardLoadTranslationMode > CardLoadTranslationMode.CacheOnly;
+            var persistToDisk =
+                allowPersistToDisk && CurrentCardLoadTranslationMode > CardLoadTranslationMode.CacheOnly;
 
-            GeBoAPI.Instance.AutoTranslationHelper.AddTranslationToCache(origName, translatedName, persistToDisk, 0x01, -1);
+            GeBoAPI.Instance.AutoTranslationHelper.AddTranslationToCache(origName, translatedName, persistToDisk, 0x01,
+                -1);
         }
 
         internal IEnumerator RegisterReplacements(ChaFile file)
@@ -207,10 +211,11 @@ namespace TranslationHelperPlugin
                 if (!RegistrationManager.HaveNamesChanged(file)) yield break;
                 RegistrationManager.Untrack(file);
             }
+
             RegistrationManager.Track(file);
         }
 
-        internal IEnumerator RegisterReplacementsWrapper(ChaFile file, bool alreadyTranslated=false)
+        internal IEnumerator RegisterReplacementsWrapper(ChaFile file, bool alreadyTranslated = false)
         {
             if (file == null) yield break;
             // handle card translation BEFORE registering replacements
@@ -221,7 +226,8 @@ namespace TranslationHelperPlugin
             }
 
             //StartCoroutine(RegisterReplacements(file));
-            /*yield return*/ file.StartMonitoredCoroutine(RegisterReplacements(file));
+            /*yield return*/
+            file.StartMonitoredCoroutine(RegisterReplacements(file));
         }
 
         internal IEnumerator UnregisterReplacements(ChaFile file)

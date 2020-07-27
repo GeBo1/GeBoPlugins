@@ -44,7 +44,7 @@ namespace TranslationHelperPlugin.Chara
                 names.Reverse();
             }
 
-            callback(string.Join(" ", names.ToArray()));
+            callback(string.Join(TranslationHelper.SpaceJoiner, names.ToArray()));
         }
     }
 }

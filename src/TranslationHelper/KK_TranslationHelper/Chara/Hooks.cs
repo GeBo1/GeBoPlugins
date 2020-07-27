@@ -16,7 +16,7 @@ namespace TranslationHelperPlugin.Chara
         private static bool ChaFileParameterFullnamePrefix(ChaFileParameter __instance, ref string __result)
         {
             if (!TranslationHelper.KK_GivenNameFirst.Value) return true;
-            __result = string.Join(" ", new[] {__instance.firstname, __instance.lastname});
+            __result = string.Join(TranslationHelper.SpaceJoiner, new[] {__instance.firstname, __instance.lastname});
             return false;
         }
     }

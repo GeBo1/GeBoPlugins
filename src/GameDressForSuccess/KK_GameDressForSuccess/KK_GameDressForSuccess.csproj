@@ -47,6 +47,10 @@
       <HintPath>..\..\..\packages\IllusionLibs.BepInEx.Harmony.2.0.3.1\lib\net35\BepInEx.Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="KKAPI, Version=1.12.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\IllusionModdingAPI.KKAPI.1.12.3\lib\net35\KKAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -64,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Enums.cs" />
+    <Compile Include="GameController.cs" />
     <Compile Include="GameDressForSuccess.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

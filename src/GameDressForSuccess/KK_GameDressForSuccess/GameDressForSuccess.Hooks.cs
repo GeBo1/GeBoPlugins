@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using ADV;
 using ADV.Commands.Chara;
 using ADV.Commands.Game;
 using BepInEx.Logging;
 using ChaCustom;
+using GeBoCommon.Utilities;
 using HarmonyLib;
 using Manager;
 using UnityEngine.EventSystems;
@@ -24,27 +26,28 @@ namespace GameDressForSuccessPlugin
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(MapChange), "Do")]
-            internal static void StartTravelingHook()
+            internal static void StartTravelingHook(MapChange __instance)
             {
                 if (!Enabled.Value) return;
-                Instance?.TravelingStart();
+                Instance?.TravelingStart(__instance?.scenario.currentHeroine);
             }
 
             [HarmonyPrefix]
             [HarmonyPatch(typeof(ADV.Commands.Effect.SceneFade), "Do")]
             [HarmonyPatch(typeof(Text), "Do")]
-            internal static void StopTravelingHook()
+            internal static void StopTravelingHook(CommandBase __instance)
             {
                 if (!Enabled.Value) return;
-                Instance?.TravelingDone();
+                Instance?.TravelingDone(__instance?.scenario.currentHeroine);
             }
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(Coordinate), "Do")]
             internal static void CoordinateDoPostfix(Coordinate __instance)
             {
-                if (Instance == null || !Enabled.Value || Instance._monitoringChange) return;
-
+                Logger.DebugLogDebug($"CoordinateDoPostfix: monitoringChange={Instance?._monitoringChange}"); 
+                if (Instance == null || !Enabled.Value || !Instance._monitoringChange) return;
+                
 
                 var typeField = Traverse.Create(__instance).Field("type");
 
@@ -60,6 +63,7 @@ namespace GameDressForSuccessPlugin
             internal static void ToggleOnPointerClickPrefix(Toggle __instance,
                 ref PointerEventData eventData, out Toggle __state)
             {
+                Logger.DebugLogDebug($"ToggleOnPointerClickPrefix");
                 __state = null;
                 if (!Enabled.Value ||
                     eventData.button != PointerEventData.InputButton.Right ||
@@ -92,7 +96,10 @@ namespace GameDressForSuccessPlugin
             [HarmonyPatch(typeof(Toggle), nameof(Toggle.OnPointerClick))]
             internal static void ToggleOnPointerClickPostfix(Toggle __state)
             {
-                __state?.OnSubmit(null);
+                Logger.DebugLogDebug("ToggleOnPointerClickPostfix");
+                if (__state == null) return;
+                // if we get here, click the automatic button afterwards
+                __state.OnSubmit(null);
             }
 
             #endregion

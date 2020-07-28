@@ -25,7 +25,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\EnumerableUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\HookedSimpleCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\IHookedCache.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Utilities\OtherExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\PathUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleLazy.cs" />

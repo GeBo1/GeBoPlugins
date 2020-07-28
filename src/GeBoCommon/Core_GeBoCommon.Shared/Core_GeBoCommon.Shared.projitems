@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\OtherExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\StringUtils.cs" />
   </ItemGroup>
 </Project>

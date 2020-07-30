@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using AIChara;
 using GameLoadCharaFileSystem;
 using GeBoCommon.AutoTranslation;
@@ -11,20 +12,20 @@ using UnityEngine.UI;
 
 namespace TranslationHelperPlugin.MainGame
 {
+    [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "Inherited code uses 'Selec'")]
     internal partial class Hooks
     {
-        // ReSharper disable IdentifierTypo
         private static bool _inMapSelecCursorEnter;
 
         private static int _inMapSelecCursorEnterIndex;
 
         private static readonly List<Text> InMapSelecCursorLabels = new List<Text> {null, null};
-        // ReSharper restore IdentifierTypo
 
-        // ReSharper disable InconsistentNaming
         [HarmonyPrefix]
         [HarmonyPatch(typeof(LobbyParameterUI), nameof(LobbyParameterUI.SetParameter), typeof(GameCharaFileInfo),
             typeof(int), typeof(int))]
+        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Hook")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         internal static void LobbySetGameCharaFileInfoPrefix(GameCharaFileInfo _info)
         {
             Translation.Hooks.TranslateFileInfo(_info);
@@ -33,6 +34,8 @@ namespace TranslationHelperPlugin.MainGame
         [HarmonyPostfix]
         [HarmonyPatch(typeof(LobbyParameterUI), nameof(LobbyParameterUI.SetParameter), typeof(GameCharaFileInfo),
             typeof(int), typeof(int))]
+        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Hook")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         internal static void LobbySetGameCharaFileInfoPostfix(LobbyParameterUI __instance, GameCharaFileInfo _info)
         {
             if (_info == null) return;
@@ -52,6 +55,7 @@ namespace TranslationHelperPlugin.MainGame
         [HarmonyPostfix]
         [HarmonyPatch(typeof(ChaFileControl), nameof(ChaFileControl.LoadCharaFile), typeof(string), typeof(byte),
             typeof(bool), typeof(bool))]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         internal static void ChaFileControl_LoadCharaFile_Postfix(ChaFileControl __instance)
         {
             if (!_inMapSelecCursorEnter || __instance == null) return;
@@ -67,13 +71,13 @@ namespace TranslationHelperPlugin.MainGame
                 TranslationHelper.Instance.StartCoroutine(UpdateText(label, r));
             });
         }
-        // ReSharper enable InconsistentNaming
 
 
-        // ReSharper disable once IdentifierTypo
-        // ReSharper disable once StringLiteralTypo
         [HarmonyPrefix]
         [HarmonyPatch(typeof(MapSelectUI), "MapSelecCursorEnter")]
+        [SuppressMessage("ReSharper", "StringLiteralTypo", Justification = "Hook")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Crash protection")]
         internal static void MapSelecCursorEnterPrefix(MapSelectUI __instance)
         {
             _inMapSelecCursorEnter = true;
@@ -95,10 +99,10 @@ namespace TranslationHelperPlugin.MainGame
             }
         }
 
-        // ReSharper disable once IdentifierTypo
-        // ReSharper disable once StringLiteralTypo
         [HarmonyPostfix]
         [HarmonyPatch(typeof(MapSelectUI), "MapSelecCursorEnter")]
+        [SuppressMessage("ReSharper", "StringLiteralTypo", Justification = "Hook")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         internal static void MapSelecCursorEnterPostfix()
         {
             _inMapSelecCursorEnter = false;

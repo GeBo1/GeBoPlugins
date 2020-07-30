@@ -1,4 +1,5 @@
-﻿using BepInEx;
+﻿using System.Diagnostics.CodeAnalysis;
+using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using ChaCustom;
@@ -20,7 +21,7 @@ namespace GameDressForSuccessPlugin
     {
         public const string GUID = "com.gebo.BepInEx.GameDressForSuccess";
         public const string PluginName = "Dress for Success";
-        public const string Version = "1.1.0";
+        public const string Version = "1.1.1";
 
         internal static GameDressForSuccess Instance;
         private int _initialCoordinateType = -1;
@@ -44,6 +45,7 @@ namespace GameDressForSuccessPlugin
                 "When to reset the players dress state to 'Automatic'");
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Unity")]
         internal void Awake()
         {
             Instance = this;
@@ -89,15 +91,18 @@ namespace GameDressForSuccessPlugin
             _monitoringChange = false;
         }
 
-        private void TravelingStart(SaveData.Heroine heroine)
+        private void TravelingStart(SaveData.Heroine heroine = null)
         {
+            if (heroine == null) heroine = GetTargetHeroine();
             if (heroine == null) return;
             _monitoringChange = true;
             _initialCoordinateType = heroine.chaCtrl.chaFile.status.coordinateType;
         }
 
-        private void TravelingDone(SaveData.Heroine heroine)
+        private void TravelingDone(SaveData.Heroine heroine = null)
         {
+            if (heroine == null) heroine = GetTargetHeroine();
+
             if (!_monitoringChange)
             {
                 _initialCoordinateType = -1;

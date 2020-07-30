@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 #if AI || HS2
 using AIChara;
@@ -19,6 +20,7 @@ namespace GeBoCommon.Chara
             GeBoAPI.Instance.ChaFileSetName(chaFile, index, name);
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Game differences")]
         public static string GetName(this ChaFile chaFile, string nameType)
         {
             return chaFile.GetName(GeBoAPI.Instance.ChaFileNameToIndex(nameType));
@@ -40,7 +42,7 @@ namespace GeBoCommon.Chara
             return GeBoAPI.Instance.ChaFileFullName(chaFile);
         }
 
-
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Crash protection")]
         public static CharacterSex GetSex(this ChaFile chaFile)
         {
             try

@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GameDressForSuccessPlugin
 {
+    [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "User selectable option")]
     public enum PluginMode
     {
         [Description("Always change")]
@@ -12,6 +14,7 @@ namespace GameDressForSuccessPlugin
     }
 
 
+    [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "User selectable option")]
     public enum ResetToAutomaticMode
     {
         [Description("Default game behavior")]

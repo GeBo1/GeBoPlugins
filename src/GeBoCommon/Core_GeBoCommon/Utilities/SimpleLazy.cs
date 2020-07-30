@@ -2,8 +2,10 @@
 #if (HS || PH || KK)
 using System.Runtime.CompilerServices;
 using System.Threading;
-
+#else
+using System.Diagnostics.CodeAnalysis;
 #endif
+
 
 namespace GeBoCommon.Utilities
 {
@@ -75,9 +77,15 @@ namespace GeBoCommon.Utilities
             _real = new Lazy<T>(valueFactory, true);
         }
 
-        public override string ToString() => _real.ToString();
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         public bool IsValueCreated => _real.IsValueCreated;
+
         public T Value => _real.Value;
+
+        public override string ToString()
+        {
+            return _real.ToString();
+        }
     }
 #endif
 }

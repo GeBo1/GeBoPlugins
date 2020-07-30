@@ -1,11 +1,11 @@
-﻿using System;
+﻿using System.Diagnostics.CodeAnalysis;
 using BepInEx.Logging;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using HarmonyLib;
 using Studio;
-using TranslationHelperPlugin.Chara;
 using IllusionStudio = Studio.Studio;
+
 #if AI || HS2
 
 #endif
@@ -14,8 +14,8 @@ namespace TranslationHelperPlugin.Studio
 {
     internal class Hooks
     {
-        // ReSharper disable InconsistentNaming
         internal static ManualLogSource Logger => TranslationHelper.Logger;
+
         internal static Harmony SetupHooks()
         {
             return Harmony.CreateAndPatchAll(typeof(Hooks));
@@ -24,6 +24,8 @@ namespace TranslationHelperPlugin.Studio
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(TreeNodeCtrl), "RefreshVisibleLoop")]
+        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Hook")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         internal static void RefreshVisibleLoopPatch(TreeNodeObject _source)
         {
             if (TranslationHelper.Instance == null || !IllusionStudio.IsInstance() ||
@@ -62,6 +64,7 @@ namespace TranslationHelperPlugin.Studio
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CharaList), "InitCharaList")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         internal static void CharaList_InitCharaList_Postfix(CharaList __instance)
         {
             TranslateDisplayList(__instance);

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
 using KKAPI.Chara;
 using UnityEngine;
-
 #if AI || HS2
 using AIChara;
+
 #endif
 
 
@@ -15,11 +16,10 @@ namespace TranslationHelperPlugin.Chara
 {
     public static partial class Extensions
     {
-
         public static string GetRegistrationID(this ChaFile chaFile)
         {
             string result = null;
-            chaFile.SafeProc((a) => result = a.GetHashCode().ToString(CultureInfo.InvariantCulture.NumberFormat));
+            chaFile.SafeProc(a => result = a.GetHashCode().ToString(CultureInfo.InvariantCulture.NumberFormat));
             return result;
         }
 
@@ -39,7 +39,6 @@ namespace TranslationHelperPlugin.Chara
             return controller != null
                 ? controller.StartMonitoredCoroutine(enumerator)
                 : TranslationHelper.Instance.StartCoroutine(enumerator);
-
         }
 
 
@@ -51,6 +50,7 @@ namespace TranslationHelperPlugin.Chara
             chaControl.SafeProcObject(cc => cc.gameObject.SafeProcObject(go => result = go.GetComponent<Controller>()));
             return result;
         }
+
         public static Controller GetTranslationHelperController(this ChaFile chaFile)
         {
             Controller result = default;
@@ -61,16 +61,17 @@ namespace TranslationHelperPlugin.Chara
             return result;
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Game differences")]
         public static bool TryGetTranslationHelperController(this ChaControl chaControl, out Controller controller)
         {
             controller = GetTranslationHelperController(chaControl);
-            return (controller != null);
+            return controller != null;
         }
 
         public static bool TryGetTranslationHelperController(this ChaFile chaFile, out Controller controller)
         {
             controller = GetTranslationHelperController(chaFile);
-            return (controller != null);
+            return controller != null;
         }
 
 

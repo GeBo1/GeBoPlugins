@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -31,7 +32,7 @@ namespace StudioSceneNavigationPlugin
     {
         public const string GUID = "com.gebo.bepinex.studioscenenavigation";
         public const string PluginName = "Studio Scene Navigation";
-        public const string Version = "0.8.6";
+        public const string Version = "0.8.7";
 
         internal static readonly char[] TrackingFileEntrySplit = {'\0'};
 
@@ -122,6 +123,7 @@ namespace StudioSceneNavigationPlugin
             GeBoAPI.Instance.SetupNotificationSoundConfig(GUID, NotificationSoundsEnabled);
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Unity")]
         internal void Awake()
         {
             if (_currentSceneFolder.IsNullOrEmpty()) _currentSceneFolder = SceneUtils.StudioSceneRootFolder;
@@ -131,6 +133,7 @@ namespace StudioSceneNavigationPlugin
             StudioSaveLoadApi.SceneLoad += StudioSaveLoadApi_SceneLoad;
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Unity")]
         internal void Update()
         {
             if (_navigationInProgress) return;
@@ -149,6 +152,7 @@ namespace StudioSceneNavigationPlugin
             }
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Unity")]
         internal void OnDestroy()
         {
             if (TrackLastLoadedSceneEnabled.Value)
@@ -281,6 +285,7 @@ namespace StudioSceneNavigationPlugin
             }
         }
 
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Crash protection")]
         private bool TryReadTrackingHeader(StreamReader reader, out Version version, out int expectedCount)
         {
             version = new Version(0, 0, 0, 0);
@@ -315,6 +320,8 @@ namespace StudioSceneNavigationPlugin
             return true;
         }
 
+
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Crash protection")]
         private Dictionary<string, string> LoadTrackingFile()
         {
             var lastLoadedScenes = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
@@ -381,84 +388,84 @@ namespace StudioSceneNavigationPlugin
             return lastLoadedScenes;
         }
 
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Crash protection")]
         private void NavigateScene(int offset)
         {
+            if (_navigationInProgress) return;
+
             var navigated = false;
-            if (!_navigationInProgress)
+            _navigationInProgress = true;
+            Logger.LogDebug($"Attempting navigate to scene: {offset}");
+            try
             {
-                _navigationInProgress = true;
-                Logger.LogDebug($"Attempting navigate to scene: {offset}");
-                try
+                var paths = NormalizedScenePaths;
+                var index = -1;
+                if (!_currentScenePath.IsNullOrEmpty() && !paths.IsNullOrEmpty())
                 {
-                    var paths = NormalizedScenePaths;
-                    var index = -1;
-                    if (!_currentScenePath.IsNullOrEmpty() && !paths.IsNullOrEmpty())
-                    {
-                        index = paths.IndexOf(_currentScenePath);
-                    }
+                    index = paths.IndexOf(_currentScenePath);
+                }
 
-                    if (index == -1)
+                if (index == -1)
+                {
+                    if (!paths.IsNullOrEmpty())
                     {
-                        if (!paths.IsNullOrEmpty())
+                        Logger.LogInfo(
+                            $"Folder changed, resuming navigation for: {PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, _currentSceneFolder)}");
+                        if (LoadLastLoadedScene())
                         {
-                            Logger.LogInfo(
-                                $"Folder changed, resuming navigation for: {PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, _currentSceneFolder)}");
-                            if (LoadLastLoadedScene())
-                            {
-                                navigated = true;
-                            }
+                            navigated = true;
                         }
                     }
-                    else
+                }
+                else
+                {
+                    string nextImage = null;
+                    while (nextImage is null)
                     {
-                        string nextImage = null;
-                        while (nextImage is null)
+                        index -= offset;
+                        if (index < 0 || index >= paths.Count)
                         {
-                            index -= offset;
-                            if (index < 0 || index >= paths.Count)
-                            {
-                                Logger.Log(BepInLogLevel.Info | BepInLogLevel.Message,
-                                    "No further scenes to navigate to.");
-                                return;
-                            }
-
-                            nextImage = paths[index];
-                            if (IsSceneValid(nextImage)) continue;
-
-                            Logger.Log(BepInLogLevel.Warning | BepInLogLevel.Message,
-                                $"Skipping invalid scene file: {nextImage}");
-                            nextImage = null;
+                            Logger.Log(BepInLogLevel.Info | BepInLogLevel.Message,
+                                "No further scenes to navigate to.");
+                            return;
                         }
 
-                        var coroutines = new List<IEnumerator>
-                        {
-                            CoroutineUtils.CreateCoroutine(
-                                () => Logger.Log(BepInLogLevel.Message | BepInLogLevel.Info,
-                                    $"Loading scene {paths.Count - index}/{paths.Count} ('{PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, nextImage)}')")),
-                            Singleton<Studio.Studio>.Instance.LoadSceneCoroutine(nextImage)
-                        };
+                        nextImage = paths[index];
+                        if (IsSceneValid(nextImage)) continue;
 
-                        StartCoroutine(CoroutineUtils.ComposeCoroutine(coroutines.ToArray()));
-
-                        navigated = true;
+                        Logger.Log(BepInLogLevel.Warning | BepInLogLevel.Message,
+                            $"Skipping invalid scene file: {nextImage}");
+                        nextImage = null;
                     }
-                }
-                catch (Exception err)
-                {
-                    Logger.LogError($"Error navigating scene: {err}");
-                }
-                finally
-                {
-                    // error encountered during navigation
-                    if (!navigated)
+
+                    var coroutines = new List<IEnumerator>
                     {
-                        _navigationInProgress = false;
-                        PlayNotificationSound(NotificationSound.Error);
-                    }
-                }
+                        CoroutineUtils.CreateCoroutine(
+                            () => Logger.Log(BepInLogLevel.Message | BepInLogLevel.Info,
+                                $"Loading scene {paths.Count - index}/{paths.Count} ('{PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, nextImage)}')")),
+                        Singleton<Studio.Studio>.Instance.LoadSceneCoroutine(nextImage)
+                    };
 
-                if (navigated) _setPage = true;
+                    StartCoroutine(CoroutineUtils.ComposeCoroutine(coroutines.ToArray()));
+
+                    navigated = true;
+                }
             }
+            catch (Exception err)
+            {
+                Logger.LogError($"Error navigating scene: {err}");
+            }
+            finally
+            {
+                // error encountered during navigation
+                if (!navigated)
+                {
+                    _navigationInProgress = false;
+                    PlayNotificationSound(NotificationSound.Error);
+                }
+            }
+
+            if (navigated) _setPage = true;
         }
 
         private IEnumerator SetPageCoroutine(string scenePath)

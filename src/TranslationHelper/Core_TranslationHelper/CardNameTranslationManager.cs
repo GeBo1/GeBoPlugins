@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using BepInEx.Logging;
@@ -301,14 +302,13 @@ namespace TranslationHelperPlugin
                     foreach (var format in _suffixFormats)
                     {
                         var testSuffix = string.Format(format, suffix);
-                        if (output.TrimEnd().EndsWith(testSuffix))
-                        {
-                            //Logger.LogDebug($"Cleaning: '{input}': suffix match: {testSuffix} <= '{output}'");
-                            output = output.Remove(output.LastIndexOf(testSuffix, StringComparison.InvariantCulture))
-                                .TrimEnd();
-                            //Logger.LogDebug($"Cleaning: '{input}': suffix match: {testSuffix} => '{output}'");
-                            break;
-                        }
+                        if (!output.TrimEnd().EndsWith(testSuffix)) continue;
+
+                        //Logger.LogDebug($"Cleaning: '{input}': suffix match: {testSuffix} <= '{output}'");
+                        output = output.Remove(output.LastIndexOf(testSuffix, StringComparison.InvariantCulture))
+                            .TrimEnd();
+                        //Logger.LogDebug($"Cleaning: '{input}': suffix match: {testSuffix} => '{output}'");
+                        break;
                     }
                 }
 
@@ -399,9 +399,12 @@ namespace TranslationHelperPlugin
             internal string OriginalName { get; }
             internal string TranslatedName { get; private set; }
 
+            [SuppressMessage("ReSharper", "UnusedMember.Global")]
             internal int TranslationScope => NameScope?.TranslationScope ?? NameScope.BaseScope;
+            [SuppressMessage("ReSharper", "UnusedMember.Global")]
             internal CharacterSex Sex => NameScope?.Sex ?? CharacterSex.Unspecified;
 
+            [SuppressMessage("ReSharper", "UnusedMember.Global")]
             internal NameType NameType => NameScope?.NameType ?? NameType.Unclassified;
             private bool SplitNames { get; }
 

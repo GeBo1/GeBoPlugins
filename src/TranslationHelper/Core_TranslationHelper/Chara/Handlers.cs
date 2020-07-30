@@ -1,4 +1,5 @@
-﻿using GeBoCommon.AutoTranslation;
+﻿using System.Diagnostics.CodeAnalysis;
+using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 
 #if AI||HS2
@@ -7,16 +8,20 @@ using AIChara;
 
 namespace TranslationHelperPlugin.Chara
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart",
+        Justification = "Allow for differences between projects")]
     public static partial class Handlers
     {
-
         public static TranslationResultHandler UpdateCardName(ChaFile chaFile, int nameIndex)
         {
             void UpdateCardNameHandler(ITranslationResult result)
             {
                 if (!result.Succeeded || string.IsNullOrEmpty(result.TranslatedText) ||
-                    chaFile.GetName(nameIndex) == result.TranslatedText) return;
+                    chaFile.GetName(nameIndex) == result.TranslatedText)
+                {
+                    return;
+                }
+
                 chaFile.SetTranslatedName(nameIndex, result.TranslatedText);
             }
 
@@ -24,20 +29,23 @@ namespace TranslationHelperPlugin.Chara
         }
 
 
-        public static TranslationResultHandler AddNameToCache(string originalName, bool allowPersistToDisk=false)
+        public static TranslationResultHandler AddNameToCache(string originalName, bool allowPersistToDisk = false)
         {
             void AddNameToCacheHandler(ITranslationResult result)
             {
                 if (!result.Succeeded || string.IsNullOrEmpty(result.TranslatedText) ||
                     result.TranslatedText == originalName ||
                     TranslationHelper.Instance.CurrentCardLoadTranslationMode <
-                    CardLoadTranslationMode.CacheOnly) return;
+                    CardLoadTranslationMode.CacheOnly)
+                {
+                    return;
+                }
 
-                TranslationHelper.Instance.AddTranslatedNameToCache(originalName, result.TranslatedText, allowPersistToDisk);
-
+                TranslationHelper.Instance.AddTranslatedNameToCache(originalName, result.TranslatedText,
+                    allowPersistToDisk);
             }
 
             return AddNameToCacheHandler;
         }
-}
+    }
 }

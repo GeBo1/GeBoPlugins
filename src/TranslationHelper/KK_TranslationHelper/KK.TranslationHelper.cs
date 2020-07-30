@@ -1,4 +1,5 @@
-﻿using BepInEx;
+﻿using System.Diagnostics.CodeAnalysis;
+using BepInEx;
 using System.Linq;
 using BepInEx.Configuration;
 
@@ -22,6 +23,7 @@ namespace TranslationHelperPlugin
             
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Game differences")]
         internal static string ProcessFullnameString(string input)
         {
             if (!KK_GivenNameFirst.Value) return input;

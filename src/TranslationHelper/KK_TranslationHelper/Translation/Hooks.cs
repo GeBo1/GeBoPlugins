@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using ActionGame;
 using ChaCustom;
@@ -12,7 +13,7 @@ namespace TranslationHelperPlugin.Translation
 {
     internal partial class Hooks
     {
-        private static Coroutine PointerEnterCoroutine;
+        private static Coroutine _pointerEnterCoroutine;
 
 
         private static byte GuessSex(string club, string personality)
@@ -20,11 +21,12 @@ namespace TranslationHelperPlugin.Translation
             return (byte)(club == "帯刀" && string.IsNullOrEmpty(personality) ? 0 : 1);
         }
 
-        // ReSharper disable once IdentifierTypo
         // used in maker, starting new game, editing roster
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CustomFileListCtrl), nameof(CustomFileListCtrl.AddList))]
         [HarmonyPatch(typeof(ClassRoomFileListCtrl), nameof(ClassRoomFileListCtrl.AddList))]
+        [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "Hook")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         internal static void FileListCtrlAddListPrefix(CustomFileListCtrl __instance, int index, ref string name,
             string club, string personality, string fullpath)
         {
@@ -62,6 +64,7 @@ namespace TranslationHelperPlugin.Translation
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CustomFileListCtrl), nameof(CustomFileListCtrl.OnPointerEnter))]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         public static void OnPointerEnterPostfix(CustomFileListCtrl __instance, GameObject obj)
         {
             if (obj == null) return;
@@ -90,23 +93,25 @@ namespace TranslationHelperPlugin.Translation
 
             if (textDrawName != null) textDrawName.text = name;
 
-            PointerEnterCoroutine = TranslationHelper.Instance.StartCoroutine(
+            _pointerEnterCoroutine = TranslationHelper.Instance.StartCoroutine(
                 TranslationHelper.CardNameManager.TranslateCardName(name, new NameScope((CharacterSex)sex),
                     CardNameTranslationManager.CanForceSplitNameString(name),
-                    Handler, _ => PointerEnterCoroutine = null));
+                    Handler, _ => _pointerEnterCoroutine = null));
         }
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CustomFileListCtrl), nameof(CustomFileListCtrl.OnPointerExit))]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         public static void OnPointerExitPrefix()
         {
-            if (PointerEnterCoroutine == null) return;
-            TranslationHelper.Instance.StopCoroutine(PointerEnterCoroutine);
-            PointerEnterCoroutine = null;
+            if (_pointerEnterCoroutine == null) return;
+            TranslationHelper.Instance.StopCoroutine(_pointerEnterCoroutine);
+            _pointerEnterCoroutine = null;
         }
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CustomFileListCtrl), nameof(CustomFileListCtrl.ChangeItem))]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         public static void ChangeItemPostfix(CustomFileListCtrl __instance, GameObject obj)
         {
             if (obj == null) return;

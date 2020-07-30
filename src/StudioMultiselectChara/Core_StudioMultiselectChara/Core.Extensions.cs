@@ -20,28 +20,24 @@ namespace StudioMultiSelectCharaPlugin
         public static void UnselectInWorkarea(this ObjectCtrlInfo objectCtrlInfo)
         {
             var treeNodeObject = objectCtrlInfo?.treeNodeObject;
-            if (treeNodeObject != null)
+            if (treeNodeObject == null) return;
+            var treeNodeCtrl = treeNodeObject.GetTreeNodeCtrl();
+            // DeselectNode is slow, even when it does nothing, check first
+            if (treeNodeCtrl.CheckSelect(treeNodeObject))
             {
-                var treeNodeCtrl = treeNodeObject.GetTreeNodeCtrl();
-                // DeselectNode is slow, even when it does nothing, check first
-                if (treeNodeCtrl.CheckSelect(treeNodeObject))
-                {
-                    DeselectNode(treeNodeCtrl, treeNodeObject);
-                }
+                DeselectNode(treeNodeCtrl, treeNodeObject);
             }
         }
 
         public static void MultiSelectInWorkarea(this ObjectCtrlInfo objectCtrlInfo)
         {
             var treeNodeObject = objectCtrlInfo?.treeNodeObject;
-            if (treeNodeObject != null)
+            if (treeNodeObject == null) return;
+            var treeNodeCtrl = treeNodeObject.GetTreeNodeCtrl();
+            // AddSelectNode with multi=true on selected object clears it's selected status, don't want that
+            if (!treeNodeCtrl.CheckSelect(treeNodeObject))
             {
-                var treeNodeCtrl = treeNodeObject.GetTreeNodeCtrl();
-                // AddSelectNode with multi=true on selected object clears it's selected status, don't want that
-                if (!treeNodeCtrl.CheckSelect(treeNodeObject))
-                {
-                    AddSelectNode(treeNodeCtrl, treeNodeObject, true);
-                }
+                AddSelectNode(treeNodeCtrl, treeNodeObject, true);
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx.Logging;
 using GeBoCommon;
@@ -11,6 +12,7 @@ using KKAPI.Utilities;
 using TranslationHelperPlugin.Chara;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
 #if AI || HS2
 using AIChara;
 
@@ -92,6 +94,7 @@ namespace TranslationHelperPlugin
             return GeBoAPI.Instance.AutoTranslationHelper.GetReplacements();
         }
 
+        [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Local", Justification = "Future expansion")]
         private bool CounterAdd(string name, string regId)
         {
             UpdateLastBusyTime();
@@ -99,24 +102,37 @@ namespace TranslationHelperPlugin
             lock (_lock)
             {
                 if (!_regIDtoNamesMap.TryGetValue(regId, out var regIdNames))
+                {
                     _regIDtoNamesMap[regId] = regIdNames = new HashSet<string>();
+                }
+
                 if (!_nameToIDMap.TryGetValue(name, out var entries))
+                {
                     _nameToIDMap[name] = entries = new HashSet<string>();
+                }
+
                 regIdNames.Add(name);
                 UpdateLastBusyTime();
                 return entries.Add(regId);
             }
         }
 
+        [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Local", Justification = "Future expansion")]
         private bool CounterRemove(string name, string regId)
         {
             UpdateLastBusyTime();
             lock (_lock)
             {
                 if (!_regIDtoNamesMap.TryGetValue(regId, out var regIdNames))
+                {
                     _regIDtoNamesMap[regId] = regIdNames = new HashSet<string>();
+                }
+
                 if (!_nameToIDMap.TryGetValue(name, out var entries))
+                {
                     _nameToIDMap[name] = entries = new HashSet<string>();
+                }
+
                 regIdNames.Remove(name);
                 UpdateLastBusyTime();
                 return entries.Remove(regId);
@@ -147,7 +163,10 @@ namespace TranslationHelperPlugin
             lock (_lock)
             {
                 if (!_regIDtoNamesMap.TryGetValue(chaFile.GetRegistrationID(), out var registered))
+                {
                     registered = new HashSet<string>();
+                }
+
                 return !registered.SetEquals(current);
             }
         }
@@ -301,7 +320,7 @@ namespace TranslationHelperPlugin
                     if (!_currentlyRegisteredReplacements.Contains(name) || CounterCount(name) != 0) continue;
                     if (replacements?.Remove(name) ?? false)
                     {
-                        Logger.LogDebug($"Unregistering as translation replacement: {name}");
+                        Logger.LogDebug($"Removing registration as translation replacement: {name}");
                     }
 
                     _currentlyRegisteredReplacements.Remove(name);
@@ -314,7 +333,7 @@ namespace TranslationHelperPlugin
             if (!_inUse) return;
 
             var orig = _nameToIDMap.Count;
-            var current = 0;
+            int current;
 
             var namesToRemove = new HashSet<string>();
             lock (_lock)

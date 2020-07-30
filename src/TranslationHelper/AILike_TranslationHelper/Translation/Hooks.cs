@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using CharaCustom;
 using GameLoadCharaFileSystem;
 using GeBoCommon.Chara;
 using HarmonyLib;
 using TranslationHelperPlugin.Chara;
+
 
 namespace TranslationHelperPlugin.Translation
 {
@@ -56,22 +58,25 @@ namespace TranslationHelperPlugin.Translation
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(GameCharaFileInfoAssist), nameof(GameCharaFileInfoAssist.CreateCharaFileInfoList))]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         internal static void CreateCharaFileInfoListPostfix(List<GameCharaFileInfo> __result)
         {
             TranslateFileInfos(__result);
         }
 
-        // ReSharper disable once InconsistentNaming
         [HarmonyPrefix]
         [HarmonyPatch(typeof(GameCharaFileScrollController), nameof(GameCharaFileScrollController.Init))]
+        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Hook")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         internal static void GameCharaFileInfoListPrefix(List<GameCharaFileInfo> _lst)
         {
             TranslateFileInfos(_lst);
         }
 
-        // ReSharper disable once InconsistentNaming
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CustomCharaScrollController), nameof(CustomCharaScrollController.CreateList))]
+        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Hook")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         internal static void CustomCharaFileInfoListPrefix(List<CustomCharaFileInfo> _lst)
         {
             TranslateFileInfos(_lst);

@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using ActionGame.Communication;
 using HarmonyLib;
 
@@ -11,7 +11,6 @@ namespace GameDialogHelperPlugin
             [HarmonyPrefix]
             [HarmonyPatch(typeof(Info), "CreateSelectADV", typeof(Info.SelectInfo), typeof(ChangeValueSelectInfo))]
             [HarmonyPatch(typeof(Info), "CreateSelectADV", typeof(Info.SelectInfo), typeof(int))]
-            // ReSharper disable once InconsistentNaming
             //internal static void Info_CreateSelectADV_Prefix(Info __instance, ref Info.SelectInfo _info)
             internal static void Info_CreateSelectADV_Prefix(Info __instance, Info.SelectInfo _info)
             {

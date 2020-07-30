@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ExtensibleSaveFormat;
 using HarmonyLib;
-using KKAPI.Maker;
-using RootMotion.Demos;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 
@@ -18,13 +17,12 @@ namespace TranslationHelperPlugin.Translation
             Assert.IsNotNull(harmony);
             SceneManager.activeSceneChanged += SceneChanged;
             ExtendedSave.CardBeingSaved += CardBeingSaved;
-
         }
 
         private static void CardBeingSaved(ChaFile file)
         {
             var toRemove =
-                ListInfoNameTranslatedMap.Keys.Where(k => System.IO.Path.GetFileName(k) == file.charaFileName).ToList();
+                ListInfoNameTranslatedMap.Keys.Where(k => Path.GetFileName(k) == file.charaFileName).ToList();
             foreach (var path in toRemove) ListInfoNameTranslatedMap.Remove(path);
         }
 

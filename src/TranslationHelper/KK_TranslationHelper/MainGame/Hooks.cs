@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using GeBoCommon;
 using GeBoCommon.Chara;
 using HarmonyLib;
@@ -42,6 +43,7 @@ namespace TranslationHelperPlugin.MainGame
             typeof(ChaFileControl))]
         [HarmonyPatch(typeof(CharaHInfoComponent), nameof(CharaHInfoComponent.SetCharaInfo),
             typeof(ChaFileControl))]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         internal static void RosterSetCharaInfoPrefix(Component __instance, ChaFileControl chaFileCtrl)
         {
             if (!ShouldProcess(__instance, chaFileCtrl) ||
@@ -58,6 +60,7 @@ namespace TranslationHelperPlugin.MainGame
             typeof(ChaFileControl))]
         [HarmonyPatch(typeof(CharaHInfoComponent), nameof(CharaHInfoComponent.SetCharaInfo),
             typeof(ChaFileControl))]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         internal static void RosterSetCharaInfoPostfix(Component __instance, ChaFileControl chaFileCtrl)
         {
             if (!ShouldProcess(__instance, chaFileCtrl)) return;

@@ -3,6 +3,7 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
@@ -183,6 +184,7 @@ namespace GeBoCommon.Utilities
             registeredCaches.Add(new WeakReference(cache));
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal static bool IsRegistered(Type typ)
         {
             return IsRegistered(TypeToKey(typ));

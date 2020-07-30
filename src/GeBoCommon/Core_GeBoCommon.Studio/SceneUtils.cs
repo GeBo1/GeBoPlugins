@@ -2,6 +2,7 @@
 using HarmonyLib;
 using Studio;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 
@@ -18,6 +19,7 @@ namespace GeBoCommon.Studio
             return loader != null ? new List<string>((IEnumerable<string>)SceneLoadSceneListPath.GetValue(loader)) : new List<string>();
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Utility class, game differences")]
         public static OCIChar GetMainChara(object instance)
         {
             return Traverse.Create(instance).Property("ociChar").GetValue<OCIChar>();

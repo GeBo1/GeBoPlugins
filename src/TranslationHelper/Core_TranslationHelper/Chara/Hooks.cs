@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using BepInEx.Logging;
 using HarmonyLib;
 using KKAPI;
@@ -9,7 +10,8 @@ using AIChara;
 
 namespace TranslationHelperPlugin.Chara
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart",
+        Justification = "Allow for differences between projects")]
     internal partial class Hooks
     {
         internal static ManualLogSource Logger => TranslationHelper.Logger;
@@ -31,6 +33,7 @@ namespace TranslationHelperPlugin.Chara
         }
         */
 
+        /*
         private static void AlternateReload(ChaFile file)
         {
             var controller = file.GetTranslationHelperController();
@@ -44,6 +47,7 @@ namespace TranslationHelperPlugin.Chara
             }
 
         }
+        */
 
         /*
         [HarmonyPrefix]
@@ -70,9 +74,10 @@ namespace TranslationHelperPlugin.Chara
 #else
         [HarmonyPostfix, HarmonyPatch(typeof(ChaFile), "SaveFile", typeof(BinaryWriter), typeof(bool), typeof(int))]
 #endif
+        [SuppressMessage("ReSharper", "UseNullPropagation", Justification = "Unity null check")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
         internal static void ChaFile_SaveFile_Postfix(ChaFile __instance)
         {
-            // ReSharper disable once UseNullPropagation
             if (__instance == null) return;
             __instance.GetTranslationHelperController()
                 .SafeProcObject(c => c.OnCardSaveComplete(KoikatuAPI.GetCurrentGameMode()));

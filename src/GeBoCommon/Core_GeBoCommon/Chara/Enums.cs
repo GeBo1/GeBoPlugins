@@ -1,5 +1,11 @@
-﻿namespace GeBoCommon.Chara
+﻿
+
+using System.Diagnostics.CodeAnalysis;
+
+namespace GeBoCommon.Chara
 {
+
+    [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Game differences")]
     public enum NameType
     {
         Unclassified = 0,
@@ -7,6 +13,7 @@
         Family = 2
     }
 
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public enum CharacterSex
     {
         Unspecified = -1,

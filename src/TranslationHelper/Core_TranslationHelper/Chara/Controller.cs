@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx.Logging;
 using GeBoCommon;
@@ -12,21 +13,20 @@ using KKAPI.Maker;
 using KKAPI.Utilities;
 using UnityEngine;
 
-#if HS2 || AI
-
-#endif
-
 namespace TranslationHelperPlugin.Chara
 {
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart",
+        Justification = "Allow for differences between projects")]
     public partial class Controller : CharaCustomFunctionController
     {
+        private readonly List<IEnumerator> _monitoredCoroutines = new List<IEnumerator>();
+
         private readonly SimpleLazy<string[]> _originalNames =
             new SimpleLazy<string[]>(() => new string[GeBoAPI.Instance.ChaFileNameCount]);
 
         private readonly SimpleLazy<string[]> _translatedNames =
             new SimpleLazy<string[]>(() => new string[GeBoAPI.Instance.ChaFileNameCount]);
 
-        private readonly List<IEnumerator> _monitoredCoroutines = new List<IEnumerator>();
         internal static ManualLogSource Logger => TranslationHelper.Logger;
 
         private static bool RestoreNamesOnSave =>
@@ -35,7 +35,7 @@ namespace TranslationHelperPlugin.Chara
         public string[] TranslatedNames => _translatedNames.Value;
         public string[] OriginalNames => _originalNames.Value;
 
-        // ReSharper disable once MergeConditionalExpression
+        [SuppressMessage("ReSharper", "MergeConditionalExpression", Justification = "Unity null check")]
         private string RegistrationID => ChaFileControl != null ? ChaFileControl.GetRegistrationID() : null;
 
         public bool IsTranslated { get; private set; }
@@ -44,10 +44,7 @@ namespace TranslationHelperPlugin.Chara
         internal Coroutine StartMonitoredCoroutine(IEnumerator routine)
         {
             _monitoredCoroutines.Add(routine);
-            return StartCoroutine(routine.AppendCo(() =>
-            {
-                _monitoredCoroutines.Remove(routine);
-            }));
+            return StartCoroutine(routine.AppendCo(() => { _monitoredCoroutines.Remove(routine); }));
         }
 
         internal void SetTranslatedName(int index, string value)
@@ -70,6 +67,7 @@ namespace TranslationHelperPlugin.Chara
             SetExtendedData(null);
         }
 
+        [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "future proofing")]
         internal void OnCardSaveComplete(GameMode gameMode)
         {
             //TranslationHelper.Logger?.LogDebug($"Controller.OnCardSaveComplete: {RegistrationID}");
@@ -79,6 +77,7 @@ namespace TranslationHelperPlugin.Chara
             {
                 OriginalNames[i] = TranslatedNames[i] = null;
             }
+
             TranslateCardNames();
         }
 
@@ -92,14 +91,15 @@ namespace TranslationHelperPlugin.Chara
 
             TranslateCardNames(cardFullyLoaded);
         }
+
         protected override void OnReload(GameMode currentGameMode)
         {
-           DoReload();
+            DoReload();
         }
 
         internal void OnAlternateReload()
         {
-           DoReload();
+            DoReload();
         }
 
         protected override void OnDestroy()
@@ -157,7 +157,8 @@ namespace TranslationHelperPlugin.Chara
                 }
             }
         }
-        public void TranslateCardNames(bool cardFullyLoaded=true)
+
+        public void TranslateCardNames(bool cardFullyLoaded = true)
         {
             TranslationHelper.Logger?.DebugLogDebug($"Controller.TranslateCardNames: {RegistrationID} {IsTranslated}");
             if (TranslationHelper.Instance.CurrentCardLoadTranslationMode == CardLoadTranslationMode.Disabled) return;
@@ -206,7 +207,6 @@ namespace TranslationHelperPlugin.Chara
             RegisterReplacements(true);
         }
 
-        
 
         internal void ApplyTranslations()
         {
@@ -223,12 +223,15 @@ namespace TranslationHelperPlugin.Chara
         {
 #if KK
             var givenIdx = GeBoAPI.Instance.ChaFileNameToIndex("firstname");
-            var givenName = IsTranslated && !string.IsNullOrEmpty(OriginalNames[givenIdx])
+            var givenName
+ = IsTranslated && !string.IsNullOrEmpty(OriginalNames[givenIdx])
                 ? OriginalNames[givenIdx]
                 : ChaFileControl.GetName(givenIdx);
                 
-            var familyIdx = GeBoAPI.Instance.ChaFileNameToIndex("lastname");
-            var familyName = IsTranslated && !string.IsNullOrEmpty(OriginalNames[familyIdx])
+            var familyIdx
+ = GeBoAPI.Instance.ChaFileNameToIndex("lastname");
+            var familyName
+ = IsTranslated && !string.IsNullOrEmpty(OriginalNames[familyIdx])
                 ? OriginalNames[familyIdx]
                 : ChaFileControl.GetName(familyIdx);
             return string.Concat(familyName, " ", givenName);

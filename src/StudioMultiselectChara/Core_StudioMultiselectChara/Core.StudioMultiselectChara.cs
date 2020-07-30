@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx;
 using BepInEx.Configuration;
@@ -20,7 +21,7 @@ namespace StudioMultiSelectCharaPlugin
     {
         public const string GUID = "com.gebo.BepInEx.studiomultiselectchara";
         public const string PluginName = "Studio MultiSelect Chara";
-        public const string Version = "0.9.1";
+        public const string Version = "0.9.2";
         internal static new ManualLogSource Logger;
 
         private bool _busy;
@@ -37,13 +38,13 @@ namespace StudioMultiSelectCharaPlugin
             GeBoAPI.Instance.SetupNotificationSoundConfig(GUID, NotificationSoundsEnabled);
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Unity")]
         internal void Update()
         {
-            if (Enabled.Value && MultiSelectShortcut.Value.IsDown() && !_busy)
-            {
-                _busy = true;
-                StartCoroutine(UpdateSelectionsCoroutine().AppendCo(() => _busy = false));
-            }
+            if (!Enabled.Value || !MultiSelectShortcut.Value.IsDown() || _busy) return;
+
+            _busy = true;
+            StartCoroutine(UpdateSelectionsCoroutine().AppendCo(() => _busy = false));
         }
 
         private static bool DoesCharaMatch(CharaId charaId, OCIChar test)

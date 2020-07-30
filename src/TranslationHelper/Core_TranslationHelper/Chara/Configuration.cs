@@ -1,5 +1,10 @@
-﻿using BepInEx.Logging;
+﻿using System.Diagnostics.CodeAnalysis;
+using BepInEx.Logging;
 using KKAPI.Chara;
+
+#if (AI||HS2)
+using AIChara;
+#endif
 
 namespace TranslationHelperPlugin.Chara
 {
@@ -14,6 +19,34 @@ namespace TranslationHelperPlugin.Chara
             var harmony = Hooks.SetupHooks();
             CharacterApi.RegisterExtraBehaviour<Controller>(GUID);
             GameSpecificSetup(harmony);
+
+
+            //CharacterApi.CharacterReloaded += CharacterApi_CharacterReloaded;
+            //ExtendedSave.CardBeingLoaded += ExtendedSave_CardBeingLoaded;
         }
+
+        [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "Temporary")]
+        private static void TranslateChaFile(ChaFile file)
+        {
+            if (file != null && TranslationHelper.Instance.CurrentCardLoadTranslationMode != CardLoadTranslationMode.Disabled)
+            {
+                file.StartMonitoredCoroutine(TranslationHelper.TranslateCardNames(file));
+            }
+        }
+
+        /*
+        private static void CharacterApi_CharacterReloaded(object dummy, CharaReloadEventArgs e)
+        {
+            TranslateChaFile(e.ReloadedCharacter?.chaFile);
+        }
+        */
+        
+
+        /*
+        private static void ExtendedSave_CardBeingLoaded(ChaFile file)
+        {
+           TranslateChaFile(file);
+        }
+        */
     }
 }

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace GeBoCommon.Utilities
 {
+    [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Utility class")]
     public class WeakCache<TKey, TValue> : IDictionary<TKey, TValue>
     {
         private int _nextKey;
@@ -62,12 +64,11 @@ namespace GeBoCommon.Utilities
             {
                 valKey = -1;
             }
-            if (_keyLookup.Remove(keyRef))
-            {
-                _values.Remove(valKey);
-                return true;
-            }
-            return false;
+
+            if (!_keyLookup.Remove(keyRef)) return false;
+
+            _values.Remove(valKey);
+            return true;
         }
 
         public bool TryGetValue(TKey key, out TValue value)
@@ -111,11 +112,7 @@ namespace GeBoCommon.Utilities
 
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            if (Contains(item))
-            {
-                return Remove(item.Key);
-            }
-            return false;
+            return Contains(item) && Remove(item.Key);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -129,6 +126,7 @@ namespace GeBoCommon.Utilities
             return _keyLookup.ContainsKey(keyRef);
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Utility class")]
         public void Cleanup()
         {
             var toRemove = _keyLookup.Where((k) => !k.Key.IsAlive);

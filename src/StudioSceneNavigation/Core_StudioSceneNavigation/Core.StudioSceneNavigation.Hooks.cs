@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using GeBoCommon.Studio;
 using GeBoCommon.Utilities;
 using HarmonyLib;
@@ -12,6 +13,7 @@ namespace StudioSceneNavigationPlugin
         {
             [HarmonyPatch(typeof(SceneLoadScene), "InitInfo")]
             [HarmonyPostfix]
+            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Hook")]
             internal static void StudioInitInfoPost(SceneLoadScene __instance)
             {
 #if DEBUG

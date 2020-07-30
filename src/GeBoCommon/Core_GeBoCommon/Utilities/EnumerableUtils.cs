@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace GeBoCommon.Utilities
 {
+    [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Utility class")]
     public static class EnumerableUtils
     {
-        public static bool EnumerableContains<T>(IEnumerable<T> haystack, IEnumerable<T> needle, IComparer<T> comparer = null) where T : IComparable
+        public static bool EnumerableContains<T>(IEnumerable<T> haystack, IEnumerable<T> needle,
+            IComparer<T> comparer = null) where T : IComparable
         {
             if (haystack is null) return false;
             var haystackList = haystack.ToList();

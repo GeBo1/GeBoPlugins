@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using GeBoCommon.Utilities;
 
@@ -22,6 +23,7 @@ namespace StudioMultiSelectCharaPlugin
             _hashCode = new SimpleLazy<int>(() => GetSortKey().GetHashCode());
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         public CharaId(IEnumerable<byte> bytes) : this(bytes.ToArray())
         {
         }

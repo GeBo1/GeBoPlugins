@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -7,7 +8,6 @@ using ExtensibleSaveFormat;
 using GeBoCommon;
 using GeBoCommon.Utilities;
 using KKAPI;
-using KKAPI.Chara;
 using KKAPI.Studio;
 using TranslationHelperPlugin.Chara;
 using TranslationHelperPlugin.Translation;
@@ -28,7 +28,7 @@ namespace TranslationHelperPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationhelper";
         public const string PluginName = "Translation Helper";
-        public const string Version = "0.9.2";
+        public const string Version = "0.9.3";
 
         internal static new ManualLogSource Logger;
         public static TranslationHelper Instance;
@@ -124,6 +124,7 @@ namespace TranslationHelperPlugin
                 $"Attempt to translate card names when they are loaded in {mode}");
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Unity")]
         internal void Awake()
         {
             Instance = this;
@@ -145,6 +146,7 @@ namespace TranslationHelperPlugin
         }
 
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Unity")]
         internal void OnDestroy()
         {
             RegistrationManager.Deactivate();
@@ -155,39 +157,23 @@ namespace TranslationHelperPlugin
             GameSpecificStart();
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         public static IEnumerator WaitOnCardTranslations()
         {
             return CardNameManager.WaitOnCardTranslations();
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         public static IEnumerator WaitOnCard(ChaFile file)
         {
             return CardNameManager.WaitOnCard(file);
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         public static IEnumerator TranslateCardNames(ChaFile file)
         {
             return CardNameManager.TranslateCardNames(file);
         }
-
-        internal void ExtendedSave_CardBeingLoaded(ChaFile file)
-        {
-            if (file != null && CurrentCardLoadTranslationMode != CardLoadTranslationMode.Disabled)
-            {
-                file.StartMonitoredCoroutine(CardNameManager.TranslateCardNames(file));
-            }
-        }
-
-        private void CharacterApi_CharacterReloaded(object dummy, CharaReloadEventArgs e)
-        {
-            if (e.ReloadedCharacter != null && e.ReloadedCharacter.chaFile != null &&
-                CurrentCardLoadTranslationMode != CardLoadTranslationMode.Disabled)
-            {
-                e.ReloadedCharacter.StartMonitoredCoroutine(
-                    CardNameManager.TranslateCardNames(e.ReloadedCharacter.chaFile));
-            }
-        }
-
         internal void AddTranslatedNameToCache(string origName, string translatedName, bool allowPersistToDisk = false)
         {
             if (origName == translatedName || StringUtils.ContainsJapaneseChar(translatedName)) return;

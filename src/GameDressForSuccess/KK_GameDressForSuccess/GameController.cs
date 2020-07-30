@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ActionGame;
+﻿using ActionGame;
 using BepInEx.Logging;
 using GeBoCommon.Utilities;
 using KKAPI.MainGame;
 
 namespace GameDressForSuccessPlugin
 {
-    class GameController : GameCustomFunctionController
+    internal class GameController : GameCustomFunctionController
     {
         protected static ManualLogSource Logger => GameDressForSuccess.Instance?.Logger;
 
@@ -20,9 +16,9 @@ namespace GameDressForSuccessPlugin
             {
                 GameDressForSuccess.Instance?.SetPlayerClothesToAutomatic();
             }
+
             base.OnPeriodChange(period);
         }
-
 
 
         protected override void OnEnterNightMenu()
@@ -33,6 +29,7 @@ namespace GameDressForSuccessPlugin
             {
                 GameDressForSuccess.Instance?.SetPlayerClothesToAutomatic();
             }
+
             base.OnEnterNightMenu();
         }
 
@@ -44,8 +41,8 @@ namespace GameDressForSuccessPlugin
             {
                 GameDressForSuccess.Instance?.SetPlayerClothesToAutomatic();
             }
+
             base.OnDayChange(day);
         }
-
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -23,7 +24,7 @@ namespace TranslationCacheCleanerPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationcachecleaner";
         public const string PluginName = "Translation Cache Cleaner";
-        public const string Version = "0.5.3";
+        public const string Version = "0.5.4";
 
         private const float NotifySeconds = 10f;
         private const float YieldSeconds = 0.1f;
@@ -37,6 +38,7 @@ namespace TranslationCacheCleanerPlugin
 
         private string AutoTranslationsFilePath => GeBoAPI.Instance.AutoTranslationHelper.GetAutoTranslationsFilePath();
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Unity")]
         internal void Awake()
         {
             Logger = base.Logger;
@@ -46,6 +48,7 @@ namespace TranslationCacheCleanerPlugin
                 "Pressing this will attempt to clean your auto-translation cache.");
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Unity")]
         internal void Update()
         {
             if (_cleaningActive || !CleanCacheHotkey.Value.IsPressed()) return;
@@ -199,14 +202,14 @@ namespace TranslationCacheCleanerPlugin
 
         public IEnumerator PostCleanupCoroutine()
         {
-            if (!_latestBackup.IsNullOrWhiteSpace() && File.Exists(_latestBackup))
-            {
-                Logger.LogWarning("Something unexpected happened. Restoring previous translation cache.");
-                MoveReplaceFile(_latestBackup, AutoTranslationsFilePath);
-                yield return StartCoroutine(CoroutineUtils.CreateCoroutine(ReloadTranslations));
-            }
+            if (_latestBackup.IsNullOrWhiteSpace() || !File.Exists(_latestBackup)) yield break;
+
+            Logger.LogWarning("Something unexpected happened. Restoring previous translation cache.");
+            MoveReplaceFile(_latestBackup, AutoTranslationsFilePath);
+            yield return StartCoroutine(CoroutineUtils.CreateCoroutine(ReloadTranslations));
         }
 
+        /*
         public void CleanTranslationCache()
         {
             Logger.LogMessage("Attempting to clean translation cache, please be patient...");
@@ -311,5 +314,6 @@ namespace TranslationCacheCleanerPlugin
                 }
             }
         }
+        */
     }
 }

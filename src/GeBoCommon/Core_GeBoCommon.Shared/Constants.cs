@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace GeBoCommon
 {
+    [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Game differences")]
     public static class Constants
     {
 #if AI
@@ -42,11 +44,13 @@ namespace GeBoCommon
         public const string Prefix = "KK";
         public const RegexOptions SupportedRegexCompilationOption = RegexOptions.None;
 #endif
-        // ReSharper disable once IdentifierTypo
         [Obsolete("Use SupportedRegexCompilationOption instead")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Backwards Compatibility")]
+        [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "Backwards Compatibility")]
         public const RegexOptions SupportedRegexComplitationOption = SupportedRegexCompilationOption;
 
         [Obsolete("Use MainGameProcessName instead")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Backwards Compatibility")]
         public const string GameProcessName = MainGameProcessName;
 
 #if (KK||AI)

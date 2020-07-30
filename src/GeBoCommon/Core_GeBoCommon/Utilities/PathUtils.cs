@@ -1,6 +1,7 @@
 ﻿using Illusion.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 
@@ -74,6 +75,7 @@ namespace GeBoCommon.Utilities
                         parts.SelectMany(i => i.Split(splitChars)).ToArray());
         }
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Utility class")]
         public static string[] SplitPath(string path) =>
             path?.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         public static string GetRelativePath(string relativeTo, string path)

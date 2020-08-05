@@ -30,5 +30,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Translation\NameTranslator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Translation\Configuration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Translation\Hooks.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Limiter.cs" />
   </ItemGroup>
 </Project>

@@ -1,15 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using CharaCustom;
 using GameLoadCharaFileSystem;
 using GeBoCommon.Chara;
 using HarmonyLib;
+using KKAPI.Utilities;
 using TranslationHelperPlugin.Chara;
+using TranslationHelperPlugin.Utils;
 
 namespace TranslationHelperPlugin.Translation
 {
     internal partial class Hooks
     {
+
+        private static readonly Limiter FileInfoLimiter = new Limiter(30);
+
         private static void TranslateFileInfo(Func<string> nameGetter, Func<CharacterSex> sexGetter,
             Action<string> nameSetter, params TranslationResultHandler[] handlers)
         {
@@ -21,13 +27,14 @@ namespace TranslationHelperPlugin.Translation
                     if (!r.Succeeded) return;
                     nameSetter(r.TranslatedText);
                 },
-                Handlers.AddNameToCache(origName)
+                Handlers.AddNameToCache(origName),
+                r => FileInfoLimiter.EndImmediately()
             };
             if (handlers.Length > 0) innerHandlers.AddRange(handlers);
-            TranslationHelper.Instance.StartCoroutine(
+            TranslationHelper.Instance.StartCoroutine(FileInfoLimiter.Start().AppendCo(
                 TranslationHelper.CardNameManager.TranslateCardName(origName,
                     new NameScope(sexGetter()),
-                    innerHandlers.ToArray()));
+                    innerHandlers.ToArray())));
         }
 
         internal static void TranslateFileInfo(GameCharaFileInfo info, params TranslationResultHandler[] handlers)

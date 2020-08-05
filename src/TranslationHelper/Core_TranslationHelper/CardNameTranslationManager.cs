@@ -10,6 +10,7 @@ using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
 using TranslationHelperPlugin.Chara;
 using TranslationHelperPlugin.Translation;
+using TranslationHelperPlugin.Utils;
 using UnityEngine;
 #if AI || HS2
 using AIChara;
@@ -29,8 +30,7 @@ namespace TranslationHelperPlugin
             new KeyValuePair<string, string>("君", "kun"), new KeyValuePair<string, string>("ちゃん", "chan")
         };
 
-
-        private static char[] SpaceSplitter => TranslationHelper.SpaceSplitter;
+        private static readonly Limiter TranslateNameLimiter = new Limiter(100);
 
         private readonly HashSet<string> _cardsInProgress;
         private readonly Dictionary<string, List<TranslationResultHandler>> _nameTracker;
@@ -42,6 +42,9 @@ namespace TranslationHelperPlugin
             _nameTracker = new Dictionary<string, List<TranslationResultHandler>>();
             _cardsInProgress = new HashSet<string>();
         }
+
+
+        private static char[] SpaceSplitter => TranslationHelper.SpaceSplitter;
 
         internal static ManualLogSource Logger => _logger ?? (_logger = TranslationHelper.Logger);
 
@@ -205,6 +208,14 @@ namespace TranslationHelperPlugin
         private IEnumerator TranslateName(string originalName, NameScope nameScope,
             TranslationResultHandler callback)
         {
+            yield return TranslateNameLimiter.Start();
+
+            void CallbackWrapper(ITranslationResult translationResult)
+            {
+                TranslateNameLimiter.EndImmediately();
+                callback(translationResult);
+            }
+
             var cardTranslationMode = TranslationHelper.Instance.CurrentCardLoadTranslationMode;
             var suffixedName = originalName;
 
@@ -214,7 +225,7 @@ namespace TranslationHelperPlugin
                 !GeBoAPI.Instance.AutoTranslationHelper.IsTranslatable(suffixedName))
             {
                 //Logger.LogDebug($"TranslateName: nothing to do: {originalName}");
-                callback(new SimpleTranslationResult(false, originalName, "Disabled or already translated"));
+                CallbackWrapper(new SimpleTranslationResult(false, originalName, "Disabled or already translated"));
                 yield break;
             }
 
@@ -228,7 +239,7 @@ namespace TranslationHelperPlugin
                     if (originalName != translatedName)
                     {
                         //Logger.LogInfo($"TranslateName: Translated card name (cached): {originalName} -> {translatedName}");
-                        callback(new SimpleTranslationResult(true, translatedName));
+                        CallbackWrapper(new SimpleTranslationResult(true, translatedName));
                         yield break;
                     }
                 }
@@ -244,7 +255,7 @@ namespace TranslationHelperPlugin
                         if (suffixedName != translatedName2)
                         {
                             //Logger.LogInfo($"TranslateName: Translated card name (cached/suffixed): {originalName} -> {translatedName2}");
-                            callback(new SimpleTranslationResult(true, translatedName2));
+                            CallbackWrapper(new SimpleTranslationResult(true, translatedName2));
                             yield break;
                         }
                     }
@@ -264,18 +275,18 @@ namespace TranslationHelperPlugin
                         if (suffixedName != translatedName)
                         {
                             //Logger.LogInfo($"TranslateName: Translated card name (async): {originalName} -> {translatedName}");
-                            callback(new SimpleTranslationResult(true, translatedName));
+                            CallbackWrapper(new SimpleTranslationResult(true, translatedName));
                             return;
                         }
                     }
 
-                    callback(result);
+                    CallbackWrapper(result);
                 });
                 yield return null;
             }
             else
             {
-                callback(new SimpleTranslationResult(false, originalName, "Unable to translate name"));
+                CallbackWrapper(new SimpleTranslationResult(false, originalName, "Unable to translate name"));
             }
         }
 

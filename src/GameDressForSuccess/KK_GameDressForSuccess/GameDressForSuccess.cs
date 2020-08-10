@@ -93,7 +93,11 @@ namespace GameDressForSuccessPlugin
         {
             if (heroine == null) return;
             _monitoringChange = true;
-            _initialCoordinateType = heroine.chaCtrl.chaFile.status.coordinateType;
+            heroine.chaCtrl.SafeProc(
+                cc => cc.chaFile.SafeProc(
+                    cf => cf.status.SafeProc(
+                        s => s.coordinateType.SafeProc(
+                            c => _initialCoordinateType = c))));
         }
 
         private void TravelingDone(SaveData.Heroine heroine)
@@ -105,7 +109,12 @@ namespace GameDressForSuccessPlugin
 
             if (_initialCoordinateType != -1 && heroine != null)
             {
-                var currentCoordinateType = heroine.chaCtrl.chaFile.status.coordinateType;
+                var currentCoordinateType = _initialCoordinateType;
+                heroine.chaCtrl.SafeProc(
+                    cc => cc.chaFile.SafeProc(
+                        cf => cf.status.SafeProc(
+                            s => s.coordinateType.SafeProc(
+                                c => currentCoordinateType = c))));
                 if (currentCoordinateType != _initialCoordinateType)
                 {
                     DressPlayer((ChaFileDefine.CoordinateType)currentCoordinateType);

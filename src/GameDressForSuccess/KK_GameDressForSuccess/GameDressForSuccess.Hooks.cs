@@ -21,15 +21,17 @@ namespace GameDressForSuccessPlugin
             private const string TogglePrefix = "tglCoorde";
             private const string AutoToggleName = TogglePrefix + "00";
 
-            
+
             internal static ManualLogSource Logger => Instance?.Logger;
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(MapChange), "Do")]
             internal static void StartTravelingHook(MapChange __instance)
             {
-                if (!Enabled.Value) return;
-                Instance?.TravelingStart(__instance?.scenario.currentHeroine);
+                if (!Enabled.Value || Instance == null) return;
+                __instance.SafeProc(
+                    i => i.scenario.SafeProc(
+                        s => s.currentHeroine.SafeProc(h => Instance.TravelingStart(h))));
             }
 
             [HarmonyPrefix]
@@ -37,17 +39,19 @@ namespace GameDressForSuccessPlugin
             [HarmonyPatch(typeof(Text), "Do")]
             internal static void StopTravelingHook(CommandBase __instance)
             {
-                if (!Enabled.Value) return;
-                Instance?.TravelingDone(__instance?.scenario.currentHeroine);
+                if (!Enabled.Value || Instance == null) return;
+                __instance.SafeProc(
+                    i => i.scenario.SafeProc(
+                        s => s.currentHeroine.SafeProc(h => Instance.TravelingDone(h))));
             }
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(Coordinate), "Do")]
             internal static void CoordinateDoPostfix(Coordinate __instance)
             {
-                Logger.DebugLogDebug($"CoordinateDoPostfix: monitoringChange={Instance?._monitoringChange}"); 
-                if (Instance == null || !Enabled.Value || !Instance._monitoringChange) return;
-                
+                Logger.DebugLogDebug($"CoordinateDoPostfix: monitoringChange={Instance?._monitoringChange}");
+                if (Instance == null || !Enabled.Value || !Instance._monitoringChange || __instance == null) return;
+
 
                 var typeField = Traverse.Create(__instance).Field("type");
 
@@ -63,11 +67,11 @@ namespace GameDressForSuccessPlugin
             internal static void ToggleOnPointerClickPrefix(Toggle __instance,
                 ref PointerEventData eventData, out Toggle __state)
             {
-                Logger.DebugLogDebug($"ToggleOnPointerClickPrefix");
+                Logger.DebugLogDebug("ToggleOnPointerClickPrefix");
                 __state = null;
                 if (!Enabled.Value ||
                     eventData.button != PointerEventData.InputButton.Right ||
-                    !__instance.name.StartsWith(TogglePrefix))
+                    __instance == null || __instance.name == null || !__instance.name.StartsWith(TogglePrefix))
                 {
                     return;
                 }
@@ -75,7 +79,7 @@ namespace GameDressForSuccessPlugin
                 // everything after this point will fire the default left-click event
                 eventData.button = PointerEventData.InputButton.Left;
 
-                
+
                 if (__instance.name == AutoToggleName) return;
 
                 var autoEnabled = (CustomBase.IsInstance() &&

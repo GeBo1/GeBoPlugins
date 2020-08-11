@@ -20,7 +20,7 @@ namespace GameDressForSuccessPlugin
     {
         public const string GUID = "com.gebo.BepInEx.GameDressForSuccess";
         public const string PluginName = "Dress for Success";
-        public const string Version = "1.1.0";
+        public const string Version = "1.1.1";
 
         internal static GameDressForSuccess Instance;
         private int _initialCoordinateType = -1;

@@ -30,7 +30,7 @@ namespace TranslationHelperPlugin
             new KeyValuePair<string, string>("君", "kun"), new KeyValuePair<string, string>("ちゃん", "chan")
         };
 
-        private static readonly Limiter TranslateNameLimiter = new Limiter(100);
+        private static readonly Limiter TranslateNameLimiter = new Limiter(100, true);
 
         private readonly HashSet<string> _cardsInProgress;
         private readonly Dictionary<string, List<TranslationResultHandler>> _nameTracker;

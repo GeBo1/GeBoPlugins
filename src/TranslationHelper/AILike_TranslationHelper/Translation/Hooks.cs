@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using CharaCustom;
 using GameLoadCharaFileSystem;
 using GeBoCommon.Chara;
@@ -13,10 +13,9 @@ namespace TranslationHelperPlugin.Translation
 {
     internal partial class Hooks
     {
-
         private static readonly Limiter FileInfoLimiter = new Limiter(30);
 
-        private static void TranslateFileInfo(Func<string> nameGetter, Func<CharacterSex> sexGetter,
+        private static IEnumerator TranslateFileInfoCoroutine(Func<string> nameGetter, Func<CharacterSex> sexGetter,
             Action<string> nameSetter, params TranslationResultHandler[] handlers)
         {
             var origName = nameGetter();
@@ -24,40 +23,49 @@ namespace TranslationHelperPlugin.Translation
             {
                 r =>
                 {
+                    FileInfoLimiter.EndImmediately();
                     if (!r.Succeeded) return;
                     nameSetter(r.TranslatedText);
                 },
-                Handlers.AddNameToCache(origName),
-                r => FileInfoLimiter.EndImmediately()
+                Handlers.AddNameToCache(origName)
             };
             if (handlers.Length > 0) innerHandlers.AddRange(handlers);
-            TranslationHelper.Instance.StartCoroutine(FileInfoLimiter.Start().AppendCo(
+            yield return FileInfoLimiter.Start().AppendCo(
                 TranslationHelper.CardNameManager.TranslateCardName(origName,
                     new NameScope(sexGetter()),
-                    innerHandlers.ToArray())));
+                    innerHandlers.ToArray()));
+        }
+
+        private static void TranslateFileInfo(Func<string> nameGetter, Func<CharacterSex> sexGetter,
+            Action<string> nameSetter, params TranslationResultHandler[] handlers)
+        {
+            TranslationHelper.Instance.StartCoroutine(TranslateFileInfoCoroutine(nameGetter, sexGetter, nameSetter,
+                handlers));
         }
 
         internal static void TranslateFileInfo(GameCharaFileInfo info, params TranslationResultHandler[] handlers)
         {
-            if (info == null) return;
-            TranslateFileInfo(() => info.name, () => (CharacterSex)info.sex, n => info.name = n, handlers);
+            if (info == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
+            TranslateFileInfo(() => info.name, () => (CharacterSex)info.sex, n => info.SafeProc(i => i.name = n),
+                handlers);
         }
 
         internal static void TranslateFileInfo(CustomCharaFileInfo info, params TranslationResultHandler[] handlers)
         {
-            if (info == null) return;
-            TranslateFileInfo(() => info.name, () => (CharacterSex)info.sex, n => info.name = n, handlers);
+            if (info == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
+            TranslateFileInfo(() => info.name, () => (CharacterSex)info.sex, n => info.SafeProc(i => i.name = n),
+                handlers);
         }
 
         internal static void TranslateFileInfos(IEnumerable<GameCharaFileInfo> infos)
         {
-            if (infos == null) return;
+            if (infos == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
             foreach (var fileInfo in infos) TranslateFileInfo(fileInfo);
         }
 
         private static void TranslateFileInfos(IEnumerable<CustomCharaFileInfo> infos)
         {
-            if (infos == null) return;
+            if (infos == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
             foreach (var fileInfo in infos) TranslateFileInfo(fileInfo);
         }
 

@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using ChaCustom;
-using GeBoCommon;
 using HarmonyLib;
-using KKAPI.Chara;
 using KKAPI.Maker;
 using TranslationHelperPlugin.Chara;
-using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.UI;
 
 namespace TranslationHelperPlugin.Maker
 {
@@ -29,6 +23,7 @@ namespace TranslationHelperPlugin.Maker
             yield return new KeyValuePair<string, string[]>("lastname", new[] {top, "InputName", "InpLastName"});
             yield return new KeyValuePair<string, string[]>("nickname", new[] {top, "InputNickName", "InpNickName"});
         }
+
         private static IEnumerator GameSpecificUpdateUICoroutine(Controller controller)
         {
             Assert.IsNotNull(controller);

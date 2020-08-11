@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Configuration;
@@ -8,14 +9,16 @@ using GeBoCommon;
 using GeBoCommon.Utilities;
 using KKAPI;
 using KKAPI.Chara;
+using KKAPI.Maker;
 using KKAPI.Studio;
 using TranslationHelperPlugin.Chara;
 using TranslationHelperPlugin.Translation;
+using UnityEngine.SceneManagement;
 using Configuration = TranslationHelperPlugin.Translation.Configuration;
 using PluginData = XUnity.AutoTranslator.Plugin.Core.Constants.PluginData;
-
 #if AI || HS2
 using AIChara;
+
 #endif
 
 namespace TranslationHelperPlugin
@@ -64,27 +67,11 @@ namespace TranslationHelperPlugin
 
         internal NameTranslator NameTranslator => _nameTranslator.Value;
 
-        internal CardLoadTranslationMode CurrentCardLoadTranslationMode
-        {
-            get
-            {
-                switch (KoikatuAPI.GetCurrentGameMode())
-                {
-                    case GameMode.MainGame:
-                        return GameTranslateCardNameOnLoad?.Value ?? CardLoadTranslationMode.Disabled;
+        internal CardLoadTranslationMode CurrentCardLoadTranslationMode { get; private set; } =
+            CardLoadTranslationMode.Disabled;
 
-                    case GameMode.Maker:
-                        return MakerTranslateCardNameOnLoad?.Value ?? CardLoadTranslationMode.Disabled;
-
-                    case GameMode.Studio:
-                        return StudioTranslateCardNameOnLoad?.Value ?? CardLoadTranslationMode.Disabled;
-
-                    default:
-                        return CardLoadTranslationMode.Disabled;
-                }
-            }
-        }
-
+        internal bool CurrentCardLoadTranslationEnabled =>
+            CurrentCardLoadTranslationMode >= CardLoadTranslationMode.CacheOnly;
 
         public static ConfigEntry<bool> RegisterActiveCharacters { get; private set; }
         public static ConfigEntry<CardLoadTranslationMode> GameTranslateCardNameOnLoad { get; private set; }
@@ -93,6 +80,34 @@ namespace TranslationHelperPlugin
         public static ConfigEntry<bool> TranslateNameWithSuffix { get; private set; }
         public static ConfigEntry<string> NameTrimChars { get; private set; }
         public static ConfigEntry<bool> MakerSaveWithTranslatedNames { get; internal set; }
+
+        internal void UpdateCurrentCardTranslationMode()
+        {
+            var origMode = CurrentCardLoadTranslationMode;
+            if (StudioAPI.InsideStudio)
+            {
+                CurrentCardLoadTranslationMode =
+                    StudioTranslateCardNameOnLoad?.Value ?? CardLoadTranslationMode.Disabled;
+            }
+
+            else if (MakerAPI.InsideMaker)
+            {
+                CurrentCardLoadTranslationMode =
+                    MakerTranslateCardNameOnLoad?.Value ?? CardLoadTranslationMode.Disabled;
+            }
+
+            else if (KoikatuAPI.GetCurrentGameMode() == GameMode.MainGame)
+            {
+                CurrentCardLoadTranslationMode =
+                    GameTranslateCardNameOnLoad?.Value ?? CardLoadTranslationMode.Disabled;
+            }
+            else
+            {
+                CurrentCardLoadTranslationMode = CardLoadTranslationMode.Disabled;
+            }
+
+            Logger.LogDebug($"UpdateCurrentCardTranslationMode: {origMode} => {CurrentCardLoadTranslationMode}");
+        }
 
         internal void Main()
         {
@@ -115,13 +130,34 @@ namespace TranslationHelperPlugin
 
             MakerSaveWithTranslatedNames = Config.Bind("Maker", "Save Translated Names", false,
                 "When enabled translated names will be saved with cards in maker, otherwise unmodified names will be restored");
+
+            if (!StudioAPI.InsideStudio)
+            {
+                MakerAPI.InsideMakerChanged += InsideMakerChanged;
+                SceneManager.activeSceneChanged += ActiveSceneChanged;
+            }
+
+            UpdateCurrentCardTranslationMode();
         }
+
+        private void ActiveSceneChanged(Scene arg0, Scene arg1)
+        {
+            UpdateCurrentCardTranslationMode();
+        }
+
+        private void InsideMakerChanged(object sender, EventArgs e)
+        {
+            UpdateCurrentCardTranslationMode();
+        }
+
 
         private ConfigEntry<CardLoadTranslationMode> InitializeGameModeConfig(GameMode mode,
             CardLoadTranslationMode defaultValue)
         {
-            return Config.Bind("Translate Card Name Modes", mode.ToString(), defaultValue,
+            var config = Config.Bind("Translate Card Name Modes", mode.ToString(), defaultValue,
                 $"Attempt to translate card names when they are loaded in {mode}");
+            config.SettingChanged += (o, e) => UpdateCurrentCardTranslationMode();
+            return config;
         }
 
         internal void Awake()

@@ -35,7 +35,7 @@ namespace TranslationHelperPlugin.MainGame
             typeof(int), typeof(int))]
         internal static void LobbySetGameCharaFileInfoPostfix(LobbyParameterUI __instance, GameCharaFileInfo _info)
         {
-            if (_info == null) return;
+            if (_info == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
 
             void Handler(ITranslationResult result)
             {

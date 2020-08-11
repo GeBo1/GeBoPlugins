@@ -5,7 +5,6 @@ namespace TranslationHelperPlugin.MainGame
 {
     internal static partial class Configuration
     {
-
         internal const string GUID = TranslationHelper.GUID + ".maingame";
         internal static ManualLogSource Logger => TranslationHelper.Logger;
 

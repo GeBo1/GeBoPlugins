@@ -1,11 +1,12 @@
-﻿using System;
-using BepInEx.Logging;
+﻿using BepInEx.Logging;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using HarmonyLib;
+using KKAPI.Utilities;
 using Studio;
-using TranslationHelperPlugin.Chara;
+using TranslationHelperPlugin.Utils;
 using IllusionStudio = Studio.Studio;
+
 #if AI || HS2
 
 #endif
@@ -16,6 +17,8 @@ namespace TranslationHelperPlugin.Studio
     {
         // ReSharper disable InconsistentNaming
         internal static ManualLogSource Logger => TranslationHelper.Logger;
+        private static readonly Limiter TreeNodeLimiter = new Limiter(30);
+
         internal static Harmony SetupHooks()
         {
             return Harmony.CreateAndPatchAll(typeof(Hooks));
@@ -27,7 +30,7 @@ namespace TranslationHelperPlugin.Studio
         internal static void RefreshVisibleLoopPatch(TreeNodeObject _source)
         {
             if (TranslationHelper.Instance == null || !IllusionStudio.IsInstance() ||
-                TranslationHelper.Instance.CurrentCardLoadTranslationMode < CardLoadTranslationMode.CacheOnly ||
+                !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled ||
                 !Singleton<IllusionStudio>.Instance.dicInfo.TryGetValue(_source, out var ctrlInfo) ||
                 !(ctrlInfo is OCIChar oChar))
             {
@@ -82,7 +85,7 @@ namespace TranslationHelperPlugin.Studio
         private static void TranslateDisplayList(CharaList charaList)
         {
             if (charaList == null || TranslationHelper.Instance == null ||
-                TranslationHelper.Instance.CurrentCardLoadTranslationMode < CardLoadTranslationMode.CacheOnly)
+                !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled)
             {
                 return;
             }
@@ -99,16 +102,18 @@ namespace TranslationHelperPlugin.Studio
                 charaFileInfo.node.text = result.TranslatedText;
             }
 
+
             foreach (var entry in cfiList)
             {
                 void Handler(ITranslationResult result)
                 {
                     HandleResult(entry, result);
+                    TreeNodeLimiter.EndImmediately();
                 }
 
-                TranslationHelper.Instance.StartCoroutine(
+                TranslationHelper.Instance.StartCoroutine(TreeNodeLimiter.Start().AppendCo(
                     TranslationHelper.CardNameManager.TranslateCardName(entry.name, new NameScope((CharacterSex)sex),
-                        CardNameTranslationManager.CanForceSplitNameString(entry.name), Handler));
+                        CardNameTranslationManager.CanForceSplitNameString(entry.name), Handler)));
             }
         }
     }

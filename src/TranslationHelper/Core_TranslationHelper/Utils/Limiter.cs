@@ -1,24 +1,33 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Text;
+﻿using System.Collections;
 using System.Threading;
 using BepInEx.Logging;
-using KKAPI.Utilities;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace TranslationHelperPlugin.Utils
 {
     internal class Limiter
     {
-        internal static ManualLogSource Logger => TranslationHelper.Logger;
         private readonly long _limit;
         private long _current;
 
-        internal Limiter(long limit)
+        internal Limiter(long limit, bool resetOnSceneTransition = false)
         {
             _limit = limit;
+            if (resetOnSceneTransition) SceneManager.sceneUnloaded += SceneUnloaded;
+            Reset();
+        }
+
+        internal static ManualLogSource Logger => TranslationHelper.Logger;
+
+        private void SceneUnloaded(Scene arg0)
+        {
+            Reset();
+        }
+
+        private void Reset()
+        {
+            _current = 0;
         }
 
         internal bool IsAtLimit()
@@ -30,13 +39,16 @@ namespace TranslationHelperPlugin.Utils
         {
             return !IsAtLimit();
         }
+
         internal IEnumerator Start()
         {
             if (IsAtLimit())
             {
-                yield return null;
+                var start = Time.unscaledTime;
                 yield return new WaitUntil(IsBelowLimit);
+                Logger.LogDebug($"Limiter delay: ${Time.unscaledTime - start}");
             }
+
             Interlocked.Increment(ref _current);
         }
 
@@ -48,9 +60,8 @@ namespace TranslationHelperPlugin.Utils
 
         internal void EndImmediately()
         {
-            Interlocked.Decrement(ref _current);
+            var value = Interlocked.Decrement(ref _current);
+            if (value < 0) Interlocked.CompareExchange(ref _current, 0, value);
         }
-
-
     }
 }

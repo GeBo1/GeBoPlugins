@@ -31,7 +31,7 @@ namespace TranslationHelperPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationhelper";
         public const string PluginName = "Translation Helper";
-        public const string Version = "0.9.2";
+        public const string Version = "0.9.4";
 
         internal static new ManualLogSource Logger;
         public static TranslationHelper Instance;
@@ -51,8 +51,8 @@ namespace TranslationHelperPlugin
 
         internal static readonly CardNameTranslationManager CardNameManager = new CardNameTranslationManager();
 
-        internal static readonly ICollection<GameMode> RegistrationGameModes =
-            new HashSet<GameMode> {GameMode.MainGame, GameMode.Studio};
+        internal static ICollection<GameMode> RegistrationGameModes =
+            new HashSet<GameMode> {GameMode.MainGame};
 
         // space, middle dot (full/half-width), ideographic space
         public static readonly char[] SpaceSplitter = {' ', '\u30FB', '\uFF65', '\u3000'};
@@ -67,6 +67,8 @@ namespace TranslationHelperPlugin
 
         internal NameTranslator NameTranslator => _nameTranslator.Value;
 
+        // GameMode as of last update to CurrentCardLoadTranslationMode
+        internal GameMode CurrentGameMode { get; private set; } = GameMode.Unknown;
         internal CardLoadTranslationMode CurrentCardLoadTranslationMode { get; private set; } =
             CardLoadTranslationMode.Disabled;
 
@@ -88,23 +90,30 @@ namespace TranslationHelperPlugin
             {
                 CurrentCardLoadTranslationMode =
                     StudioTranslateCardNameOnLoad?.Value ?? CardLoadTranslationMode.Disabled;
+                CurrentGameMode = GameMode.Studio;
             }
 
             else if (MakerAPI.InsideMaker)
             {
                 CurrentCardLoadTranslationMode =
                     MakerTranslateCardNameOnLoad?.Value ?? CardLoadTranslationMode.Disabled;
-            }
-
-            else if (KoikatuAPI.GetCurrentGameMode() == GameMode.MainGame)
-            {
-                CurrentCardLoadTranslationMode =
-                    GameTranslateCardNameOnLoad?.Value ?? CardLoadTranslationMode.Disabled;
+                CurrentGameMode = GameMode.Maker;
             }
             else
             {
-                CurrentCardLoadTranslationMode = CardLoadTranslationMode.Disabled;
+                CurrentGameMode = KoikatuAPI.GetCurrentGameMode();
+
+                if (CurrentGameMode == GameMode.MainGame)
+                {
+                    CurrentCardLoadTranslationMode =
+                        GameTranslateCardNameOnLoad?.Value ?? CardLoadTranslationMode.Disabled;
+                }
+                else
+                {
+                    CurrentCardLoadTranslationMode = CardLoadTranslationMode.Disabled;
+                }
             }
+
 
             Logger.LogDebug($"UpdateCurrentCardTranslationMode: {origMode} => {CurrentCardLoadTranslationMode}");
         }
@@ -239,7 +248,7 @@ namespace TranslationHelperPlugin
         {
             if (file == null) yield break;
             //Logger.LogDebug($"RegisterReplacements {file} {file.parameter.fullname}");
-            if (!RegistrationGameModes.Contains(KoikatuAPI.GetCurrentGameMode())) yield break;
+            if (!RegistrationGameModes.Contains(CurrentGameMode)) yield break;
 
             yield return CardNameManager.WaitOnCard(file);
             if (RegistrationManager.IsTracked(file))
@@ -269,7 +278,7 @@ namespace TranslationHelperPlugin
         internal IEnumerator UnregisterReplacements(ChaFile file)
         {
             if (file == null) yield break;
-            if (!RegistrationGameModes.Contains(KoikatuAPI.GetCurrentGameMode())) yield break;
+            //if (!RegistrationGameModes.Contains(CurrentGameMode)) yield break;
             yield return null;
             RegistrationManager.Untrack(file);
         }

@@ -49,7 +49,6 @@ namespace TranslationHelperPlugin.Studio
                     .Where(e => e.Value is OCIChar ociChar && ociChar.charInfo.chaFile == chaFile)
                     .Select(e => e.Key).FirstOrDefault();
                 if (match == null) return;
-
                 match.textName = fullName;
             }
 

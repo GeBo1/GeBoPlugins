@@ -181,7 +181,7 @@ namespace TranslationHelperPlugin.Chara
         {
             //TranslationHelper.Logger?.LogDebug($"Controller.RegisterReplacements: {RegistrationID}");
             if (!TranslationHelper.RegisterActiveCharacters.Value ||
-                KoikatuAPI.GetCurrentGameMode() == GameMode.Maker)
+                !TranslationHelper.RegistrationGameModes.Contains(TranslationHelper.Instance.CurrentGameMode))
             {
                 return;
             }
@@ -193,7 +193,6 @@ namespace TranslationHelperPlugin.Chara
         public void UnregisterReplacements()
         {
             //TranslationHelper.Logger?.LogDebug($"Controller.UnregisterReplacements: {RegistrationID}");
-            if (KoikatuAPI.GetCurrentGameMode() == GameMode.Maker) return;
             TranslationHelper.Instance.UnregisterReplacements(ChaFileControl).RunImmediately();
         }
 

@@ -18,6 +18,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NameScope.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NameScopeDictionary.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TranslatorReplacementsManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TranslationHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Delegates.cs" />

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using GeBoCommon;
 using GeBoCommon.Chara;
+using GeBoCommon.Utilities;
 using UnityEngine;
 
 namespace TranslationHelperPlugin.Chara
@@ -13,20 +15,20 @@ namespace TranslationHelperPlugin.Chara
         {
             int started;
 
-            var names = new List<string>
-            {
-                chaFile.GetName(GeBoAPI.Instance.ChaFileNameToIndex("lastname")),
-                chaFile.GetName(GeBoAPI.Instance.ChaFileNameToIndex("firstname"))
-            };
+            var nameTypes = new[] { "lastname", "firstname" };
+
+            var names = nameTypes.Select(n => string.Empty).ToList();   
 
             started = names.Count;
-            for (var i = 0; i < names.Count; i++)
+            for(var i = 0; i < nameTypes.Length; i++)
             {
                 var dest = i;
+                var nameTypeIndex = GeBoAPI.Instance.ChaFileNameToIndex(nameTypes[i]);
+                var name = names[i] = chaFile.GetName(nameTypeIndex);
 
                 chaFile.StartMonitoredCoroutine(
-                    CardNameTranslationManager.Instance.TranslateCardName(names[i],
-                        new NameScope(chaFile.GetSex(), chaFile.GetNameType(i)), r =>
+                    CardNameTranslationManager.Instance.TranslateCardName(name, 
+                        new NameScope(chaFile.GetSex(), chaFile.GetNameType(nameTypeIndex)), r =>
                         {
                             if (r.Succeeded)
                             {

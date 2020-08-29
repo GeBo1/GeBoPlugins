@@ -17,9 +17,9 @@ Contains shared code used by other plugins in this repo. Unless otherwise noted 
 
 **Note:** Requires [IllusionModdingAPI](https://github.com/IllusionMods/IllusionModdingAPI/)
 
-- AI v1.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/AI_GeBoCommon.v1.0.zip)
-- HS2 v1.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/HS2_GeBoCommon.v1.0.zip
-- KK v1.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/KK_GeBoCommon.v1.0.zip)
+- AI v1.0.1 [Download]https://github.com/GeBo1/GeBoPlugins/releases/download/r8/AI_GeBoCommon.v1.0.1.zip)
+- HS2 v1.0.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/HS2_GeBoCommon.v1.0.1.zip)
+- KK v1.0.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/KK_GeBoCommon.v1.0.1.zip)
 
 ### GameDialogHelper 
 
@@ -31,7 +31,7 @@ Highlights correct dialog choice in KK main game. You can configure level of rel
 
 Fixes it so when player invites (or is invited) to swim/exercise with a girl he remembers to change his clothes rather than going in what he's already wearing. By default only applies if player clothes are already set to automatic, but can be configured to always be applied.
 
-- KK v1.0.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/KK_GameDressForSuccess.v1.0.1.zip)
+- KK v1.1.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r10/KK_GameDressForSuccess.v1.1.1.zip)
 
 
 ### StudioMultiselectChara
@@ -58,9 +58,9 @@ Removes all entries from your translation cache file that would be translated by
 
 **Note:** Requires [XUnity.AutoTranslator](https://github.com/bbepis/XUnity.AutoTranslator)
 
-- AI v0.5.2 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/AI_TranslationCacheCleaner.v0.5.2.zip)
-- HS2 v0.5.2 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/HS2_TranslationCacheCleaner.v0.5.2.zip)
-- KK v0.5.2 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/KK_TranslationCacheCleaner.v0.5.2.zip)
+- AI v0.5.3 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/AI_TranslationCacheCleaner.v0.5.3.zip)
+- HS2 v0.5.3 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/HS2_TranslationCacheCleaner.v0.5.3.zip)
+- KK v0.5.3 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/KK_TranslationCacheCleaner.v0.5.3.zip)
 
 ### TranslationHelper
 
@@ -75,9 +75,9 @@ Improves the experience of using XUnity.AutoTranslator in numerous ways.
 
 Check plugin options to configure. Defaults to only using the translation cache, but for the best experience you may wish to set to `Fully Enabled`.
 
-- AI v0.9 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/AI_TranslationHelper.v0.9.zip)
-- HS2 v0.9 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/HS2_TranslationHelper.v0.9.zip)
-- KK v0.9 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/KK_TranslationHelper.v0.9.zip)
+- AI v0.9.4 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r11/AI_TranslationHelper.v0.9.4.zip)
+- HS2 v0.9.4 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r11/HS2_TranslationHelper.v0.9.4.zip)
+- KK v0.9.4 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r11/KK_TranslationHelper.v0.9.4.zip)
 
 
 

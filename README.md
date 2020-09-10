@@ -17,7 +17,7 @@ Contains shared code used by other plugins in this repo. Unless otherwise noted 
 
 **Note:** Requires [IllusionModdingAPI](https://github.com/IllusionMods/IllusionModdingAPI/)
 
-- AI v1.0.1 [Download]https://github.com/GeBo1/GeBoPlugins/releases/download/r8/AI_GeBoCommon.v1.0.1.zip)
+- AI v1.0.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/AI_GeBoCommon.v1.0.1.zip)
 - HS2 v1.0.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/HS2_GeBoCommon.v1.0.1.zip)
 - KK v1.0.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/KK_GeBoCommon.v1.0.1.zip)
 

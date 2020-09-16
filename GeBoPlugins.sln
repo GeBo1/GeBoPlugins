@@ -82,6 +82,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AI_StudioSceneNavigation", 
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "AILike_TranslationHelper", "src\TranslationHelper\AILike_TranslationHelper\AILike_TranslationHelper.shproj", "{65E7C5C7-24E3-49DF-A62E-51CD57350C88}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GameWhoIsThere", "GameWhoIsThere", "{244B8A95-25FA-44DE-A762-DA8CBA2CD978}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HS2_GameWhoIsThere", "src\GameWhoIsThere\HS2_GameWhoIsThere\HS2_GameWhoIsThere.csproj", "{37A04B58-C00F-4B59-9F42-D0FB8DD9E7C1}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\StudioSceneNavigation\Core_StudioSceneNavigation\Core_StudioSceneNavigation.projitems*{19796e45-b2ff-4206-8901-a1821b797df8}*SharedItemsImports = 4
@@ -201,6 +205,10 @@ Global
 		{C2C7182A-8F3E-495F-B350-6CEF46627A2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2C7182A-8F3E-495F-B350-6CEF46627A2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C2C7182A-8F3E-495F-B350-6CEF46627A2B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37A04B58-C00F-4B59-9F42-D0FB8DD9E7C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37A04B58-C00F-4B59-9F42-D0FB8DD9E7C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37A04B58-C00F-4B59-9F42-D0FB8DD9E7C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37A04B58-C00F-4B59-9F42-D0FB8DD9E7C1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -234,6 +242,7 @@ Global
 		{347E78E9-4046-46C8-9569-D51D3A79FB69} = {D2FAF07E-FF83-4CD4-B96E-FA81D947C6FC}
 		{C2C7182A-8F3E-495F-B350-6CEF46627A2B} = {EDCAD560-423D-456F-A39A-818D3BB38290}
 		{65E7C5C7-24E3-49DF-A62E-51CD57350C88} = {DB633DB4-148A-452A-B5CC-957335BDA302}
+		{37A04B58-C00F-4B59-9F42-D0FB8DD9E7C1} = {244B8A95-25FA-44DE-A762-DA8CBA2CD978}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ACC65545-B46C-4998-B489-9249F65FD93B}

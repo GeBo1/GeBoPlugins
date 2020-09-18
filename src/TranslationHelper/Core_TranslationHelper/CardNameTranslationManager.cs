@@ -31,17 +31,18 @@ namespace TranslationHelperPlugin
             new KeyValuePair<string, string>("君", "kun"), new KeyValuePair<string, string>("ちゃん", "chan")
         };
 
-        private static readonly Limiter TranslateNameLimiter = new Limiter(100, true);
+        private static readonly Limiter TranslateNameLimiter = new Limiter(100, nameof(TranslateNameLimiter), true);
 
         private readonly HashSet<string> _cardsInProgress;
-        private readonly NameScopeDictionary<Dictionary<string, List<TranslationResultHandler>>> _nameTracker;
+        private readonly NameTracker _nameTracker;
 
         private readonly IEnumerable<string> _suffixFormats = new[] {"[{0}]", "-{0}", "{0}"};
 
         internal CardNameTranslationManager()
         {
-            _nameTracker = new NameScopeDictionary<Dictionary<string, List<TranslationResultHandler>>>();
+            _nameTracker = new NameTracker();
             _cardsInProgress = new HashSet<string>();
+            _waitWhileCardsAreInProgress = new WaitWhile(AreCardsInProgress);
         }
 
 
@@ -58,14 +59,12 @@ namespace TranslationHelperPlugin
             return nameString.Split(TranslationHelper.SpaceSplitter, StringSplitOptions.RemoveEmptyEntries).Length == 2;
         }
 
+        public bool AreCardsInProgress() => _cardsInProgress.Count > 0;
+
+        private readonly IEnumerator _waitWhileCardsAreInProgress;
         public IEnumerator WaitOnCardTranslations()
         {
-            while (_cardsInProgress.Count > 0)
-            {
-                yield return new WaitForSeconds(1f);
-            }
-
-            yield return new WaitWhile(() => _cardsInProgress.Count > 0);
+            yield return _waitWhileCardsAreInProgress;
         }
 
         public bool CardNeedsTranslation(ChaFile file)
@@ -80,15 +79,12 @@ namespace TranslationHelperPlugin
         {
             if (file == null) yield break;
             var regId = file.GetRegistrationID();
+
+            bool NotDone() => _cardsInProgress.Contains(regId);
             // delay once if card does not appear active yet
-            if (!_cardsInProgress.Contains(regId)) yield return null;
-            /*
-            while (cardsInProgress.Contains(regId))
-            {
-                yield return new WaitForSeconds(1f);
-            }
-            */
-            yield return new WaitWhile(() => _cardsInProgress.Contains(regId));
+            if (!NotDone()) yield return null;
+
+            yield return new WaitWhile(NotDone);
 
             ApplyTranslations(file);
             Logger.DebugLogDebug($"TranslateCardNames: {file}: card done: {regId}");
@@ -150,41 +146,40 @@ namespace TranslationHelperPlugin
         public IEnumerator TranslateCardName(string originalName, NameScope scope, bool forceSplit,
             params TranslationResultHandler[] callbacks)
         {
-            Logger.DebugLogDebug($"TranslateCardName: {originalName}: scope={scope}, forceSplit={forceSplit}");
+            var done = false;
+            var tmpCallbacks = callbacks.ToList();
+            tmpCallbacks.Add(r => done = true);
 
+            IEnumerator WhileNotDone()
+            {
+                if (done) yield break;
+                yield return null;
+            }
+            
             if (RecentTranslationsByName[scope].TryGetValue(originalName, out var cachedName))
             {
-                Logger.DebugLogDebug($"TranslateCardName: {originalName}: cache hit: {cachedName}");
-                callbacks.CallHandlers(new SimpleTranslationResult(true, cachedName));
+                tmpCallbacks.CallHandlers(new SimpleTranslationResult(true, cachedName));
                 yield break;
             }
 
-            Logger.DebugLogDebug($"TranslateCardName: {originalName}: start");
-            var newRequest = false;
-            if (!_nameTracker[scope].TryGetValue(originalName, out var actions))
-            {
-                Logger.DebugLogDebug($"TranslateCardName: {originalName}: add to tracker");
-                actions = _nameTracker[scope][originalName] = new List<TranslationResultHandler>();
-                newRequest = true;
-            }
+           
 
-
-            Logger.DebugLogDebug($"TranslateCardName: {originalName}: adding {callbacks.Length} callbacks");
-            actions.AddRange(callbacks);
-            if (newRequest)
+            if (!_nameTracker.TryAddHandlers(scope, originalName, tmpCallbacks))
             {
+                _nameTracker.TrackName(scope, originalName, tmpCallbacks);
+                yield return null; // improves batching of handlers
+
                 void Handler(KeyValuePair<string, string> names)
                 {
                     CardNameComplete(names, scope);
                 }
 
-                Logger.DebugLogDebug($"TranslateCardName: {originalName}: start new request");
                 /*yield return*/
                 TranslationHelper.Instance.StartCoroutine(new NameJob(originalName, scope,
                     TranslationHelper.SplitNamesBeforeTranslate || forceSplit, Handler).Start());
             }
 
-            yield return new WaitWhile(() => _nameTracker[scope].ContainsKey(originalName));
+            yield return WhileNotDone();
         }
 
         private void CardNameComplete(KeyValuePair<string, string> names, NameScope scope = null)
@@ -206,13 +201,8 @@ namespace TranslationHelperPlugin
                 }
             }
 
-            if (!_nameTracker[scope].TryGetValue(names.Key, out var actions)) return;
-
-            _nameTracker[scope].Remove(names.Key);
-            Logger.DebugLogDebug($"Processing {actions} for {names.Key}");
-
             var result = new SimpleTranslationResult(names.Value != null && names.Value != names.Key, names.Value);
-            actions.CallHandlers(result);
+            _nameTracker.CallHandlers(scope, names.Key, result);
         }
 
         private IEnumerator TranslateName(string originalName, NameScope nameScope,
@@ -234,7 +224,7 @@ namespace TranslationHelperPlugin
             if (cardTranslationMode == CardLoadTranslationMode.Disabled ||
                 !GeBoAPI.Instance.AutoTranslationHelper.IsTranslatable(suffixedName))
             {
-                //Logger.LogDebug($"TranslateName: nothing to do: {originalName}");
+                Logger.DebugLogDebug($"TranslateName: nothing to do: {originalName}");
                 CallbackWrapper(new SimpleTranslationResult(false, originalName, "Disabled or already translated"));
                 yield break;
             }
@@ -242,33 +232,36 @@ namespace TranslationHelperPlugin
 
             if (cardTranslationMode >= CardLoadTranslationMode.CacheOnly)
             {
-                //Logger.LogDebug($"TranslateName: attempting translation (cached): {originalName}");
+                Logger.DebugLogDebug($"TranslateName: attempting translation (XUA cached): {originalName}");
                 if (NameTranslator.TryTranslateName(originalName, nameScope, out var translatedName))
                 {
                     translatedName = CleanTranslationResult(translatedName, string.Empty);
                     if (originalName != translatedName)
                     {
-                        //Logger.LogInfo($"TranslateName: Translated card name (cached): {originalName} -> {translatedName}");
+                        Logger.DebugLogDebug($"TranslateName: Translated card name (XUA cached): {originalName} -> {translatedName}");
                         CallbackWrapper(new SimpleTranslationResult(true, translatedName));
                         yield break;
                     }
                 }
 
+                yield return null;
+
                 if (TranslationHelper.TranslateNameWithSuffix.Value && nameScope.Sex != CharacterSex.Unspecified)
                 {
                     activeSuffix = Suffixes[(int)nameScope.Sex];
                     suffixedName = string.Concat(originalName, activeSuffix.Key);
-                    //Logger.LogDebug($"TranslateName: attempting translation (cached): {suffixedName}");
+                    Logger.DebugLogDebug($"TranslateName: attempting translation (XUA cached/suffixed): {suffixedName}");
                     if (NameTranslator.TryTranslateName(suffixedName, nameScope, out var translatedName2))
                     {
                         translatedName2 = CleanTranslationResult(translatedName2, activeSuffix.Value);
                         if (suffixedName != translatedName2)
                         {
-                            //Logger.LogInfo($"TranslateName: Translated card name (cached/suffixed): {originalName} -> {translatedName2}");
+                            Logger.DebugLogDebug($"TranslateName: Translated card name (XUA cached/suffixed): {originalName} -> {translatedName2}");
                             CallbackWrapper(new SimpleTranslationResult(true, translatedName2));
                             yield break;
                         }
                     }
+                    yield return null;
                 }
             }
 
@@ -276,7 +269,7 @@ namespace TranslationHelperPlugin
             if (cardTranslationMode == CardLoadTranslationMode.FullyEnabled)
             {
                 // suffixedName will be origName if TranslateNameWithSuffix is off, so just use it here
-                //Logger.LogDebug($"TranslateName: attempting translation (async): {suffixedName}");
+                Logger.DebugLogDebug($"TranslateName: attempting translation (XUA async): {suffixedName}");
                 NameTranslator.TranslateNameAsync(suffixedName, nameScope, result =>
                 {
                     if (result.Succeeded)
@@ -284,7 +277,7 @@ namespace TranslationHelperPlugin
                         var translatedName = CleanTranslationResult(result.TranslatedText, activeSuffix.Value);
                         if (suffixedName != translatedName)
                         {
-                            //Logger.LogInfo($"TranslateName: Translated card name (async): {originalName} -> {translatedName}");
+                            Logger.DebugLogDebug($"TranslateName: Translated card name (XUA async): {originalName} -> {translatedName}");
                             CallbackWrapper(new SimpleTranslationResult(true, translatedName));
                             return;
                         }
@@ -292,7 +285,6 @@ namespace TranslationHelperPlugin
 
                     CallbackWrapper(result);
                 });
-                yield return null;
             }
             else
             {
@@ -351,7 +343,7 @@ namespace TranslationHelperPlugin
         internal abstract class BaseJob<T>
         {
             private readonly Action<T> _callback;
-            private int _jobCount;
+            private long _jobCount;
 
             internal BaseJob(Action<T> callback)
             {
@@ -379,7 +371,7 @@ namespace TranslationHelperPlugin
             {
                 //Logger.LogDebug($"Start: {this}");
                 yield return StartCoroutine(StartJobs());
-                while (_jobCount > 0)
+                while (Interlocked.Read(ref _jobCount) > 0)
                 {
                     yield return null;
                 }

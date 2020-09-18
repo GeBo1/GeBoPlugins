@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using BepInEx.Logging;
 using KKAPI.Chara;
 using KKAPI.Studio;
@@ -15,6 +16,9 @@ namespace TranslationHelperPlugin.Studio
 {
     internal static partial class Configuration
     {
+        internal static readonly List<TryAlternateStudioCharaLoaderTranslation> AlternateStudioCharaLoaderTranslators =
+            new List<TryAlternateStudioCharaLoaderTranslation>();
+
         internal static ManualLogSource Logger => TranslationHelper.Logger;
 
         internal static void Setup()

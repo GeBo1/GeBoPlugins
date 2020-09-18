@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Threading;
 using BepInEx.Logging;
+using GeBoCommon.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -8,18 +9,21 @@ namespace TranslationHelperPlugin.Utils
 {
     internal class Limiter
     {
+        private readonly string _limiterName;
         private readonly long _limit;
         private long _current;
+        private readonly IEnumerator _waitUntilBelowLimit;
 
-        internal Limiter(long limit, bool resetOnSceneTransition = false)
+        internal Limiter(long limit, string limiterName, bool resetOnSceneTransition = false)
         {
             _limit = limit;
+            _limiterName = limiterName;
+            _waitUntilBelowLimit = new WaitUntil(IsBelowLimit);
             if (resetOnSceneTransition) SceneManager.sceneUnloaded += SceneUnloaded;
             Reset();
         }
 
         internal static ManualLogSource Logger => TranslationHelper.Logger;
-
         private void SceneUnloaded(Scene arg0)
         {
             Reset();
@@ -42,14 +46,20 @@ namespace TranslationHelperPlugin.Utils
 
         internal IEnumerator Start()
         {
-            if (IsAtLimit())
+            var start = Time.unscaledTime;
+            var limited = 0;
+            long current;
+            while (true)
             {
-                var start = Time.unscaledTime;
-                yield return new WaitUntil(IsBelowLimit);
-                Logger.LogDebug($"Limiter delay: ${Time.unscaledTime - start}");
+                current = Interlocked.Increment(ref _current);
+                if (current <= _limit) break;
+                Interlocked.Decrement(ref _current);
+                limited++;
+                yield return _waitUntilBelowLimit;
             }
 
-            Interlocked.Increment(ref _current);
+            Logger.DebugLogDebug(
+                $"Limiter {_limiterName} ready ({current}/{_limit}): limited: {limited}, delay: {Time.unscaledTime - start}");
         }
 
         internal IEnumerator End()
@@ -62,6 +72,7 @@ namespace TranslationHelperPlugin.Utils
         {
             var value = Interlocked.Decrement(ref _current);
             if (value < 0) Interlocked.CompareExchange(ref _current, 0, value);
+            Logger.DebugLogDebug($"Limiter done {_limiterName} ({value}/{_limit})");
         }
     }
 }

@@ -5,23 +5,30 @@ namespace TranslationHelperPlugin
     internal class NameScopeDictionary<T> where T : new()
     {
         private readonly Dictionary<NameScope, T> _dictionary = new Dictionary<NameScope, T>();
+        private readonly object _lock = new object();
 
         public T this[NameScope key]
         {
             get
             {
-                if (!_dictionary.TryGetValue(key, out var result))
+                T result;
+                lock (_lock)
                 {
-                    result = _dictionary[key] = new T();
+                    if (!_dictionary.TryGetValue(key, out result))
+                    {
+                        _dictionary[key] = result = new T();
+                    }
                 }
-
                 return result;
             }
         }
 
         public void Clear()
         {
-            _dictionary.Clear();
+            lock (_lock)
+            {
+                _dictionary.Clear();
+            }
         }
     }
 }

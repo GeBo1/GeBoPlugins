@@ -113,6 +113,7 @@ namespace TranslationHelperPlugin.MainGame
                         translated => Update3P(entry.Key, translated));
                 }
             }
+            heroineMap.Clear();
         }
     }
 }

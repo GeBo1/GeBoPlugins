@@ -19,8 +19,12 @@ namespace TranslationHelperPlugin.MainGame
         private static int _inMapSelecCursorEnterIndex;
 
         private static readonly List<Text> InMapSelecCursorLabels = new List<Text> {null, null};
-        // ReSharper restore IdentifierTypo
 
+        // ReSharper disable once IdentifierTypo
+        private static readonly IEnumerator WaitWhileInMapSelecCursorEnter = new WaitWhile(IsInMapSelecCursorEnter);
+
+
+        // ReSharper restore IdentifierTypo
         // ReSharper disable InconsistentNaming
         [HarmonyPrefix]
         [HarmonyPatch(typeof(LobbyParameterUI), nameof(LobbyParameterUI.SetParameter), typeof(GameCharaFileInfo),
@@ -104,10 +108,17 @@ namespace TranslationHelperPlugin.MainGame
             _inMapSelecCursorEnter = false;
         }
 
+        // ReSharper disable once IdentifierTypo
+        private static bool IsInMapSelecCursorEnter()
+        {
+            return _inMapSelecCursorEnter;
+        }
+
+
         private static IEnumerator UpdateText(Text label, string value)
         {
-            // wait for CursorEnter to finish or it may overwrite 
-            yield return new WaitUntil(() => !_inMapSelecCursorEnter);
+            // wait for CursorEnter to finish or it may overwrite
+            yield return WaitWhileInMapSelecCursorEnter;
             if (label.text == "???") yield break;
             label.text = value;
         }

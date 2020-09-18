@@ -1,4 +1,5 @@
-﻿using BepInEx.Logging;
+﻿using System.Linq;
+using BepInEx.Logging;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using HarmonyLib;
@@ -6,18 +7,17 @@ using KKAPI.Utilities;
 using Studio;
 using TranslationHelperPlugin.Utils;
 using IllusionStudio = Studio.Studio;
-
 #if AI || HS2
 
 #endif
 
 namespace TranslationHelperPlugin.Studio
 {
-    internal class Hooks
+    internal partial class Hooks
     {
         // ReSharper disable InconsistentNaming
         internal static ManualLogSource Logger => TranslationHelper.Logger;
-        private static readonly Limiter TreeNodeLimiter = new Limiter(30);
+        private static readonly Limiter TreeNodeLimiter = new Limiter(30, nameof(TreeNodeLimiter));
 
         internal static Harmony SetupHooks()
         {
@@ -47,21 +47,6 @@ namespace TranslationHelperPlugin.Studio
             _source.textName = name;
         }
 
-        /*
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(CharaList), "InitFemaleList")]
-        [HarmonyPatch(typeof(CharaList), "InitMaleList")]
-        private static void InitGenderListPrefix()
-        {
-            TranslationHelper.AlternateLoadEventsEnabled = true;
-        }
-
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(CharaList), "InitFemaleList")]
-        [HarmonyPatch(typeof(CharaList), "InitMaleList")]
-        private static void InitGenderListPostfix() => TranslationHelper.AlternateLoadEventsEnabled = false;
-        */
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CharaList), "InitCharaList")]
@@ -70,17 +55,12 @@ namespace TranslationHelperPlugin.Studio
             TranslateDisplayList(__instance);
         }
 
-        /*
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(ChaFileControl), nameof(ChaFileControl.LoadCharaFile), typeof(string), typeof(byte),
-            typeof(bool), typeof(bool))]
-        private static void ChaFileControl_LoadCharaFile_Postfix(ChaFileControl __instance)
-        {
-            if (!TrackLoadCharaFile || __instance == null) return;
-            __instance.GetTranslationHelperController().SafeProcObject(c => c.TranslateCardNames());
-        }
-        */
 
+        private static bool TryApplyAlternateTranslation(CharaFileInfo charaFileInfo, string origName)
+        {
+            return Configuration.AlternateStudioCharaLoaderTranslators.Any(tryTranslate =>
+                tryTranslate(charaFileInfo, origName));
+        }
 
         private static void TranslateDisplayList(CharaList charaList)
         {
@@ -99,21 +79,34 @@ namespace TranslationHelperPlugin.Studio
             void HandleResult(CharaFileInfo charaFileInfo, ITranslationResult result)
             {
                 if (!result.Succeeded) return;
-                charaFileInfo.node.text = result.TranslatedText;
+                charaFileInfo.name = charaFileInfo.node.text = result.TranslatedText;
             }
 
+            var scope = new NameScope((CharacterSex)sex);
 
             foreach (var entry in cfiList)
             {
+                var origName = entry.name;
+                if (TryApplyAlternateTranslation(entry, origName))
+                {
+                    TreeNodeLimiter.EndImmediately();
+                    return;
+                }
+
                 void Handler(ITranslationResult result)
                 {
                     HandleResult(entry, result);
+                    if (TryApplyAlternateTranslation(entry, origName))
+                    {
+                        TreeNodeLimiter.EndImmediately();
+                    }
+
                     TreeNodeLimiter.EndImmediately();
                 }
 
                 TranslationHelper.Instance.StartCoroutine(TreeNodeLimiter.Start().AppendCo(
-                    TranslationHelper.CardNameManager.TranslateCardName(entry.name, new NameScope((CharacterSex)sex),
-                        CardNameTranslationManager.CanForceSplitNameString(entry.name), Handler)));
+                    TranslationHelper.CardNameManager.TranslateCardName(origName, scope,
+                        CardNameTranslationManager.CanForceSplitNameString(origName), Handler)));
             }
         }
     }

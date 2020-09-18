@@ -13,7 +13,7 @@ namespace TranslationHelperPlugin.Translation
 {
     internal partial class Hooks
     {
-        private static readonly Limiter FileInfoLimiter = new Limiter(30);
+        private static readonly Limiter FileInfoLimiter = new Limiter(30, nameof(FileInfoLimiter));
 
         private static IEnumerator TranslateFileInfoCoroutine(Func<string> nameGetter, Func<CharacterSex> sexGetter,
             Action<string> nameSetter, params TranslationResultHandler[] handlers)

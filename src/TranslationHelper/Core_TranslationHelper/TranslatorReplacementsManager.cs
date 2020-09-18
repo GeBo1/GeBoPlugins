@@ -11,6 +11,7 @@ using KKAPI.Utilities;
 using TranslationHelperPlugin.Chara;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
 #if AI || HS2
 using AIChara;
 
@@ -26,6 +27,8 @@ namespace TranslationHelperPlugin
         private const float CleanupIdleTime = 2f;
 
         internal static readonly HashSet<string> SceneNamesThatTriggerReset = new HashSet<string> {"Title"};
+
+        private readonly IEnumerator _cleanupIdleDelay = new WaitForSecondsRealtime(CleanupIdleTime / 2f);
 
         private readonly HashSet<string> _currentlyRegisteredReplacements;
 
@@ -99,9 +102,15 @@ namespace TranslationHelperPlugin
             lock (_lock)
             {
                 if (!_regIDtoNamesMap.TryGetValue(regId, out var regIdNames))
+                {
                     _regIDtoNamesMap[regId] = regIdNames = new HashSet<string>();
+                }
+
                 if (!_nameToIDMap.TryGetValue(name, out var entries))
+                {
                     _nameToIDMap[name] = entries = new HashSet<string>();
+                }
+
                 regIdNames.Add(name);
                 UpdateLastBusyTime();
                 return entries.Add(regId);
@@ -114,9 +123,15 @@ namespace TranslationHelperPlugin
             lock (_lock)
             {
                 if (!_regIDtoNamesMap.TryGetValue(regId, out var regIdNames))
+                {
                     _regIDtoNamesMap[regId] = regIdNames = new HashSet<string>();
+                }
+
                 if (!_nameToIDMap.TryGetValue(name, out var entries))
+                {
                     _nameToIDMap[name] = entries = new HashSet<string>();
+                }
+
                 regIdNames.Remove(name);
                 UpdateLastBusyTime();
                 return entries.Remove(regId);
@@ -147,7 +162,10 @@ namespace TranslationHelperPlugin
             lock (_lock)
             {
                 if (!_regIDtoNamesMap.TryGetValue(chaFile.GetRegistrationID(), out var registered))
+                {
                     registered = new HashSet<string>();
+                }
+
                 return !registered.SetEquals(current);
             }
         }
@@ -219,7 +237,6 @@ namespace TranslationHelperPlugin
                     if (CounterCount(name) != 0 || !_currentlyRegisteredReplacements.Contains(name)) continue;
                     toClean.Add(name);
                 }
-
                 _regIDtoCardMap.Remove(regID);
             }
 
@@ -285,9 +302,10 @@ namespace TranslationHelperPlugin
             var replacements = GetReplacements();
             while (UpdateWorkNames() > 0)
             {
-                while (Time.unscaledTime <= _lastBusyTime + CleanupIdleTime)
+                var idleTimeEnd = _lastBusyTime + CleanupIdleTime;
+                while (Time.unscaledTime <= idleTimeEnd)
                 {
-                    yield return new WaitForSecondsRealtime(CleanupIdleTime / 2f);
+                    yield return _cleanupIdleDelay;
                 }
 
                 var name = workNames.FirstOrDefault();

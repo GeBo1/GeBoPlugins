@@ -31,7 +31,7 @@ namespace TranslationHelperPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationhelper";
         public const string PluginName = "Translation Helper";
-        public const string Version = "0.9.4";
+        public const string Version = "0.9.5";
 
         internal static new ManualLogSource Logger;
         public static TranslationHelper Instance;

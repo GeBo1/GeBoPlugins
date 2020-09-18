@@ -208,6 +208,7 @@ namespace TranslationHelperPlugin
         private IEnumerator TranslateName(string originalName, NameScope nameScope,
             TranslationResultHandler callback)
         {
+            Logger.DebugLogDebug($"TranslateName(\"{originalName}\", {nameScope}, {callback})");
             yield return TranslateNameLimiter.Start();
 
             void CallbackWrapper(ITranslationResult translationResult)

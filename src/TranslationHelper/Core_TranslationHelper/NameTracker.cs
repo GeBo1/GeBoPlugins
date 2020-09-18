@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.Remoting.Messaging;
 using BepInEx.Logging;
 using GeBoCommon.AutoTranslation;
-using UnityEngine;
+
 
 namespace TranslationHelperPlugin
 {

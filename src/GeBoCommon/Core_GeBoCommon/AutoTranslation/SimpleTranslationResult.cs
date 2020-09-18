@@ -20,5 +20,10 @@ namespace GeBoCommon.AutoTranslation
         public bool Succeeded { get; }
         public string TranslatedText { get; }
         public string ErrorMessage { get; }
+
+        public override string ToString()
+        {
+            return $"{GetType()}({Succeeded}, {TranslatedText}, {ErrorMessage})";
+        }
     }
 }

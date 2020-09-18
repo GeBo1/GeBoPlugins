@@ -75,14 +75,12 @@ namespace StudioMultiSelectCharaPlugin
             foreach (var entry in roots)
             {
                 yield return entry;
-                foreach (var childNode in entry.child)
+                foreach (var tnObj in entry.child.SelectMany(EnumerateTreeNodeObjects))
                 {
-                    foreach (var tnObj in EnumerateTreeNodeObjects(childNode))
-                    {
-                        yield return tnObj;
-                    }
+                    yield return tnObj;
                 }
             }
+            roots.Clear();
         }
 
         private IEnumerable<ObjectCtrlInfo> EnumerateObjects(ObjectCtrlInfo root = null)

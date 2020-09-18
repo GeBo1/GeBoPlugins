@@ -36,25 +36,22 @@ namespace StudioSceneNavigationPlugin
         internal static readonly char[] TrackingFileEntrySplit = {'\0'};
 
         private static List<string> _normalizedScenePaths;
-
         private static string _currentSceneFolder = string.Empty;
-
         private static readonly object SavePendingLock = new object();
         private static bool _setPage;
         private static SceneLoadScene _sceneLoadScene;
-
 
         private static readonly string TrackLastLoadedSceneFile = PathUtils.CombinePaths(
             "BepInEx", "config", StringUtils.JoinStrings(".", GUID, "LastLoadedScene", "data"));
 
         private readonly SimpleLazy<Func<string, bool>> _isSceneValid;
-
         private readonly SimpleLazy<Dictionary<string, string>> _lastLoadedScenes;
+        private readonly IEnumerator _saveTrackingFileDelay = new WaitForSecondsRealtime(1f);
+
         private string _currentScenePath = string.Empty;
-
         private string _currentScenePathCandidate = string.Empty;
-        private bool _navigationInProgress;
 
+        private bool _navigationInProgress;
         private bool _savePending;
 
         public StudioSceneNavigation()
@@ -191,7 +188,7 @@ namespace StudioSceneNavigationPlugin
                 _navigationInProgress = false;
                 TrackLastLoadedScene();
             }));
-            coroutines.Add(SaveTrackingFileCouroutine(1f));
+            coroutines.Add(SaveTrackingFileCouroutine(_saveTrackingFileDelay));
             StartCoroutine(CoroutineUtils.ComposeCoroutine(coroutines.ToArray()));
         }
 
@@ -268,6 +265,8 @@ namespace StudioSceneNavigationPlugin
                 }
                 finally
                 {
+                    relativeScenes.Clear();
+
                     if (File.Exists(oldFile))
                     {
                         File.Delete(oldFile);
@@ -473,11 +472,10 @@ namespace StudioSceneNavigationPlugin
             _sceneLoadScene?.GetType().GetField("page", AccessTools.all)?.SetValue(null, page);
         }
 
-        public IEnumerator SaveTrackingFileCouroutine(float delaySeconds = 0)
+        public IEnumerator SaveTrackingFileCouroutine(IEnumerator delay = null)
         {
             if (!TrackLastLoadedSceneEnabled.Value) yield break;
-            yield return new WaitForSecondsRealtime(delaySeconds);
-
+            yield return delay;
             if (SavePending) SaveTrackingFile();
         }
 

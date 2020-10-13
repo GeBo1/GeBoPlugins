@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 #if (HS || PH || KK)
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -7,6 +7,9 @@ using System.Threading;
 
 namespace GeBoCommon.Utilities
 {
+    /// <summary>
+    /// Basic implementation of .NET Lazy
+    /// </summary>
 #if (HS || PH || KK)
     public class SimpleLazy<T>
     {

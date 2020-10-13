@@ -3,6 +3,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using ChaCustom;
 using GeBoCommon;
+using GeBoCommon.Utilities;
 using HarmonyLib;
 using KKAPI;
 using KKAPI.MainGame;
@@ -20,7 +21,7 @@ namespace GameDressForSuccessPlugin
     {
         public const string GUID = "com.gebo.BepInEx.GameDressForSuccess";
         public const string PluginName = "Dress for Success";
-        public const string Version = "1.1.1";
+        public const string Version = "1.1.2";
 
         internal static GameDressForSuccess Instance;
         private int _initialCoordinateType = -1;
@@ -49,32 +50,25 @@ namespace GameDressForSuccessPlugin
             Instance = this;
             Logger = base.Logger;
             Harmony.CreateAndPatchAll(typeof(Hooks));
-            GameAPI.RegisterExtraBehaviour<GameController>(GUID);
-        }
-
-
-        public static SaveData.Heroine GetTargetHeroine()
-        {
-            var advScene = Singleton<Game>.Instance?.actScene?.AdvScene;
-
-            return advScene?.Scenario?.currentHeroine ??
-                   (advScene?.nowScene as TalkScene)?.targetHeroine ??
-                   FindObjectOfType<TalkScene>()?.targetHeroine;
+            GameAPI.RegisterExtraBehaviour<DressForSuccessController>(GUID);
         }
 
         internal void DressPlayer(ChaFileDefine.CoordinateType newCoordinateType)
         {
-            if (!_monitoringChange) return;
+            if (!_monitoringChange || Singleton<Game>.Instance == null) return;
 
-            var player = Singleton<Game>.Instance?.Player;
+            var player = Singleton<Game>.Instance.Player;
 
             if (player == null) return;
 
             var mode = Mode.Value;
 
             var playerClothesIsAuto = player.changeClothesType < 0;
+            var playerShouldChange = playerClothesIsAuto || mode == PluginMode.Always;
+            Logger.DebugLogDebug(
+                $"{nameof(DressPlayer)}: mode={mode}, playerClothesIsAuto={playerClothesIsAuto}, playerShouldChange={playerShouldChange}");
 
-            if (mode != PluginMode.Always || (mode == PluginMode.AutomaticOnly && !playerClothesIsAuto)) return;
+            if (!playerShouldChange) return;
 
             if (player.chaCtrl.ChangeCoordinateTypeAndReload(newCoordinateType))
             {
@@ -132,6 +126,7 @@ namespace GameDressForSuccessPlugin
                 var player = Singleton<Game>.Instance.Player;
                 if (player != null)
                 {
+                    Logger.DebugLogDebug($"{nameof(SetPlayerClothesToAutomatic)}: setting Player.changeClothesType");
                     player.changeClothesType = -1;
                 }
             }
@@ -141,6 +136,7 @@ namespace GameDressForSuccessPlugin
                 var customBase = Singleton<CustomBase>.Instance;
                 if (customBase != null)
                 {
+                    Logger.DebugLogDebug($"{nameof(SetPlayerClothesToAutomatic)}: setting CustomBase.autoClothesState");
                     customBase.autoClothesState = true;
                 }
             }

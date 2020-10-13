@@ -25,10 +25,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\EnumerableUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\HookedSimpleCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\IHookedCache.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\CoroutineLimiter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\NormalizedPathComparer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\PathUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleLazy.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Utilities\StringUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\WeakCache.cs" />
   </ItemGroup>
 </Project>

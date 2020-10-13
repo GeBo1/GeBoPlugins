@@ -6,6 +6,13 @@ namespace GeBoCommon.Utilities
 {
     public static class EnumerableUtils
     {
+        /// <summary>
+        /// Checks if one enumerable can be found within another
+        /// </summary>
+        /// <param name="haystack">Searching inside this.</param>
+        /// <param name="needle">Searching for this.</param>
+        /// <param name="comparer">IComparer to use</param>
+        /// <returns>true if found, otherwise false</returns>
         public static bool EnumerableContains<T>(IEnumerable<T> haystack, IEnumerable<T> needle, IComparer<T> comparer = null) where T : IComparable
         {
             if (haystack is null) return false;
@@ -17,14 +24,12 @@ namespace GeBoCommon.Utilities
             comparer = comparer ?? Comparer<T>.Default;
 
             var start = 0;
-            // while first character exists in remaining haystack
+            // while first item exists in remaining haystack
             while ((start = haystackList.IndexOf(needleList[0], start)) != -1)
             {
-                if (start + needleLength > haystackLength)
-                {
-                    // can't fit in remaining bytes
-                    break;
-                }
+
+                // only keep checking if haystack would fit
+                if (start + needleLength > haystackLength) break;
 
                 var found = true;
                 for (var i = 1; i < needleLength; i++)

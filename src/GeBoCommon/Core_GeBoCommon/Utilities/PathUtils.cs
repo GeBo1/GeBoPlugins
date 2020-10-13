@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BepInEx.Logging;
 
 namespace GeBoCommon.Utilities
 {
@@ -43,11 +44,26 @@ namespace GeBoCommon.Utilities
             ".." + Path.DirectorySeparatorChar
         };
 
+
+        public static StringComparer NormalizedPathComparer = new NormalizedPathComparer();
+
+        /// <summary>
+        /// Determines whether the specified path is normalized (contains only standard path separators and doesn't contain relative paths)
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <returns>
+        ///   <c>true</c> if the specified path is normalized; otherwise, <c>false</c>.
+        /// </returns>
         public static bool IsNormalized(string path)
         {
             return path != null && path[1] == ':' && !NonNormalizedSubstrings.Any(path.Contains);
         }
 
+        /// <summary>
+        /// Normalizes the path.
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <returns>normalized path</returns>
         public static string NormalizePath(string path)
         {
             return string.IsNullOrEmpty(path) || IsNormalized(path)
@@ -56,6 +72,11 @@ namespace GeBoCommon.Utilities
                     .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         }
 
+        /// <summary>
+        /// Normalizes the path separators.
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <returns>path with normalized separators</returns>
         public static string NormalizePathSeparators(string path)
         {
             // avoid Path.Combine, blows up on '..' in the middle somewhere
@@ -65,6 +86,11 @@ namespace GeBoCommon.Utilities
                 : StringUtils.JoinStrings(Path.DirectorySeparatorChar, parts);
         }
 
+        /// <summary>
+        /// Combines path segments with normalized path separators.
+        /// </summary>
+        /// <param name="parts">The parts.</param>
+        /// <returns>combined path</returns>
         public static string CombinePaths(params string[] parts)
         {
             var splitChars = (char[])DirectorySeparatorsToReplace;
@@ -74,6 +100,11 @@ namespace GeBoCommon.Utilities
                         parts.SelectMany(i => i.Split(splitChars)).ToArray());
         }
 
+        /// <summary>
+        /// Splits the path on path separators
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <returns>path sections</returns>
         public static string[] SplitPath(string path) =>
             path?.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         public static string GetRelativePath(string relativeTo, string path)

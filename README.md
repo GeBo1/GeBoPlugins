@@ -27,14 +27,14 @@ Highlights correct dialog choice in KK main game. You can configure level of rel
 
 - KK v0.9.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r2/KK_GameDialogHelper.v0.9.1.zip) 
 
-### GameDressForSuccess
+### [GameDressForSuccess](src/GameDressForSuccess/README.md)
 
 Fixes it so when player invites (or is invited) to swim/exercise with a girl he remembers to change his clothes rather than going in what he's already wearing. By default only applies if player clothes are already set to automatic, but can be configured to always be applied.
 
 - KK v1.1.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r10/KK_GameDressForSuccess.v1.1.1.zip)
 
 
-### StudioMultiselectChara
+### [StudioMultiselectChara](src/StudioMultiselectChara/README.md)
 
 If you select a character in studio and press the hotkey, all other instances of that character in the scene will also be selected. Useful for replacing all instances of a given character.
 
@@ -44,7 +44,7 @@ If you select a character in studio and press the hotkey, all other instances of
 
 [//]: # (### StudioSceneCharaInfo)
 
-### StudioSceneNavigation
+### [StudioSceneNavigation](src/StudioSceneNavigation/README.md)
 
 Provides hotkeys for loading the next/previous scene from the scenes folder. Supports [Illusion BrowserFolders](https://github.com/ManlyMarco/Illusion_BrowserFolders). Tracks last loaded image so it can pick up where it left off between sessions (or if you change folders).
 
@@ -52,7 +52,7 @@ Provides hotkeys for loading the next/previous scene from the scenes folder. Sup
 - HS2 v0.8.6 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/HS2_StudioSceneNavigation.v0.8.6.zip)
 - KK v0.8.6 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r6/KK_StudioSceneNavigation.v0.8.6.zip)
 
-### TranslationCacheCleaner
+### [TranslationCacheCleaner](src/TranslationCacheCleaner/README.md)
 
 Removes all entries from your translation cache file that would be translated by existing translations.  Useful when translation files are updated to ensure you aren't still getting old translations from your cache.  
 
@@ -62,7 +62,7 @@ Removes all entries from your translation cache file that would be translated by
 - HS2 v0.5.3 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/HS2_TranslationCacheCleaner.v0.5.3.zip)
 - KK v0.5.3 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/KK_TranslationCacheCleaner.v0.5.3.zip)
 
-### TranslationHelper
+### TranslationHelper(src/TranslationHelper/README.md)
 
 Improves the experience of using XUnity.AutoTranslator in numerous ways.
 

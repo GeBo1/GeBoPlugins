@@ -12,5 +12,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\OtherExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\StringUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\TrimmedStringComparer.cs" />
   </ItemGroup>
 </Project>

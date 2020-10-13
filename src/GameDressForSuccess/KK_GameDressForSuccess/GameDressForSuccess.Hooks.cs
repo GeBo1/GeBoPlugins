@@ -22,7 +22,7 @@ namespace GameDressForSuccessPlugin
             private const string AutoToggleName = TogglePrefix + "00";
 
 
-            internal static ManualLogSource Logger => Instance?.Logger;
+            internal static ManualLogSource Logger => Instance != null ? Instance.Logger : null;
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(MapChange), "Do")]
@@ -49,7 +49,8 @@ namespace GameDressForSuccessPlugin
             [HarmonyPatch(typeof(Coordinate), "Do")]
             internal static void CoordinateDoPostfix(Coordinate __instance)
             {
-                Logger.DebugLogDebug($"CoordinateDoPostfix: monitoringChange={Instance?._monitoringChange}");
+                Logger.DebugLogDebug(
+                    $"CoordinateDoPostfix: monitoringChange={(Instance != null && Instance._monitoringChange)}");
                 if (Instance == null || !Enabled.Value || !Instance._monitoringChange || __instance == null) return;
 
 
@@ -57,7 +58,7 @@ namespace GameDressForSuccessPlugin
 
                 if (!typeField.FieldExists()) return;
 
-                Instance?.DressPlayer(typeField.GetValue<ChaFileDefine.CoordinateType>());
+                Instance.DressPlayer(typeField.GetValue<ChaFileDefine.CoordinateType>());
             }
 
             #region Right Click Clothing Support
@@ -107,18 +108,6 @@ namespace GameDressForSuccessPlugin
             }
 
             #endregion
-
-            /*
-            [HarmonyPrefix]
-            [HarmonyPatch(typeof(CommandBase), "Do")]
-            internal static void CommandBaseDoPrefix(CommandBase __instance)
-            {
-                var variable = AccessTools.Field(__instance.GetType(), "variable")?.GetValue(__instance) as string;
-                var value = AccessTools.Field(__instance.GetType(), "value")?.GetValue(__instance) as string;
-                Logger?.LogError(
-                    $"{__instance}: scenario={__instance.scenario}, variable={variable}, value={value}");
-            }
-            */
         }
     }
 }

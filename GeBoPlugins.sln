@@ -3,6 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TranslationHelper", "TranslationHelper", "{DB633DB4-148A-452A-B5CC-957335BDA302}"
+	ProjectSection(SolutionItems) = preProject
+		src\TranslationHelper\README.md = src\TranslationHelper\README.md
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KK_TranslationHelper", "src\TranslationHelper\KK_TranslationHelper\KK_TranslationHelper.csproj", "{6B60025D-20DE-4DF7-AEB2-BE76490A7386}"
 EndProject
@@ -11,6 +14,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AI_TranslationHelper", "src\TranslationHelper\AI_TranslationHelper\AI_TranslationHelper.csproj", "{A412DD33-E3CF-4AF0-9C17-9A918947B10B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TranslationCacheCleaner", "TranslationCacheCleaner", "{65700315-D0D8-4E75-9F3F-514CE624A5A0}"
+	ProjectSection(SolutionItems) = preProject
+		src\TranslationCacheCleaner\README.md = src\TranslationCacheCleaner\README.md
+	EndProjectSection
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Core_TranslationCacheCleaner", "src\TranslationCacheCleaner\Core_TranslationCacheCleaner\Core_TranslationCacheCleaner.shproj", "{E268C317-7402-4376-9ADB-1C6B272A8789}"
 EndProject
@@ -33,12 +39,18 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AI_StudioSceneCharaInfo", "src\StudioSceneCharaInfo\AI_StudioSceneCharaInfo\AI_StudioSceneCharaInfo.csproj", "{4AD155C4-CA3E-4E34-8D6D-822CD860F27F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "StudioSceneNavigation", "StudioSceneNavigation", "{EDCAD560-423D-456F-A39A-818D3BB38290}"
+	ProjectSection(SolutionItems) = preProject
+		src\StudioSceneNavigation\README.md = src\StudioSceneNavigation\README.md
+	EndProjectSection
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Core_StudioSceneNavigation", "src\StudioSceneNavigation\Core_StudioSceneNavigation\Core_StudioSceneNavigation.shproj", "{9BF51FB9-D251-492B-A0B2-35E479ED90EB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KK_StudioSceneNavigation", "src\StudioSceneNavigation\KK_StudioSceneNavigation\KK_StudioSceneNavigation.csproj", "{9AE3FBCF-32D1-412E-8754-DBE1D3F0EB7C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "StudioMultiselectChara", "StudioMultiselectChara", "{D2FAF07E-FF83-4CD4-B96E-FA81D947C6FC}"
+	ProjectSection(SolutionItems) = preProject
+		src\StudioMultiselectChara\README.md = src\StudioMultiselectChara\README.md
+	EndProjectSection
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Core_StudioMultiselectChara", "src\StudioMultiselectChara\Core_StudioMultiselectChara\Core_StudioMultiselectChara.shproj", "{A9BB5821-CEB9-42DC-B31F-820188043EAC}"
 EndProject
@@ -65,6 +77,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KK_TranslationCacheCleaner", "src\TranslationCacheCleaner\KK_TranslationCacheCleaner\KK_TranslationCacheCleaner.csproj", "{BE2077D1-1271-4F7F-89B4-1BB49D07F98B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GameDressForSuccess", "GameDressForSuccess", "{4DE70FC2-7766-4272-A399-9BDC9B689DA3}"
+	ProjectSection(SolutionItems) = preProject
+		src\GameDressForSuccess\README.md = src\GameDressForSuccess\README.md
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KK_GameDressForSuccess", "src\GameDressForSuccess\KK_GameDressForSuccess\KK_GameDressForSuccess.csproj", "{7193DFAE-7481-4708-BCBB-81D01FF9F413}"
 EndProject
@@ -83,15 +98,18 @@ EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "AILike_TranslationHelper", "src\TranslationHelper\AILike_TranslationHelper\AILike_TranslationHelper.shproj", "{65E7C5C7-24E3-49DF-A62E-51CD57350C88}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GameWhoIsThere", "GameWhoIsThere", "{244B8A95-25FA-44DE-A762-DA8CBA2CD978}"
+	ProjectSection(SolutionItems) = preProject
+		src\GameWhoIsThere\README.md = src\GameWhoIsThere\README.md
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HS2_GameWhoIsThere", "src\GameWhoIsThere\HS2_GameWhoIsThere\HS2_GameWhoIsThere.csproj", "{37A04B58-C00F-4B59-9F42-D0FB8DD9E7C1}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\StudioSceneNavigation\Core_StudioSceneNavigation\Core_StudioSceneNavigation.projitems*{19796e45-b2ff-4206-8901-a1821b797df8}*SharedItemsImports = 4
-		Core_StudioSceneCharaInfo\Core_StudioSceneCharaInfo.projitems*{1bdc5051-b62d-44f9-b48f-12f78174d6cb}*SharedItemsImports = 4
+		src\StudioSceneCharaInfo\Core_StudioSceneCharaInfo\Core_StudioSceneCharaInfo.projitems*{1bdc5051-b62d-44f9-b48f-12f78174d6cb}*SharedItemsImports = 4
 		src\StudioMultiselectChara\Core_StudioMultiselectChara\Core_StudioMultiselectChara.projitems*{347e78e9-4046-46c8-9569-d51d3a79fb69}*SharedItemsImports = 4
-		Core_StudioSceneCharaInfo\Core_StudioSceneCharaInfo.projitems*{4ad155c4-ca3e-4e34-8d6d-822cd860f27f}*SharedItemsImports = 4
+		src\StudioSceneCharaInfo\Core_StudioSceneCharaInfo\Core_StudioSceneCharaInfo.projitems*{4ad155c4-ca3e-4e34-8d6d-822cd860f27f}*SharedItemsImports = 4
 		src\TranslationCacheCleaner\Core_TranslationCacheCleaner\Core_TranslationCacheCleaner.projitems*{5e80c7ec-d14a-490b-8f3c-70c4956a911d}*SharedItemsImports = 4
 		src\GeBoCommon\Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems*{622df8ad-567c-4036-8e13-636a5bbebb43}*SharedItemsImports = 4
 		src\GeBoCommon\Core_GeBoCommon.Studio\Shared.CharaStudio.projitems*{622df8ad-567c-4036-8e13-636a5bbebb43}*SharedItemsImports = 4
@@ -100,7 +118,7 @@ Global
 		src\TranslationHelper\Core_TranslationHelper\Core_TranslationHelper.projitems*{6b60025d-20de-4df7-aeb2-be76490a7386}*SharedItemsImports = 4
 		src\StudioMultiselectChara\Core_StudioMultiselectChara\Core_StudioMultiselectChara.projitems*{6b983c93-3232-41dc-b844-eb96bf7897ba}*SharedItemsImports = 4
 		src\GeBoCommon\Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems*{7193dfae-7481-4708-bcbb-81d01ff9f413}*SharedItemsImports = 4
-		Core_StudioSceneCharaInfo\Core_StudioSceneCharaInfo.projitems*{73ece425-f128-41c7-8d24-6567ab8b4923}*SharedItemsImports = 13
+		src\StudioSceneCharaInfo\Core_StudioSceneCharaInfo\Core_StudioSceneCharaInfo.projitems*{73ece425-f128-41c7-8d24-6567ab8b4923}*SharedItemsImports = 13
 		src\GeBoCommon\Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems*{7c2442d2-1c58-4c20-bcb0-3a56c8dddb16}*SharedItemsImports = 13
 		src\TranslationHelper\AILike_TranslationHelper\AILike_TranslationHelper.projitems*{945a3640-237b-4dac-9df1-bab021a20c8e}*SharedItemsImports = 4
 		src\TranslationHelper\Core_TranslationHelper\Core_TranslationHelper.projitems*{945a3640-237b-4dac-9df1-bab021a20c8e}*SharedItemsImports = 4

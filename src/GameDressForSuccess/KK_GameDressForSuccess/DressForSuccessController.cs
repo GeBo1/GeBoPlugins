@@ -9,16 +9,17 @@ using KKAPI.MainGame;
 
 namespace GameDressForSuccessPlugin
 {
-    class GameController : GameCustomFunctionController
+    class DressForSuccessController : GameCustomFunctionController
     {
-        protected static ManualLogSource Logger => GameDressForSuccess.Instance?.Logger;
+        protected static ManualLogSource Logger =>
+            GameDressForSuccess.Instance != null ? GameDressForSuccess.Instance.Logger : null;
 
         protected override void OnPeriodChange(Cycle.Type period)
         {
             Logger?.DebugLogDebug($"{GetType().FullName}.{nameof(OnPeriodChange)}({period})");
             if (GameDressForSuccess.ResetToAutomatic.Value >= ResetToAutomaticMode.PeriodChange)
             {
-                GameDressForSuccess.Instance?.SetPlayerClothesToAutomatic();
+                GameDressForSuccess.Instance.SafeProcObject(o => o.SetPlayerClothesToAutomatic());
             }
             base.OnPeriodChange(period);
         }
@@ -31,7 +32,7 @@ namespace GameDressForSuccessPlugin
             Logger?.DebugLogDebug($"{GetType().FullName}.{nameof(OnEnterNightMenu)}()");
             if (GameDressForSuccess.ResetToAutomatic.Value >= ResetToAutomaticMode.DayChange)
             {
-                GameDressForSuccess.Instance?.SetPlayerClothesToAutomatic();
+                GameDressForSuccess.Instance.SafeProcObject(o => o.SetPlayerClothesToAutomatic());
             }
             base.OnEnterNightMenu();
         }
@@ -42,7 +43,7 @@ namespace GameDressForSuccessPlugin
             Logger?.DebugLogDebug($"{GetType().FullName}.{nameof(OnDayChange)}({day})");
             if (GameDressForSuccess.ResetToAutomatic.Value >= ResetToAutomaticMode.DayChange)
             {
-                GameDressForSuccess.Instance?.SetPlayerClothesToAutomatic();
+                GameDressForSuccess.Instance.SafeProcObject(o => o.SetPlayerClothesToAutomatic());
             }
             base.OnDayChange(day);
         }

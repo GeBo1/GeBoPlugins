@@ -34,9 +34,15 @@ namespace GeBoCommon
     {
         public const string GUID = "com.gebo.BepInEx.GeBoAPI";
         public const string PluginName = "GeBo Modding API";
-        public const string Version = "1.0.1";
+        public const string Version = "1.0.2";
 
         private static readonly Dictionary<string, bool> NotificationSoundsEnabled = new Dictionary<string, bool>();
+        /// <summary>
+        /// Gets the instance of GeBoAPI for the current execution.
+        /// </summary>
+        /// <value>
+        /// The instance.
+        /// </value>
         public static GeBoAPI Instance { get; private set; }
 
         internal new ManualLogSource Logger;
@@ -54,6 +60,8 @@ namespace GeBoCommon
         }
 
         private readonly SimpleLazy<IAutoTranslationHelper> _autoTranslationHelper;
+
+        /// <inheritdoc/>
         public IAutoTranslationHelper AutoTranslationHelper => _autoTranslationHelper.Value;
 
         public int ChaFileNameCount => ChaFileNamesInternal.Count;
@@ -61,6 +69,7 @@ namespace GeBoCommon
         private readonly SimpleLazy<IList<string>> _chaFileNames =
             new SimpleLazy<IList<string>>(() => ChaFileNamesInternal.Select(n => n.Key).ToList());
 
+        /// <inheritdoc/>
         public IList<string> ChaFileNames => _chaFileNames.Value;
 
         private IAutoTranslationHelper AutoTranslationHelperLoader()
@@ -73,6 +82,11 @@ namespace GeBoCommon
             return new StubAutoTranslationHelper();
         }
 
+        /// <summary>
+        /// Setups the notification sound configuration for a plugin.
+        /// </summary>
+        /// <param name="guid">The plugin GUID you're configuring notifications for.</param>
+        /// <param name="configEntry">The configuration entry.</param>
         public void SetupNotificationSoundConfig(string guid, ConfigEntry<bool> configEntry)
         {
             NotificationSoundsEnabled[guid] = configEntry.Value;
@@ -86,6 +100,11 @@ namespace GeBoCommon
             configEntry.SettingChanged += SoundSettingChanged;
         }
 
+        /// <summary>
+        /// Plays the notification sound.
+        /// </summary>
+        /// <param name="notificationSound">The notification sound to play </param>
+        /// <param name="guid">The plugin GUID. If provided will check the per-plugin config if sounds are enabled.</param>
         public void PlayNotificationSound(NotificationSound notificationSound, string guid = null)
         {
             if (!string.IsNullOrEmpty(guid))
@@ -99,17 +118,20 @@ namespace GeBoCommon
             PlayNotification(notificationSound);
         }
 
+        /// <inheritdoc/>
         public int ChaFileNameToIndex(string chaName)
         {
             return ChaFileNames.IndexOf(chaName);
         }
 
+        /// <inheritdoc/>
         public NameType ChaFileIndexToNameType(int index)
         {
             if (index < 0 || index > ChaFileNamesInternal.Count) return NameType.Unclassified;
             return ChaFileNamesInternal[index].Value;
         }
 
+        /// <inheritdoc/>
         public string ChaFileIndexToName(int index)
         {
             if (index < 0 || index > ChaFileNamesInternal.Count) return null;

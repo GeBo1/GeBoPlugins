@@ -11,11 +11,10 @@ namespace GeBoCommon.Utilities
             return array.Select((item, index) => new KeyValuePair<int, T>(index, item));
         }
 
+        [System.Diagnostics.Conditional("DEBUG")]
         public static void DebugLogDebug(this ManualLogSource logger, object obj)
         {
-#if DEBUG
             logger.LogDebug(obj);
-#endif
         }
     }
 }

@@ -6,11 +6,11 @@ If you select a character in studio and press the hotkey, all other instances of
 
 ### Supported Games
 
-|                        | Game               | Studio             |
-| ----------------------:| ------------------ | ------------------ |
-| Koikatu/Koikatsu Party | :x:                | :heavy_check_mark: |
-| AI-Shoujo/AI-Syoujyo   | :x:                | :heavy_check_mark: |
-| Honey Select 2         | :x:                | :heavy_check_mark: |
+|                         | Game  | Studio |
+| ----------------------: | ----- | -------|
+| Koikatu/Koikatsu Party  | ❌    | ✔️      |
+| AI-Shoujo/AI-Syoujyo    | ❌    | ✔️      |
+| Honey Select 2          | ❌    | ✔️      |
 
 
 ### Dependencies

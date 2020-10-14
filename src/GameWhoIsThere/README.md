@@ -4,9 +4,9 @@
 
 ### Supported Games
 
-|                        | Game               | Studio             |
-| ----------------------:| ------------------ | ------------------ |
-| Honey Select 2         | :heavy_check_mark: | :x:                |
+|                         | Game  | Studio |
+| ----------------------: | ----- | -------|
+| Honey Select 2          | ✔️     | ❌     |
 
 
 ### Dependencies

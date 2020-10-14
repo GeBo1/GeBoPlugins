@@ -25,9 +25,10 @@ If not set to true entire plugin is disabled.
 
 ### Supported Games
 
-|                         | Game               | Studio             |
-| ----------------------: | ------------------ | ------------------ |
-| Koikatu/Koikatsu Party  | :heavy_check_mark: | :x:                |
+|                         | Game  | Studio |
+| ----------------------: | ----- | -------|
+| Koikatu/Koikatsu Party  | ✔️     | ❌     |
+
 
 
 ### Dependencies

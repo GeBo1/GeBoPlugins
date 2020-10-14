@@ -4,11 +4,11 @@
 
 ### Supported Games
 
-|                        | Game               | Studio             |
-| ----------------------:| ------------------ | ------------------ |
-| Koikatu/Koikatsu Party | :heavy_check_mark: | :heavy_check_mark: |
-| AI-Shoujo/AI-Syoujyo   | :heavy_check_mark: | :heavy_check_mark: |
-| Honey Select 2         | :heavy_check_mark: | :heavy_check_mark: |
+|                         | Game  | Studio |
+| ----------------------: | ----- | -------|
+| Koikatu/Koikatsu Party  | ✔️     | ✔️      |
+| AI-Shoujo/AI-Syoujyo    | ✔️     | ✔️      |
+| Honey Select 2          | ✔️     | ✔️      |
 
 
 ### Dependencies

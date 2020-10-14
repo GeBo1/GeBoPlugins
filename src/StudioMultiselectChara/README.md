@@ -2,16 +2,16 @@
 
 If you select a character in studio and press the hotkey, all other instances of that character in the scene will also be selected. Useful for replacing all instances of a given character.
 
+## Supported Games
+
+|                         | Game  | Studio  | Download     |
+| ----------------------: | :---: | :-----: | ------------ |
+| Koikatu/Koikatsu Party  | ❌    | ✔️      | [KK Latest]  |
+| AI-Shoujo/AI-Syoujyo    | ❌    | ✔️      | [AI Latest]  |
+| Honey Select 2          | ❌    | ✔️      | [HS2 Latest] |
+
+
 ## Technical Info
-
-### Supported Games
-
-|                         | Game  | Studio |
-| ----------------------: | ----- | -------|
-| Koikatu/Koikatsu Party  | ❌    | ✔️      |
-| AI-Shoujo/AI-Syoujyo    | ❌    | ✔️      |
-| Honey Select 2          | ❌    | ✔️      |
-
 
 ### Dependencies
 
@@ -31,7 +31,9 @@ Hit the hotkey (defaults to `Shift-Tab`) and all instances of the same character
 Now you can quickly apply changes to all selected characters (like Replace Character):
 ![Select character in tree](README_Images/ex-01-03.png)
 
+[//]: # (## Latest Links)
 
-
-
+[AI Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r6/AI_StudioMultiselectChara.v0.9.1.zip "v0.9.1"
+[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r6/HS2_StudioMultiselectChara.v0.9.1.zip "v0.9.1"
+[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r6/KK_StudioMultiselectChara.v0.9.1.zip "v0.9.1"
 

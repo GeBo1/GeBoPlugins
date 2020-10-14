@@ -2,6 +2,12 @@
 
 When the player is invited (or invites a girl) to swim/exercise he can automatically change clothes rather than going in what he's already wearing. By default only applies if player clothes are already set to automatic, but can be configured to always be applied.
 
+## Supported Games
+
+|                         | Game  | Studio  | Download     |
+| ----------------------: | :---: | :-----: | ------------ |
+| Koikatu/Koikatsu Party  | ✔️     | ❌      | [KK Latest]  |
+
 ## Configuration
 
 ### Settings
@@ -23,16 +29,11 @@ If not set to true entire plugin is disabled.
 
 ## Technical Info
 
-### Supported Games
-
-|                         | Game  | Studio |
-| ----------------------: | ----- | -------|
-| Koikatu/Koikatsu Party  | ✔️     | ❌     |
-
-
-
 ### Dependencies
 
 - [Illusion Modding API](https://github.com/IllusionMods/IllusionModdingAPI) v1.12.3+
 - [BepInEx](https://github.com/BepInEx/BepInEx) v5.1+
 
+[//]: # (## Latest Links)
+
+[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r13/KK_GameDressForSuccess.v1.1.2.zip "v1.1.2"

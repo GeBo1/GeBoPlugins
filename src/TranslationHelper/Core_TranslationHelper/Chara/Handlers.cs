@@ -24,7 +24,7 @@ namespace TranslationHelperPlugin.Chara
         }
 
 
-        public static TranslationResultHandler AddNameToCache(string originalName, bool allowPersistToDisk=false)
+        public static TranslationResultHandler AddNameToAutoTranslationCache(string originalName, bool allowPersistToDisk = false)
         {
             void AddNameToCacheHandler(ITranslationResult result)
             {
@@ -33,11 +33,11 @@ namespace TranslationHelperPlugin.Chara
                     TranslationHelper.Instance.CurrentCardLoadTranslationMode <
                     CardLoadTranslationMode.CacheOnly) return;
 
-                TranslationHelper.Instance.AddTranslatedNameToCache(originalName, result.TranslatedText, allowPersistToDisk);
+                TranslationHelper.Instance.AddTranslatedNameToCache(originalName, result.TranslatedText,
+                    allowPersistToDisk);
 
             }
-
             return AddNameToCacheHandler;
         }
-}
+    }
 }

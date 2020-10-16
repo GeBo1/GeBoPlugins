@@ -1,5 +1,4 @@
 ﻿using System;
-using BepInEx;
 using BepInEx.Configuration;
 
 namespace TranslationHelperPlugin
@@ -11,7 +10,8 @@ namespace TranslationHelperPlugin
 
         internal void AILikeAwake()
         {
-            AILike_SplitNamesBeforeTranslate = Config.Bind("Translate Card Name Options", "Split Names Before Translate",
+            AILike_SplitNamesBeforeTranslate = Config.Bind("Translate Card Name Options",
+                "Split Names Before Translate",
                 true, "Split on space and translate names by sections");
             AILike_SplitNamesBeforeTranslate.SettingChanged += AILike_SplitNamesBeforeTranslate_SettingChanged;
             SplitNamesBeforeTranslate = AILike_SplitNamesBeforeTranslate.Value;

@@ -2,11 +2,13 @@
 using HarmonyLib;
 using Studio;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 
 namespace GeBoCommon.Studio
 {
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class SceneUtils
     {
         private static readonly FieldInfo SceneLoadSceneListPath = AccessTools.Field(typeof(SceneLoadScene), "listPath");

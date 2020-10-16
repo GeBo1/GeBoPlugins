@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using AIChara;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -24,6 +25,7 @@ namespace GameWhoIsTherePlugin
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(MapSelectUI), "MapSelecCursorEnter")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void MapSelecCursorEnterPrefix(MapSelectUI __instance)
         {
             if (!GameWhoIsThere.Instance.InMyRoom) return;
@@ -50,6 +52,7 @@ namespace GameWhoIsTherePlugin
         [HarmonyPostfix]
         [HarmonyPatch(typeof(ChaFileControl), nameof(ChaFileControl.LoadCharaFile), typeof(string), typeof(byte),
             typeof(bool), typeof(bool))]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void ChaFileControl_LoadCharaFile_Postfix(ChaFileControl __instance)
         {
             if (!_inMapSelecCursorEnter || __instance == null) return;
@@ -59,6 +62,7 @@ namespace GameWhoIsTherePlugin
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(MapSelectUI), "MapSelecCursorEnter")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void MapSelecCursorEnterPostfix()
         {
             if (!_inMapSelecCursorEnter) return;

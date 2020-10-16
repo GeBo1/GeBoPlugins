@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using CharaCustom;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using GameLoadCharaFileSystem;
-using GeBoCommon.Chara;
 using HarmonyLib;
-using TranslationHelperPlugin.Chara;
 
 namespace TranslationHelperPlugin.Translation
 {
@@ -14,7 +11,9 @@ namespace TranslationHelperPlugin.Translation
         [HarmonyPatch(typeof(LobbyCharaSelectInfoScrollController), nameof(LobbyCharaSelectInfoScrollController.Init))]
         [HarmonyPatch(typeof(LobbyCharaSelectInfoScrollController1),
             nameof(LobbyCharaSelectInfoScrollController1.Init))]
-        internal static void LobbyCharaSelectInfoScrollControllerInitPrefix(List<GameCharaFileInfo> _lst)
+        [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "HarmonyPatch")]
+        // ReSharper disable once InconsistentNaming
+        private static void LobbyCharaSelectInfoScrollControllerInitPrefix(List<GameCharaFileInfo> _lst)
         {
             TranslateFileInfos(_lst);
         }

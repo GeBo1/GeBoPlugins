@@ -1,4 +1,6 @@
-using System;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+
 #if (HS || PH || KK)
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -10,6 +12,8 @@ namespace GeBoCommon.Utilities
     /// <summary>
     /// Basic implementation of .NET Lazy
     /// </summary>
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
 #if (HS || PH || KK)
     public class SimpleLazy<T>
     {

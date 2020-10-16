@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace GeBoCommon.Utilities
@@ -7,6 +8,7 @@ namespace GeBoCommon.Utilities
     /// <summary>
     ///     Represents a string comparison operation that pre-processes the strings by trimming them.
     /// </summary>
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public class TrimmedStringComparer : StringComparer
     {
         private readonly StringComparer _baseStringComparer;

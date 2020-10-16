@@ -1,4 +1,6 @@
 ﻿using System;
+// ReSharper disable UnusedMember.Global
+
 
 namespace GeBoCommon.AutoTranslation
 {

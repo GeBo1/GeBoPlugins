@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace GeBoCommon
 {
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class Constants
     {
 #if AI

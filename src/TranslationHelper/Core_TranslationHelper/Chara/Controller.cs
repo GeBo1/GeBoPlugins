@@ -13,20 +13,22 @@ using KKAPI.Utilities;
 using UnityEngine;
 
 #if HS2 || AI
-
 #endif
 
 namespace TranslationHelperPlugin.Chara
 {
+    // ReSharper disable once PartialTypeWithSinglePart
     public partial class Controller : CharaCustomFunctionController
     {
+        private readonly List<IEnumerator> _monitoredCoroutines = new List<IEnumerator>();
+
         private readonly SimpleLazy<string[]> _originalNames =
             new SimpleLazy<string[]>(() => new string[GeBoAPI.Instance.ChaFileNameCount]);
 
         private readonly SimpleLazy<string[]> _translatedNames =
             new SimpleLazy<string[]>(() => new string[GeBoAPI.Instance.ChaFileNameCount]);
 
-        private readonly List<IEnumerator> _monitoredCoroutines = new List<IEnumerator>();
+        private string _fullPath;
         internal static ManualLogSource Logger => TranslationHelper.Logger;
 
         private static bool RestoreNamesOnSave =>
@@ -37,17 +39,39 @@ namespace TranslationHelperPlugin.Chara
 
         // ReSharper disable once MergeConditionalExpression
         private string RegistrationID => ChaFileControl != null ? ChaFileControl.GetRegistrationID() : null;
-
         public bool IsTranslated { get; private set; }
         public bool TranslationInProgress { get; private set; }
+
+        public string FullPath
+        {
+            get
+            {
+                if (!_fullPath.IsNullOrEmpty()) return _fullPath;
+                if (Configuration.TryGetCharaFileControlPath(ChaFileControl, out var value))
+                {
+                    _fullPath = PathUtils.NormalizePath(value);
+                }
+
+                return _fullPath;
+            }
+            internal set
+            {
+                try
+                {
+                    _fullPath = PathUtils.NormalizePath(value);
+                }
+                catch
+                {
+                    // not trackable in main game
+                    _fullPath = null;
+                }
+            }
+        }
 
         internal Coroutine StartMonitoredCoroutine(IEnumerator routine)
         {
             _monitoredCoroutines.Add(routine);
-            return StartCoroutine(routine.AppendCo(() =>
-            {
-                _monitoredCoroutines.Remove(routine);
-            }));
+            return StartCoroutine(routine.AppendCo(() => { _monitoredCoroutines.Remove(routine); }));
         }
 
         internal void SetTranslatedName(int index, string value)
@@ -79,7 +103,9 @@ namespace TranslationHelperPlugin.Chara
             {
                 OriginalNames[i] = TranslatedNames[i] = null;
             }
+
             TranslateCardNames();
+            var _ = gameMode;
         }
 
         private void DoReload(bool cardFullyLoaded = true)
@@ -92,14 +118,15 @@ namespace TranslationHelperPlugin.Chara
 
             TranslateCardNames(cardFullyLoaded);
         }
+
         protected override void OnReload(GameMode currentGameMode)
         {
-           DoReload();
+            DoReload();
         }
 
         internal void OnAlternateReload()
         {
-           DoReload();
+            DoReload();
         }
 
         protected override void OnDestroy()
@@ -157,7 +184,8 @@ namespace TranslationHelperPlugin.Chara
                 }
             }
         }
-        public void TranslateCardNames(bool cardFullyLoaded=true)
+
+        public void TranslateCardNames(bool cardFullyLoaded = true)
         {
             TranslationHelper.Logger?.DebugLogDebug($"Controller.TranslateCardNames: {RegistrationID} {IsTranslated}");
             if (TranslationHelper.Instance.CurrentCardLoadTranslationMode == CardLoadTranslationMode.Disabled) return;
@@ -205,7 +233,6 @@ namespace TranslationHelperPlugin.Chara
             RegisterReplacements(true);
         }
 
-        
 
         internal void ApplyTranslations()
         {
@@ -218,6 +245,26 @@ namespace TranslationHelperPlugin.Chara
             }
         }
 
+        public string GetFormattedOriginalName()
+        {
+#if KK
+            if (!TranslationHelper.ShowGivenNameFirst) return GetOriginalFullName();
+            var givenIdx = GeBoAPI.Instance.ChaFileNameToIndex("firstname");
+            var givenName = IsTranslated && !string.IsNullOrEmpty(OriginalNames[givenIdx])
+                ? OriginalNames[givenIdx]
+                : ChaFileControl.GetName(givenIdx);
+
+            var familyIdx = GeBoAPI.Instance.ChaFileNameToIndex("lastname");
+            var familyName = IsTranslated && !string.IsNullOrEmpty(OriginalNames[familyIdx])
+                ? OriginalNames[familyIdx]
+                : ChaFileControl.GetName(familyIdx);
+            return string.Concat(givenName, " ", familyName);
+#else
+            return GetOriginalFullName();
+#endif
+        }
+
+
         public string GetOriginalFullName()
         {
 #if KK
@@ -225,7 +272,7 @@ namespace TranslationHelperPlugin.Chara
             var givenName = IsTranslated && !string.IsNullOrEmpty(OriginalNames[givenIdx])
                 ? OriginalNames[givenIdx]
                 : ChaFileControl.GetName(givenIdx);
-                
+
             var familyIdx = GeBoAPI.Instance.ChaFileNameToIndex("lastname");
             var familyName = IsTranslated && !string.IsNullOrEmpty(OriginalNames[familyIdx])
                 ? OriginalNames[familyIdx]

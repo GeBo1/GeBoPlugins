@@ -1,8 +1,10 @@
-﻿using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace GeBoCommon.Utilities
 {
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class StringUtils
     {
         private static readonly Regex ContainsJapaneseCharRegex = new Regex(
@@ -43,8 +45,7 @@ namespace GeBoCommon.Utilities
         {
             if (value == null || value.Length == 0) return string.Empty;
             // Concat is faster than string.Join(string.empty, ...) 
-            if (string.IsNullOrEmpty(separator)) return string.Concat(value);
-            return string.Join(separator, value);
+            return string.IsNullOrEmpty(separator) ? string.Concat(value) : string.Join(separator, value);
         }
 
 

@@ -9,32 +9,49 @@ namespace GameDialogHelperPlugin
         #region ChaControl
         public static GameDialogHelperController GetGameDialogHelperController(this ChaControl chaControl)
         {
-            return chaControl?.gameObject?.GetComponent<GameDialogHelperController>();
+            GameDialogHelperController controller = null;
+            chaControl.SafeProcObject(cc =>
+                cc.gameObject.SafeProcObject(go => controller = go.GetComponent<GameDialogHelperController>()));
+            return controller;
         }
 
         public static void Remember(this ChaControl chaControl, int question, int answer)
         {
-            chaControl?.GetGameDialogHelperController()?.Remember(question, answer);
+            chaControl.SafeProcObject(cc=>cc.GetGameDialogHelperController().SafeProcObject(controller=>
+                    controller.Remember(question, answer)));
         }
 
         public static bool CanRecallQuestion(this ChaControl chaControl, int question)
         {
-            return chaControl?.GetGameDialogHelperController()?.CanRecallQuestion(question) ?? false;
+            var result = false;
+            chaControl.SafeProcObject(cc => cc.GetGameDialogHelperController().SafeProcObject(controller =>
+                result = controller.CanRecallQuestion(question)));
+            return result;
         }
 
         public static bool CanRecallAnswer(this ChaControl chaControl, int question, int answer)
         {
-            return chaControl?.GetGameDialogHelperController()?.CanRecallAnswer(question, answer) ?? false;
+            var result = false;
+            chaControl.SafeProcObject(cc => cc.GetGameDialogHelperController().SafeProcObject(controller =>
+                result = controller.CanRecallAnswer(question, answer)));
+            return result;
         }
 
         public static int TimesQuestionAnswered(this ChaControl chaControl, int question)
         {
-            return chaControl?.GetGameDialogHelperController()?.TimesQuestionAnswered(question) ?? 0;
+            var result = 0;
+
+            chaControl.SafeProcObject(cc => cc.GetGameDialogHelperController().SafeProcObject(controller =>
+                result = controller.TimesQuestionAnswered(question)));
+            return result;
         }
 
         public static int TimesAnswerSelected(this ChaControl chaControl, int question, int answer)
         {
-            return chaControl?.GetGameDialogHelperController()?.TimesAnswerSelected(question, answer) ?? 0;
+            var result = 0;
+            chaControl.SafeProcObject(cc => cc.GetGameDialogHelperController().SafeProcObject(controller =>
+                result = controller.TimesAnswerSelected(question, answer)));
+            return result;
         }
 
         #endregion ChaControl
@@ -42,27 +59,39 @@ namespace GameDialogHelperPlugin
         #region Heroine
         public static void Remember(this SaveData.Heroine heroine, int question, int answer)
         {
-            heroine?.chaCtrl?.Remember(question, answer);
+            heroine.SafeProc(h => h.chaCtrl.SafeProcObject(cc => cc.Remember(question, answer)));
         }
 
         public static bool CanRecallQuestion(this SaveData.Heroine heroine, int question)
         {
-            return heroine?.chaCtrl?.CanRecallQuestion(question) ?? false;
+            var result = false;
+            heroine.SafeProc(h => h.chaCtrl.SafeProcObject(cc =>
+                result = cc.CanRecallQuestion(question)));
+            return result;
         }
 
         public static bool CanRecallAnswer(this SaveData.Heroine heroine, int question, int answer)
         {
-            return heroine?.chaCtrl?.CanRecallAnswer(question, answer) ?? false;
+            var result = false;
+            heroine.SafeProc(h => h.chaCtrl.SafeProcObject(cc =>
+                result = cc.CanRecallAnswer(question, answer)));
+            return result;
         }
 
         public static int TimesQuestionAnswered(this SaveData.Heroine heroine, int question)
         {
-            return heroine?.chaCtrl?.TimesQuestionAnswered(question) ?? 0;
+            var result = 0;
+            heroine.SafeProc(h => h.chaCtrl.SafeProcObject(cc =>
+                result = cc.TimesQuestionAnswered(question)));
+            return result;
         }
 
         public static int TimesAnswerSelected(this SaveData.Heroine heroine, int question, int answer)
         {
-            return heroine?.chaCtrl?.TimesAnswerSelected(question, answer) ?? 0;
+            var result = 0;
+            heroine.SafeProc(h => h.chaCtrl.SafeProcObject(cc =>
+                result = cc.TimesAnswerSelected(question, answer)));
+            return result;
         }
 
         #endregion Heroine

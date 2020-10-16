@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using ActionGame.Communication;
 using HarmonyLib;
 
@@ -11,6 +12,7 @@ namespace GameDialogHelperPlugin
             [HarmonyPrefix]
             [HarmonyPatch(typeof(Info), "CreateSelectADV", typeof(Info.SelectInfo), typeof(ChangeValueSelectInfo))]
             [HarmonyPatch(typeof(Info), "CreateSelectADV", typeof(Info.SelectInfo), typeof(int))]
+            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
             // ReSharper disable once InconsistentNaming
             //internal static void Info_CreateSelectADV_Prefix(Info __instance, ref Info.SelectInfo _info)
             internal static void Info_CreateSelectADV_Prefix(Info __instance, Info.SelectInfo _info)
@@ -44,6 +46,7 @@ namespace GameDialogHelperPlugin
 
             [HarmonyPrefix]
             [HarmonyPatch(typeof(ADV.Program.Transfer), nameof(ADV.Program.Transfer.Create))]
+            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
             internal static bool Transfer_Create_Prefix(bool multi, ADV.Command command, string[] args)
             {
                 _ = multi;
@@ -59,6 +62,7 @@ namespace GameDialogHelperPlugin
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(ADV.Commands.Base.Choice), "ButtonProc")]
+            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
             internal static void Choice_ButtonProc_Postfix(int __result)
             {
                 Logger.LogError($"Clicked on {__result}");

@@ -31,7 +31,7 @@ namespace StudioSceneNavigationPlugin
     {
         public const string GUID = "com.gebo.bepinex.studioscenenavigation";
         public const string PluginName = "Studio Scene Navigation";
-        public const string Version = "0.8.6";
+        public const string Version = "0.8.7";
 
         internal static readonly char[] TrackingFileEntrySplit = {'\0'};
 
@@ -46,13 +46,14 @@ namespace StudioSceneNavigationPlugin
 
         private readonly SimpleLazy<Func<string, bool>> _isSceneValid;
         private readonly SimpleLazy<Dictionary<string, string>> _lastLoadedScenes;
-        private readonly IEnumerator _saveTrackingFileDelay = new WaitForSecondsRealtime(1f);
+        private readonly IEnumerator _saveTrackingFileDelay;
 
         private string _currentScenePath = string.Empty;
         private string _currentScenePathCandidate = string.Empty;
 
         private bool _navigationInProgress;
         private bool _savePending;
+        private float _saveReady;
 
         public StudioSceneNavigation()
         {
@@ -73,6 +74,8 @@ namespace StudioSceneNavigationPlugin
                     $"Will use {pluginType.Name}.{method.Name} to pre-check images during navigation");
                 return (Func<string, bool>)Delegate.CreateDelegate(typeof(Func<string, bool>), method);
             });
+
+            _saveTrackingFileDelay = new WaitUntil(IsSaveReady);
         }
 
         private static List<string> ScenePaths { get; set; } = new List<string>();
@@ -81,6 +84,7 @@ namespace StudioSceneNavigationPlugin
                                                             (_normalizedScenePaths =
                                                                 new List<string>(
                                                                     ScenePaths.Select(PathUtils.NormalizePath)));
+
 
         private Func<string, bool> IsSceneValid => _isSceneValid.Value;
 
@@ -93,6 +97,7 @@ namespace StudioSceneNavigationPlugin
             set
             {
                 lock (SavePendingLock) _savePending = value;
+                if (value) UpdateSaveReady();
             }
         }
 
@@ -103,6 +108,11 @@ namespace StudioSceneNavigationPlugin
         public static ConfigEntry<KeyboardShortcut> ReloadCurrentSceneShortcut { get; private set; }
         public static ConfigEntry<bool> NotificationSoundsEnabled { get; private set; }
         public static ConfigEntry<bool> TrackLastLoadedSceneEnabled { get; private set; }
+
+        private bool IsSaveReady()
+        {
+            return Time.realtimeSinceStartup > _saveReady;
+        }
 
         internal void Main()
         {
@@ -161,6 +171,7 @@ namespace StudioSceneNavigationPlugin
 
         private void StudioSaveLoadApi_SceneLoad(object sender, SceneLoadEventArgs e)
         {
+            UpdateSaveReady();
 #if DEBUG
             //Logger.LogDebug( $"StudioSaveLoadApi_SceneLoad({sender}, {e}) {CurrentScenePathCandidate}, {e.Operation}");
 #endif
@@ -188,8 +199,14 @@ namespace StudioSceneNavigationPlugin
                 _navigationInProgress = false;
                 TrackLastLoadedScene();
             }));
-            coroutines.Add(SaveTrackingFileCouroutine(_saveTrackingFileDelay));
+            coroutines.Add(_saveTrackingFileDelay);
+            coroutines.Add(SaveTrackingFileCouroutine());
             StartCoroutine(CoroutineUtils.ComposeCoroutine(coroutines.ToArray()));
+        }
+
+        private void UpdateSaveReady()
+        {
+            _saveReady = Time.realtimeSinceStartup + 3f;
         }
 
         private void ExtendedSave_SceneBeingLoaded(string path)
@@ -372,7 +389,7 @@ namespace StudioSceneNavigationPlugin
 
                 if (expectedCount >= 0 && version >= new Version(0, 8, 7) && expectedCount != count)
                 {
-                    Logger.Log(BepInLogLevel.Warning | BepInLogLevel.Message,
+                    Logger.LogWarningMessage(
                         $"{TrackLastLoadedSceneFile} may be corrupted. It contains {count} entries, expected {expectedCount}.");
                 }
             }
@@ -383,81 +400,78 @@ namespace StudioSceneNavigationPlugin
         private void NavigateScene(int offset)
         {
             var navigated = false;
-            if (!_navigationInProgress)
+            if (_navigationInProgress) return;
+
+            _navigationInProgress = true;
+            Logger.LogDebug($"Attempting navigate to scene: {offset}");
+            try
             {
-                _navigationInProgress = true;
-                Logger.LogDebug($"Attempting navigate to scene: {offset}");
-                try
+                var paths = NormalizedScenePaths;
+                var index = -1;
+                if (!_currentScenePath.IsNullOrEmpty() && !paths.IsNullOrEmpty())
                 {
-                    var paths = NormalizedScenePaths;
-                    var index = -1;
-                    if (!_currentScenePath.IsNullOrEmpty() && !paths.IsNullOrEmpty())
-                    {
-                        index = paths.IndexOf(_currentScenePath);
-                    }
+                    index = paths.IndexOf(_currentScenePath);
+                }
 
-                    if (index == -1)
+                if (index == -1)
+                {
+                    if (!paths.IsNullOrEmpty())
                     {
-                        if (!paths.IsNullOrEmpty())
+                        Logger.LogInfo(
+                            $"Folder changed, resuming navigation for: {PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, _currentSceneFolder)}");
+                        if (LoadLastLoadedScene())
                         {
-                            Logger.LogInfo(
-                                $"Folder changed, resuming navigation for: {PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, _currentSceneFolder)}");
-                            if (LoadLastLoadedScene())
-                            {
-                                navigated = true;
-                            }
+                            navigated = true;
                         }
                     }
-                    else
+                }
+                else
+                {
+                    string nextImage = null;
+                    while (nextImage is null)
                     {
-                        string nextImage = null;
-                        while (nextImage is null)
+                        index -= offset;
+                        if (index < 0 || index >= paths.Count)
                         {
-                            index -= offset;
-                            if (index < 0 || index >= paths.Count)
-                            {
-                                Logger.Log(BepInLogLevel.Info | BepInLogLevel.Message,
-                                    "No further scenes to navigate to.");
-                                return;
-                            }
-
-                            nextImage = paths[index];
-                            if (IsSceneValid(nextImage)) continue;
-
-                            Logger.Log(BepInLogLevel.Warning | BepInLogLevel.Message,
-                                $"Skipping invalid scene file: {nextImage}");
-                            nextImage = null;
+                            Logger.LogInfoMessage("No further scenes to navigate to.");
+                            return;
                         }
 
-                        var coroutines = new List<IEnumerator>
-                        {
-                            CoroutineUtils.CreateCoroutine(
-                                () => Logger.Log(BepInLogLevel.Message | BepInLogLevel.Info,
-                                    $"Loading scene {paths.Count - index}/{paths.Count} ('{PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, nextImage)}')")),
-                            Singleton<Studio.Studio>.Instance.LoadSceneCoroutine(nextImage)
-                        };
+                        nextImage = paths[index];
+                        if (IsSceneValid(nextImage)) continue;
 
-                        StartCoroutine(CoroutineUtils.ComposeCoroutine(coroutines.ToArray()));
-
-                        navigated = true;
+                        Logger.LogWarningMessage($"Skipping invalid scene file: {nextImage}");
+                        nextImage = null;
                     }
-                }
-                catch (Exception err)
-                {
-                    Logger.LogError($"Error navigating scene: {err}");
-                }
-                finally
-                {
-                    // error encountered during navigation
-                    if (!navigated)
+
+                    var coroutines = new List<IEnumerator>
                     {
-                        _navigationInProgress = false;
-                        PlayNotificationSound(NotificationSound.Error);
-                    }
-                }
+                        CoroutineUtils.CreateCoroutine(
+                            () => Logger.LogInfoMessage(
+                                $"Loading scene {paths.Count - index}/{paths.Count} ('{PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, nextImage)}')")),
+                        Singleton<Studio.Studio>.Instance.LoadSceneCoroutine(nextImage)
+                    };
 
-                if (navigated) _setPage = true;
+                    StartCoroutine(CoroutineUtils.ComposeCoroutine(coroutines.ToArray()));
+
+                    navigated = true;
+                }
             }
+            catch (Exception err)
+            {
+                Logger.LogErrorMessage($"Error navigating scene: {err.Message}");
+            }
+            finally
+            {
+                // error encountered during navigation
+                if (!navigated)
+                {
+                    _navigationInProgress = false;
+                    PlayNotificationSound(NotificationSound.Error);
+                }
+            }
+
+            if (navigated) _setPage = true;
         }
 
         private IEnumerator SetPageCoroutine(string scenePath)
@@ -469,13 +483,13 @@ namespace StudioSceneNavigationPlugin
             var page = NormalizedScenePaths.IndexOf(scenePath) / ImagesPerPage;
             if (page < 0) yield break;
 
-            _sceneLoadScene?.GetType().GetField("page", AccessTools.all)?.SetValue(null, page);
+            _sceneLoadScene.SafeProcObject(sls =>
+                sls.GetType().GetField("page", AccessTools.all)?.SetValue(null, page));
         }
 
-        public IEnumerator SaveTrackingFileCouroutine(IEnumerator delay = null)
+        public IEnumerator SaveTrackingFileCouroutine()
         {
             if (!TrackLastLoadedSceneEnabled.Value) yield break;
-            yield return delay;
             if (SavePending) SaveTrackingFile();
         }
 
@@ -520,7 +534,7 @@ namespace StudioSceneNavigationPlugin
             {
                 if (!navigated)
                 {
-                    Logger.Log(BepInLogLevel.Message | BepInLogLevel.Error,
+                    Logger.LogErrorMessage(
                         $"Error loading last scene from {_currentSceneFolder}");
                     if (clearNavigation)
                     {

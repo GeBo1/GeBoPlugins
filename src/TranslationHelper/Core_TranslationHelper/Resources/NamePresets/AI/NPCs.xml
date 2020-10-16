@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- ReSharper disable MarkupTextTypo -->
+<NamePresets>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>シャン</Name>
+        </GivenNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Shan</GivenName>
+            </Translation>
+        </Translations>
+        <Notes>AI NPC</Notes>
+    </NamePreset>
+</NamePresets>

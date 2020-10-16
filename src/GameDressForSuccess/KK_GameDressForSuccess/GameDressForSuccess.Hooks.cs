@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using ADV;
 using ADV.Commands.Chara;
@@ -26,6 +27,7 @@ namespace GameDressForSuccessPlugin
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(MapChange), "Do")]
+            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
             internal static void StartTravelingHook(MapChange __instance)
             {
                 if (!Enabled.Value || Instance == null) return;
@@ -37,6 +39,7 @@ namespace GameDressForSuccessPlugin
             [HarmonyPrefix]
             [HarmonyPatch(typeof(ADV.Commands.Effect.SceneFade), "Do")]
             [HarmonyPatch(typeof(Text), "Do")]
+            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
             internal static void StopTravelingHook(CommandBase __instance)
             {
                 if (!Enabled.Value || Instance == null) return;
@@ -47,6 +50,7 @@ namespace GameDressForSuccessPlugin
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(Coordinate), "Do")]
+            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
             internal static void CoordinateDoPostfix(Coordinate __instance)
             {
                 Logger.DebugLogDebug(
@@ -65,6 +69,7 @@ namespace GameDressForSuccessPlugin
 
             [HarmonyPrefix]
             [HarmonyPatch(typeof(Toggle), nameof(Toggle.OnPointerClick))]
+            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
             internal static void ToggleOnPointerClickPrefix(Toggle __instance,
                 ref PointerEventData eventData, out Toggle __state)
             {
@@ -99,6 +104,7 @@ namespace GameDressForSuccessPlugin
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(Toggle), nameof(Toggle.OnPointerClick))]
+            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
             internal static void ToggleOnPointerClickPostfix(Toggle __state)
             {
                 Logger.DebugLogDebug("ToggleOnPointerClickPostfix");

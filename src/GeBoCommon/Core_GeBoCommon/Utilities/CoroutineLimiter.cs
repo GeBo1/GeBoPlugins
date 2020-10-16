@@ -45,7 +45,10 @@ namespace GeBoCommon.Utilities
             {
                 if (StudioAPI.InsideStudio) return;
             }
+#pragma warning disable CA1031 // Do not catch general exception types
+            // ReSharper disable once EmptyGeneralCatchClause
             catch { }
+#pragma warning restore CA1031 // Do not catch general exception types
 
             Reset();
         }
@@ -67,8 +70,10 @@ namespace GeBoCommon.Utilities
 
         public IEnumerator Start()
         {
+            // ReSharper disable RedundantAssignment
             var start = Time.realtimeSinceStartup;
             var startFrame = Time.renderedFrameCount;
+            // ReSharper restore RedundantAssignment
             var limited = 0;
             long current;
             while (true)

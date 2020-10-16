@@ -18,6 +18,7 @@ using AIChara;
 
 namespace TranslationHelperPlugin.Maker
 {
+    // ReSharper disable once PartialTypeWithSinglePart
     internal static partial class Configuration
     {
         internal static ManualLogSource Logger => TranslationHelper.Logger;
@@ -44,6 +45,7 @@ namespace TranslationHelperPlugin.Maker
 
                 MakerAPI.MakerExiting += (s, e2) => sidebarToggle = null;
             };
+            
             GameSpecificSetup(harmony);
         }
 
@@ -60,7 +62,13 @@ namespace TranslationHelperPlugin.Maker
         private static void MakerFinishedLoading(object sender, EventArgs e)
         {
             CharacterApi.CharacterReloaded += MakerCharacterReloaded;
+            SetupNameInputFields();
 
+            MakerAPI.GetCharacterControl().SafeProcObject(UpdateUIForChara);
+        }
+
+        private static void SetupNameInputFields()
+        {
             foreach (var entry in GetNameInputFieldInfos())
             {
                 try
@@ -74,19 +82,18 @@ namespace TranslationHelperPlugin.Maker
                 }
 #pragma warning restore CA1031 // Do not catch general exception types
             }
-
-            MakerAPI.GetCharacterControl().SafeProcObject(UpdateUIForChara);
         }
 
         private static void MakerExiting(object sender, EventArgs e)
         {
             CharacterApi.CharacterReloaded -= MakerCharacterReloaded;
-            CardNameTranslationManager.ClearCaches();
+
+            TranslationHelper.NotifyBehaviorChanged(e);
         }
 
         private static void MakerStartedLoading(object sender, RegisterCustomControlsEvent e)
         {
-            CardNameTranslationManager.ClearCaches();
+            TranslationHelper.NotifyBehaviorChanged(e);
         }
 
         private static void UpdateUIForChara(ChaControl chaControl)
@@ -100,8 +107,8 @@ namespace TranslationHelperPlugin.Maker
             if (controller == null) yield break;
 
             controller.TranslateCardNames();
-            yield return TranslationHelper.WaitOnCard(controller.ChaFileControl);
-            yield return GameSpecificUpdateUICoroutine(controller);
+            yield return TranslationHelper.Instance.StartCoroutine(TranslationHelper.WaitOnCard(controller.ChaFileControl));
+            yield return TranslationHelper.Instance.StartCoroutine(GameSpecificUpdateUICoroutine(controller));
         }
 
         private static void SetupNameInputField(string name, params string[] inputFieldPath)
@@ -114,7 +121,7 @@ namespace TranslationHelperPlugin.Maker
             foreach (var fieldName in inputFieldPath)
             {
                 if (top == null) break;
-                top = top.GetComponentsInChildren<Component>().FirstOrDefault(r => r.name == fieldName);
+                top = top.GetComponentsInChildren<Component>(true).FirstOrDefault(r => r.name == fieldName);
             }
 
 

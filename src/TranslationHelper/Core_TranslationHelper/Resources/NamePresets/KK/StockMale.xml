@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- ReSharper disable MarkupTextTypo -->
+<NamePresets>
+    <NamePreset>
+        <Sex>Male</Sex>
+        <GivenNames>
+            <Name>壮亮</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>柏木</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Sousuke</GivenName>
+                <FamilyName>Kashiwagi</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>KK Stock Character</Notes>
+    </NamePreset>
+
+    <NamePreset>
+        <Sex>Male</Sex>
+        <GivenNames>
+            <Name>ロイ</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>北条</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Roy</GivenName>
+                <FamilyName>Houjou</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>KK Stock Character</Notes>
+    </NamePreset>
+
+    <NamePreset>
+        <Sex>Male</Sex>
+        <GivenNames>
+            <Name>拓磨</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>近藤</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Takuma</GivenName>
+                <FamilyName>Kondo</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>KK Stock Character</Notes>
+    </NamePreset>
+
+</NamePresets>

@@ -95,6 +95,7 @@ namespace TranslationHelperPlugin
             return GeBoAPI.Instance.AutoTranslationHelper.GetReplacements();
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private bool CounterAdd(string name, string regId)
         {
             UpdateLastBusyTime();
@@ -117,6 +118,7 @@ namespace TranslationHelperPlugin
             }
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private bool CounterRemove(string name, string regId)
         {
             UpdateLastBusyTime();
@@ -332,7 +334,7 @@ namespace TranslationHelperPlugin
             if (!_inUse) return;
 
             var orig = _nameToIDMap.Count;
-            var current = 0;
+            int current;
 
             var namesToRemove = new HashSet<string>();
             lock (_lock)

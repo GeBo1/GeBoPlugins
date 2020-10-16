@@ -58,10 +58,16 @@ namespace GameDialogHelperPlugin
 
         private static IAutoTranslationHelper AutoTranslator => GeBoAPI.Instance.AutoTranslationHelper;
 
-        public static SaveData.Heroine TargetHeroine =>
-            CurrentlyEnabled
-                ? _targetHeroine ?? (_targetHeroine = FindObjectOfType<TalkScene>()?.targetHeroine)
-                : null;
+        public static SaveData.Heroine TargetHeroine
+        {
+            get
+            {
+                if (!CurrentlyEnabled) return null;
+                if (_targetHeroine == null) FindObjectOfType<TalkScene>().SafeProcObject(
+                        ts => _targetHeroine = ts.targetHeroine);
+                return _targetHeroine;
+            }
+        }
 
         internal static InfoCheckSelectConditionsDelegate InfoCheckSelectConditions =>
             InfoCheckSelectConditionsLoader.Value;
@@ -118,7 +124,6 @@ namespace GameDialogHelperPlugin
 
         private void CurrentPluginMode_SettingChanged(object sender, EventArgs e)
         {
-            Logger.LogError($"{nameof(CurrentPluginMode_SettingChanged)} fired: {sender}, {e}");
             SetupPluginModeLogic(sender is ConfigEntry<PluginMode> configMode ? configMode.Value : PluginMode.Disabled);
         }
 

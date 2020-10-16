@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<NamePresets>
+    <NamePreset>
+        <Sex>Male</Sex>
+        <GivenNames>
+            <Name>主人公</Name>
+        </GivenNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Hero</GivenName>
+            </Translation>
+        </Translations>
+        <Notes>AI Stock Character (default)</Notes>
+    </NamePreset>
+</NamePresets>

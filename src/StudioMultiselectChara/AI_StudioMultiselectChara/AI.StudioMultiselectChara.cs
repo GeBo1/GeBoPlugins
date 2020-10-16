@@ -2,7 +2,5 @@
 
 namespace StudioMultiSelectCharaPlugin
 {
-    public partial class StudioMultiSelectChara : BaseUnityPlugin
-    {
-    }
+    public partial class StudioMultiSelectChara { }
 }

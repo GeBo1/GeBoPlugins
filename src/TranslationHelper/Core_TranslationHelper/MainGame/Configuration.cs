@@ -3,6 +3,7 @@ using KKAPI.Studio;
 
 namespace TranslationHelperPlugin.MainGame
 {
+    // ReSharper disable once PartialTypeWithSinglePart
     internal static partial class Configuration
     {
         internal const string GUID = TranslationHelper.GUID + ".maingame";

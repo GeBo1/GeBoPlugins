@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<NamePresets>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>フュル</Name>
+        </GivenNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Fur</GivenName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 NPC</Notes>
+    </NamePreset>
+
+  
+</NamePresets>

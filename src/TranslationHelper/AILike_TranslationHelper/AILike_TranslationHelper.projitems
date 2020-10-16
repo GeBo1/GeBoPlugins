@@ -17,5 +17,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Studio\Configuration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Translation\Configuration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Translation\Hooks.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\CharaFileInfoWrapper.cs" />
   </ItemGroup>
 </Project>

@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using AIChara;
 using GameLoadCharaFileSystem;
 using GeBoCommon.AutoTranslation;
@@ -29,6 +30,7 @@ namespace TranslationHelperPlugin.MainGame
         [HarmonyPrefix]
         [HarmonyPatch(typeof(LobbyParameterUI), nameof(LobbyParameterUI.SetParameter), typeof(GameCharaFileInfo),
             typeof(int), typeof(int))]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void LobbySetGameCharaFileInfoPrefix(GameCharaFileInfo _info)
         {
             Translation.Hooks.TranslateFileInfo(_info);
@@ -37,6 +39,7 @@ namespace TranslationHelperPlugin.MainGame
         [HarmonyPostfix]
         [HarmonyPatch(typeof(LobbyParameterUI), nameof(LobbyParameterUI.SetParameter), typeof(GameCharaFileInfo),
             typeof(int), typeof(int))]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void LobbySetGameCharaFileInfoPostfix(LobbyParameterUI __instance, GameCharaFileInfo _info)
         {
             if (_info == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
@@ -56,6 +59,7 @@ namespace TranslationHelperPlugin.MainGame
         [HarmonyPostfix]
         [HarmonyPatch(typeof(ChaFileControl), nameof(ChaFileControl.LoadCharaFile), typeof(string), typeof(byte),
             typeof(bool), typeof(bool))]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void ChaFileControl_LoadCharaFile_Postfix(ChaFileControl __instance)
         {
             if (!_inMapSelecCursorEnter || __instance == null) return;
@@ -78,8 +82,10 @@ namespace TranslationHelperPlugin.MainGame
         // ReSharper disable once StringLiteralTypo
         [HarmonyPrefix]
         [HarmonyPatch(typeof(MapSelectUI), "MapSelecCursorEnter")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void MapSelecCursorEnterPrefix(MapSelectUI __instance)
         {
+            if (__instance == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
             _inMapSelecCursorEnter = true;
             _inMapSelecCursorEnterIndex = 0;
             var i = 0;
@@ -103,6 +109,7 @@ namespace TranslationHelperPlugin.MainGame
         // ReSharper disable once StringLiteralTypo
         [HarmonyPostfix]
         [HarmonyPatch(typeof(MapSelectUI), "MapSelecCursorEnter")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void MapSelecCursorEnterPostfix()
         {
             _inMapSelecCursorEnter = false;

@@ -183,6 +183,7 @@ namespace GeBoCommon.Utilities
             registeredCaches.Add(new WeakReference(cache));
         }
 
+        // ReSharper disable once UnusedMember.Global
         internal static bool IsRegistered(Type typ)
         {
             return IsRegistered(TypeToKey(typ));

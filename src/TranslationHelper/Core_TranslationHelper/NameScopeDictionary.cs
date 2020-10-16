@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace TranslationHelperPlugin
 {
@@ -6,20 +7,38 @@ namespace TranslationHelperPlugin
     {
         private readonly Dictionary<NameScope, T> _dictionary = new Dictionary<NameScope, T>();
         private readonly object _lock = new object();
+        private readonly Func<T> _initializer;
+        public NameScopeDictionary(Func<T> initializer = null)
+        {
+            _initializer = initializer;
+        }
 
+        private T InitializeScope(NameScope scope)
+        {
+            var result = _initializer != null ? _initializer() : new T();
+            lock (_lock)
+            {
+                _dictionary[scope] = result;
+            }
+
+            return result;
+        }
         public T this[NameScope key]
         {
             get
             {
-                T result;
                 lock (_lock)
                 {
-                    if (!_dictionary.TryGetValue(key, out result))
-                    {
-                        _dictionary[key] = result = new T();
-                    }
+                    return (_dictionary.TryGetValue(key, out var result)) ? result : InitializeScope(key);
                 }
-                return result;
+            }
+        }
+
+        public IEnumerable<NameScope> GetScopes()
+        {
+            lock (_lock)
+            {
+                return _dictionary.Keys;
             }
         }
 

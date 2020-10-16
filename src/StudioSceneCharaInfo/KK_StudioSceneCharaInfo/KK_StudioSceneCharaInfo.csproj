@@ -7,7 +7,7 @@
     <ProjectGuid>{1BDC5051-B62D-44F9-B48F-12F78174D6CB}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>KK_StudioSceneCharaInfoPlugin</RootNamespace>
+    <RootNamespace>StudioSceneCharaInfoPlugin</RootNamespace>
     <AssemblyName>KK_StudioSceneCharaInfo</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <LangVersion>7.3</LangVersion>
@@ -18,7 +18,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
+    <DebugType>embedded</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;KK</DefineConstants>
@@ -26,12 +26,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE;KK</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -73,18 +74,24 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\KK_GeBoCommon\KK_GeBoCommon.csproj">
+    <ProjectReference Include="..\..\GeBoCommon\KK_GeBoCommon\KK_GeBoCommon.csproj">
       <Project>{ed839651-4764-420e-97fc-a40d7d98449b}</Project>
       <Name>KK_GeBoCommon</Name>
     </ProjectReference>
-    <ProjectReference Include="..\KK_TranslationHelper\KK_TranslationHelper.csproj">
+    <ProjectReference Include="..\..\TranslationHelper\KK_TranslationHelper\KK_TranslationHelper.csproj">
       <Project>{6b60025d-20de-4df7-aeb2-be76490a7386}</Project>
       <Name>KK_TranslationHelper</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="..\..\..\packages\BepInEx.Analyzers.1.0.1\analyzers\dotnet\cs\BepInEx.Analyzers.CodeFixes.dll" />
+    <Analyzer Include="..\..\..\packages\BepInEx.Analyzers.1.0.1\analyzers\dotnet\cs\BepInEx.Analyzers.dll" />
+    <Analyzer Include="..\..\..\packages\Microsoft.Unity.Analyzers.1.8.2\analyzers\dotnet\cs\Microsoft.Unity.Analyzers.dll" />
+  </ItemGroup>
   <Import Project="..\..\StudioSceneCharaInfo\Core_StudioSceneCharaInfo\Core_StudioSceneCharaInfo.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
+    <PathMap>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)=.</PathMap>
     <PostBuildEvent>IF EXIST $(SolutionDir)PostBuild.bat CALL "$(SolutionDir)PostBuild.bat" $(TargetPath) KK</PostBuildEvent>
   </PropertyGroup>
 </Project>

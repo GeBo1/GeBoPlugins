@@ -4,7 +4,7 @@ namespace GeBoCommon.Utilities
 {
     public class NormalizedPathComparer : StringComparer
     {
-        internal NormalizedPathComparer() : base() { }
+        internal NormalizedPathComparer() { }
 
 
         private static string NormalizePathString(string input)
@@ -24,7 +24,8 @@ namespace GeBoCommon.Utilities
             if (x == y) return true;
             if (x == null || y == null) return false;
             // try to compare without normalizing first in case they already match
-            return OrdinalIgnoreCase.Equals(x, y) || OrdinalIgnoreCase.Equals(NormalizePathString(x), NormalizePathString(y));
+            return OrdinalIgnoreCase.Equals(x, y) ||
+                   OrdinalIgnoreCase.Equals(NormalizePathString(x), NormalizePathString(y));
         }
 
 

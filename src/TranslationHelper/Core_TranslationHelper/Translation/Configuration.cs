@@ -2,6 +2,7 @@
 
 namespace TranslationHelperPlugin.Translation
 {
+    // ReSharper disable once PartialTypeWithSinglePart
     internal static partial class Configuration
     {
         internal static ManualLogSource Logger => TranslationHelper.Logger;

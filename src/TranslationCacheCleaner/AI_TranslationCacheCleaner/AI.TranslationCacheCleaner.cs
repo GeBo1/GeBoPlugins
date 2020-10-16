@@ -2,7 +2,5 @@
 
 namespace TranslationCacheCleanerPlugin
 {
-    public partial class TranslationCacheCleaner : BaseUnityPlugin
-    {
-    }
+    public partial class TranslationCacheCleaner { }
 }

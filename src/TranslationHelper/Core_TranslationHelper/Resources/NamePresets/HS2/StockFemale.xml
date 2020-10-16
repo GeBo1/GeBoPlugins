@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- ReSharper disable MarkupTextTypo -->
+<!-- most HS2 stock chars are from AI -->
+<NamePresets>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>美和</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>波多野</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Miwa</GivenName>
+                <FamilyName>Hatano</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 stock character (default)</Notes>
+    </NamePreset>
+   
+</NamePresets>

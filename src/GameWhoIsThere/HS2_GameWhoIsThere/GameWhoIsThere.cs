@@ -83,8 +83,8 @@ namespace GameWhoIsTherePlugin
         private IEnumerator UpdateLabels()
         {
             if (_busy) yield break;
-            yield return null;
             _busy = true;
+            yield return null;
             try
             {
                 for (var i = 0; i < _labels.Length; i++)

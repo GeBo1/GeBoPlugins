@@ -1,5 +1,8 @@
-﻿namespace GeBoCommon.AutoTranslation
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace GeBoCommon.AutoTranslation
 {
+    [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
     public interface ITranslationResult
     {
         bool Succeeded { get; }

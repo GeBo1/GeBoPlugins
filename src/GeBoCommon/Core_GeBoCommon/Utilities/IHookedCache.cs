@@ -1,5 +1,8 @@
-﻿namespace GeBoCommon.Utilities
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace GeBoCommon.Utilities
 {
+    [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
     public interface IHookedCacheEventArgs
     {
         bool Cancel { get; }

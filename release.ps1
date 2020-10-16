@@ -10,6 +10,8 @@ function Zip-Plugin {
     $plugin = (Get-Item $plugin_dir).Basename
     $plugin_bin_dir = $plugin_dir + "\bin\Release"
     $dll_name = $plugin + ".dll"
+    #$readme_src = $plugin_dir + "\..\README.md";
+    #$readme_name = "README." + $plugin + ".md";
     
     $dlls = (Get-ChildItem -Path ($plugin_bin_dir) -Filter $dll_name -Recurse -Force)
     if (!$dlls) {
@@ -43,6 +45,12 @@ function Zip-Plugin {
     foreach ($pf in $plugin_files) {
         Copy-Item -Path $pf.FullName -Destination $destdir -Recurse -Force
     }
+
+    #if (Test-Path $readme_src) {
+    #    $readme = Get-Item -Path $readme_src
+    #    Copy-Item -Path $readme.FullName -Destination ($destdir + "\" + $readme_name)
+    #}
+        
 
     $dummy = New-Item -ItemType Directory -Force -Path ($topdir + "\dist")
 

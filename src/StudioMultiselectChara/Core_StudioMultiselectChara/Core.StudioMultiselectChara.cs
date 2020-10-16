@@ -10,13 +10,12 @@ using KKAPI.Studio;
 using KKAPI.Utilities;
 using Studio;
 using UnityEngine;
-using BepInLogLevel = BepInEx.Logging.LogLevel;
 
 namespace StudioMultiSelectCharaPlugin
 {
     [BepInPlugin(GUID, PluginName, Version)]
     [BepInProcess(Constants.StudioProcessName)]
-    public partial class StudioMultiSelectChara
+    public partial class StudioMultiSelectChara : BaseUnityPlugin
     {
         public const string GUID = "com.gebo.BepInEx.studiomultiselectchara";
         public const string PluginName = "Studio MultiSelect Chara";
@@ -86,10 +85,7 @@ namespace StudioMultiSelectCharaPlugin
         private IEnumerable<ObjectCtrlInfo> EnumerateObjects(ObjectCtrlInfo root = null)
         {
             TreeNodeObject tnRoot = null;
-            if (root != null)
-            {
-                tnRoot = root.treeNodeObject;
-            }
+            root.SafeProc(r => tnRoot = r.treeNodeObject);
 
             foreach (var tnObj in EnumerateTreeNodeObjects(tnRoot))
             {
@@ -129,7 +125,7 @@ namespace StudioMultiSelectCharaPlugin
                 }
             }
 
-            Logger.Log(BepInLogLevel.Info | BepInLogLevel.Message,
+            Logger.LogInfoMessage(
                 $"characters selected: {selected} ({selected - origCharCount} new selections, {origObjCount} non-characters unselected)");
             GeBoAPI.Instance.PlayNotificationSound(NotificationSound.Success);
         }
@@ -140,12 +136,12 @@ namespace StudioMultiSelectCharaPlugin
             var selectedCount = selectedIds.Count;
             if (selectedCount == 0)
             {
-                Logger.Log(BepInLogLevel.Warning | BepInLogLevel.Message, "No characters selected");
+                Logger.LogWarningMessage("No characters selected");
                 GeBoAPI.Instance.PlayNotificationSound(NotificationSound.Error);
             }
             else if (selectedCount != 1)
             {
-                Logger.Log(BepInLogLevel.Warning | BepInLogLevel.Message,
+                Logger.LogWarningMessage(
                     "Select only instances of a single character.");
                 GeBoAPI.Instance.PlayNotificationSound(NotificationSound.Error);
             }

@@ -1,12 +1,14 @@
 ﻿using Illusion.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using BepInEx.Logging;
 
 namespace GeBoCommon.Utilities
 {
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
     public static class PathUtils
     {
         private static char[] _directorySeparatorsToReplace;

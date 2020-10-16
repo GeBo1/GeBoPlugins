@@ -19,7 +19,7 @@ namespace TranslationCacheCleanerPlugin
     [BepInDependency(GeBoAPI.GUID, GeBoAPI.Version)]
     [BepInDependency(PluginData.Identifier)]
     [BepInPlugin(GUID, PluginName, Version)]
-    public partial class TranslationCacheCleaner
+    public partial class TranslationCacheCleaner : BaseUnityPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationcachecleaner";
         public const string PluginName = "Translation Cache Cleaner";

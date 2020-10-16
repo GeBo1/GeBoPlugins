@@ -22,6 +22,7 @@ namespace StudioMultiSelectCharaPlugin
             _hashCode = new SimpleLazy<int>(() => GetSortKey().GetHashCode());
         }
 
+        // ReSharper disable once UnusedMember.Global
         public CharaId(IEnumerable<byte> bytes) : this(bytes.ToArray())
         {
         }

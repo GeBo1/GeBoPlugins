@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="NamePresets" nillable="true" type="NamePresets" />
+    <xs:complexType name="NamePresets">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="NamePreset" nillable="true" type="NamePreset" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="NamePreset" nillable="true" type="NamePreset" />
+    <xs:complexType name="NamePreset">
+        <xs:sequence>
+            <xs:element minOccurs="1" maxOccurs="1" name="Sex" type="CharacterSex" />
+            <xs:element minOccurs="0" maxOccurs="1" name="GivenNames" type="Names" />
+            <xs:element minOccurs="0" maxOccurs="1" name="FamilyNames" type="Names" />
+            <xs:element minOccurs="0" maxOccurs="1" name="NickNames" type="Names" />
+            <xs:element minOccurs="0" maxOccurs="1" name="Translations" type="NameTranslations" />
+            <xs:element minOccurs="0" maxOccurs="1" name="Notes" type="xs:string" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:simpleType name="CharacterSex">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unspecified" />
+            <xs:enumeration value="Male" />
+            <xs:enumeration value="Female" />
+        </xs:restriction>
+    </xs:simpleType>
+
+
+    <xs:element name="Name" nillable="true" type="xs:string" />
+    <xs:complexType name="Names">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="Name" nillable="true" type="xs:string" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="Language" nillable="true" type="xs:string" />
+    <xs:complexType name="Languages">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="Language" nillable="true" type="xs:string" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="Translation" nillable="true" type="xs:string" />
+    <xs:element name="Translations" nillable="true" type="NameTranslations" />
+    <xs:complexType name="NameTranslations">
+        <xs:sequence>
+            <xs:element minOccurs="1" maxOccurs="unbounded" name="Translation" nillable="true" type="NameTranslation" />
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <xs:complexType name="NameTranslation">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="1" name="TargetLanguages" type="Languages" />
+            <xs:element minOccurs="0" maxOccurs="1" name="GivenName" type="xs:string" />
+            <xs:element minOccurs="0" maxOccurs="1" name="FamilyName" type="xs:string" />
+            <xs:element minOccurs="0" maxOccurs="1" name="NickName" type="xs:string" />
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

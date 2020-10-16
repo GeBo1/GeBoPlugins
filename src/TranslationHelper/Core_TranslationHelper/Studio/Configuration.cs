@@ -1,11 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BepInEx.Logging;
 using KKAPI.Chara;
 using KKAPI.Studio;
+using KKAPI.Studio.SaveLoad;
 using Studio;
 using TranslationHelperPlugin.Chara;
 using IllusionStudio = Studio.Studio;
+
 #if AI || HS2
 using AIChara;
 
@@ -14,6 +17,7 @@ using AIChara;
 
 namespace TranslationHelperPlugin.Studio
 {
+    // ReSharper disable once PartialTypeWithSinglePart
     internal static partial class Configuration
     {
         internal static readonly List<TryAlternateStudioCharaLoaderTranslation> AlternateStudioCharaLoaderTranslators =
@@ -29,7 +33,14 @@ namespace TranslationHelperPlugin.Studio
 
             CharacterApi.CharacterReloaded += CharacterApi_CharacterReloaded;
 
+            StudioSaveLoadApi.SceneLoad += StudioSaveLoadApi_SceneLoad;
+
             GameSpecificSetup(harmony);
+        }
+
+        private static void StudioSaveLoadApi_SceneLoad(object sender, SceneLoadEventArgs e)
+        {
+           if (e.Operation == SceneOperationKind.Clear) TranslationHelper.NotifyBehaviorChanged(e);
         }
 
         private static void CharacterApi_CharacterReloaded(object sender, CharaReloadEventArgs e)
@@ -39,13 +50,22 @@ namespace TranslationHelperPlugin.Studio
 
         internal static void UpdateTreeForChar(ChaControl chaControl)
         {
-            UpdateTreeForChar(chaControl?.chaFile);
+            UpdateTreeForChar(chaControl, null);
+        }
+
+        internal static void UpdateTreeForChar(ChaControl chaControl, Action<string> callback)
+        {
+            chaControl.SafeProcObject(c=>UpdateTreeForChar(c.chaFile, callback));
         }
 
         internal static void UpdateTreeForChar(ChaFile chaFile)
         {
-            if (chaFile == null) return;
+            UpdateTreeForChar(chaFile, null);
+        }
 
+        internal static void UpdateTreeForChar(ChaFile chaFile, Action<string> callback)
+        {
+            if (chaFile == null) return;
             void Handler(string fullName)
             {
                 if (string.IsNullOrEmpty(fullName)) return;
@@ -54,6 +74,7 @@ namespace TranslationHelperPlugin.Studio
                     .Select(e => e.Key).FirstOrDefault();
                 if (match == null) return;
                 match.textName = fullName;
+                callback?.Invoke(fullName);
             }
 
             chaFile.TranslateFullName(Handler);

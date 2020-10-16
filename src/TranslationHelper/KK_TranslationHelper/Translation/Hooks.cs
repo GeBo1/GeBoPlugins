@@ -1,143 +1,189 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using ActionGame;
 using ChaCustom;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
+using GeBoCommon.Utilities;
 using HarmonyLib;
+using TranslationHelperPlugin.Chara;
+using TranslationHelperPlugin.Utils;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.UI;
 
 namespace TranslationHelperPlugin.Translation
 {
     internal partial class Hooks
     {
-        private static Coroutine PointerEnterCoroutine;
+        private static Coroutine _pointerEnterCoroutine;
 
 
-        private static byte GuessSex(string club, string personality)
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(CustomCharaFile), "Initialize")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
+        internal static void CustomCharaFileInitializePrefix()
         {
-            return (byte)(club == "帯刀" && string.IsNullOrEmpty(personality) ? 0 : 1);
+            Configuration.LoadCharaFileMonitorEnabled = true;
         }
 
-        // ReSharper disable once IdentifierTypo
-        // used in maker, starting new game, editing roster
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(CustomFileListCtrl), nameof(CustomFileListCtrl.AddList))]
-        [HarmonyPatch(typeof(ClassRoomFileListCtrl), nameof(ClassRoomFileListCtrl.AddList))]
-        internal static void FileListCtrlAddListPrefix(CustomFileListCtrl __instance, int index, ref string name,
-            string club, string personality, string fullpath)
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(CustomCharaFile), "Initialize")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
+        internal static void CustomCharaFileInitializePostfix()
         {
-            if (Configuration.ListInfoNameTranslatedMap.TryGetValue(fullpath, out var tmpName))
-            {
-                name = tmpName;
-                return;
-            }
+            Configuration.LoadCharaFileMonitorEnabled = false;
+        }
 
-            if (TranslationHelper.Instance == null || string.IsNullOrEmpty(club) ||
-                TranslationHelper.Instance.CurrentCardLoadTranslationMode < CardLoadTranslationMode.CacheOnly)
-            {
-                return;
-            }
+        internal static string ProcessTranslationResult(byte sex, string origName, string fullPath,
+            ITranslationResult result)
+        {
+            return ProcessTranslationResult(new NameScope((CharacterSex)sex), origName, fullPath, result);
+        }
 
-            var sex = GuessSex(club, personality);
-
-
-            void Handler(ITranslationResult result)
-            {
-                var newName = Configuration.ListInfoNameTranslatedMap[fullpath] = result.TranslatedText;
-
-                var lstFileInfo = Traverse.Create(__instance)?.Field<List<CustomFileInfo>>("lstFileInfo")?.Value;
-                var entry = lstFileInfo?.FirstOrDefault(x => x.index == index);
-
-                if (entry == null) return;
-                entry.name = newName;
-            }
-
-            TranslationHelper.Instance.StartCoroutine(
-                TranslationHelper.CardNameManager.TranslateCardName(name, new NameScope((CharacterSex)sex),
-                    CardNameTranslationManager.CanForceSplitNameString(name), Handler));
+        internal static string ProcessTranslationResult(NameScope sexOnlyScope, string origName, string fullPath,
+            ITranslationResult result)
+        {
+            Assert.AreEqual(origName, origName);
+            if (result.Succeeded)
+                CharaFileInfoTranslationManager.CacheRecentTranslation(sexOnlyScope, fullPath, result.TranslatedText);
+            return result.TranslatedText;
         }
 
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(CustomFileListCtrl), nameof(CustomFileListCtrl.OnPointerEnter))]
-        public static void OnPointerEnterPostfix(CustomFileListCtrl __instance, GameObject obj)
+        [HarmonyPatch(typeof(ChaFileControl), nameof(ChaFileControl.LoadCharaFile), typeof(string), typeof(byte),
+            typeof(bool), typeof(bool))]
+        [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "HarmonyPatch")]
+        private static void ChaFileControl_LoadCharaFile_Postfix(ChaFileControl __instance, string filename,
+            bool __result)
         {
-            if (obj == null) return;
-            var component = obj.GetComponent<CustomFileInfoComponent>();
-            if (component == null) return;
-            var textDrawName = Traverse.Create(__instance)?.Field<Text>("textDrawName")?.Value;
-            var name = component.info.name;
-            if (Configuration.ListInfoNameTranslatedMap.TryGetValue(component.info.FullPath, out var tmpName))
+            // ReSharper disable once RedundantAssignment
+            var start = Time.realtimeSinceStartup;
+            try
             {
-                component.info.name = tmpName;
+                if (!__result || !Configuration.LoadCharaFileMonitorEnabled || __instance == null ||
+                    __instance.parameter.fullname.IsNullOrWhiteSpace() ||
+                    !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled)
+                {
+                    return;
+                }
+
+                var origName = __instance.parameter.fullname;
+                var scope = new NameScope((CharacterSex)__instance.parameter.sex);
+
+                void Handler(string translatedName)
+                {
+                    ProcessTranslationResult(scope, origName, filename,
+                        new TranslationResult(origName, translatedName));
+                }
+
+                if (TranslationHelper.TryFastTranslateFullName(scope, origName, filename, out var fastName))
+                {
+                    Handler(fastName);
+                    return;
+                }
+
+                __instance.TranslateFullName(Handler);
+            }
+            finally
+            {
+                Logger.DebugLogDebug(
+                    $"ChaFileControl_LoadCharaFile_Postfix: {Time.realtimeSinceStartup - start:000.0000000000}");
+            }
+        }
+
+        internal static void FileListCtrlAddListPrefix(CustomFileListCtrl __instance, ICharaFileInfo info)
+        {
+            if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
+            // ReSharper disable once RedundantAssignment
+            var start = Time.realtimeSinceStartup;
+            try
+            {
+                var origName = info.Name;
+                var sex = Configuration.GuessSex(info.Club, info.Personality);
+                var scope = new NameScope((CharacterSex)sex);
+
+                void Handler(ITranslationResult result)
+                {
+                    var newName = ProcessTranslationResult(scope, origName, info.FullPath, result);
+
+                    if (TranslationHelper.NameStringComparer.Equals(origName, newName)) return;
+
+                    var lstFileInfo = Traverse.Create(__instance)?.Field<List<CustomFileInfo>>("lstFileInfo")?.Value;
+                    var entry = lstFileInfo?.FirstOrDefault(x =>
+                    {
+                        int index;
+                        try
+                        {
+                            index = x.index;
+                        }
+                        catch
+                        {
+                            index = -1;
+                        }
+
+                        if (index == -1)
+                        {
+                            index = Traverse.Create(x).Property<int>("index")?.Value ?? -1;
+                        }
+
+                        return info.Index == index;
+                    });
+
+                    if (entry == null) return;
+                    entry.name = newName;
+                }
+
+                TranslationHelper.Instance.StartCoroutine(
+                    TranslationHelper.TranslateFileInfo(info, Handler));
+            }
+            finally
+            {
+                Logger.DebugLogDebug($"FileListCtrlAddListPrefix: {Time.realtimeSinceStartup - start:000.0000000000}");
+            }
+        }
+
+        internal static void OnPointerEnterPostfix(MonoBehaviour instance, ICharaFileInfo wrapper)
+        {
+            if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
+            var name = wrapper.Name;
+            //Logger.LogDebug($"OnPointerEnterPostfix: name={name}");
+
+            var textDrawName = Traverse.Create(instance)?.Field<Text>("textDrawName")?.Value;
+
+            if (TranslationHelper.TryFastTranslateFullName(wrapper, out var tmpName))
+            {
+                wrapper.Name = tmpName;
                 if (textDrawName != null) textDrawName.text = tmpName;
                 return;
             }
 
-
-            var sex = GuessSex(component.info.club, component.info.personality);
-
             void Handler(ITranslationResult result)
             {
-                var newName = Configuration.ListInfoNameTranslatedMap[component.info.FullPath] = result.TranslatedText;
-                component.info.name = newName;
-                if (!result.Succeeded) return;
+                //Logger.LogDebug($"OnPointerEnterPostfix: Handler: {result}");
+                /*var newName = ProcessTranslationResult(scope, wrapper.FullPath, name, result);*/
+                if (!result.Succeeded || result.TranslatedText == name) return;
+                wrapper.Name = result.TranslatedText;
                 if (textDrawName == null) return;
-                textDrawName.text = newName;
+                textDrawName.text = result.TranslatedText;
             }
 
             if (textDrawName != null) textDrawName.text = name;
 
-            PointerEnterCoroutine = TranslationHelper.Instance.StartCoroutine(
-                TranslationHelper.CardNameManager.TranslateCardName(name, new NameScope((CharacterSex)sex),
-                    CardNameTranslationManager.CanForceSplitNameString(name),
-                    Handler, _ => PointerEnterCoroutine = null));
+
+
+            _pointerEnterCoroutine = TranslationHelper.Instance.StartCoroutine(
+                TranslationHelper.TranslateFileInfo(wrapper,
+                    //TranslationHelper.CardNameManager.TranslateFullName(name, new NameScope((CharacterSex)sex),
+                    Handler, _ => _pointerEnterCoroutine = null));
         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(CustomFileListCtrl), nameof(CustomFileListCtrl.OnPointerExit))]
-        public static void OnPointerExitPrefix()
+        internal static void OnPointerExitPrefix()
         {
-            if (PointerEnterCoroutine == null) return;
-            TranslationHelper.Instance.StopCoroutine(PointerEnterCoroutine);
-            PointerEnterCoroutine = null;
-        }
-
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(CustomFileListCtrl), nameof(CustomFileListCtrl.ChangeItem))]
-        public static void ChangeItemPostfix(CustomFileListCtrl __instance, GameObject obj)
-        {
-            if (obj == null) return;
-            var component = obj.GetComponent<CustomFileInfoComponent>();
-            if (component == null) return;
-            var selectDrawName = Traverse.Create(__instance)?.Field("selectDrawName");
-            var name = component.info.name;
-            if (Configuration.ListInfoNameTranslatedMap.TryGetValue(component.info.FullPath, out var tmpName))
-            {
-                component.info.name = tmpName;
-                if (selectDrawName != null && selectDrawName.FieldExists()) selectDrawName.SetValue(tmpName);
-                return;
-            }
-
-
-            var sex = GuessSex(component.info.club, component.info.personality);
-
-            void Handler(ITranslationResult result)
-            {
-                var newName = result.TranslatedText;
-                component.info.name = Configuration.ListInfoNameTranslatedMap[component.info.FullPath] = newName;
-                if (!result.Succeeded) return;
-                if (selectDrawName != null && selectDrawName.FieldExists())
-                {
-                    selectDrawName.SetValue(newName);
-                }
-            }
-
-            TranslationHelper.Instance.StartCoroutine(
-                TranslationHelper.CardNameManager.TranslateCardName(name, new NameScope((CharacterSex)sex),
-                    CardNameTranslationManager.CanForceSplitNameString(name), Handler));
+            if (_pointerEnterCoroutine == null) return;
+            TranslationHelper.Instance.StopCoroutine(_pointerEnterCoroutine);
+            _pointerEnterCoroutine = null;
         }
     }
 }

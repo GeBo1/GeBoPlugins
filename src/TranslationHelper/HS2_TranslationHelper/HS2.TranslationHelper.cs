@@ -1,6 +1,4 @@
-﻿using System;
-using BepInEx;
-using BepInEx.Configuration;
+﻿using BepInEx;
 
 namespace TranslationHelperPlugin
 {

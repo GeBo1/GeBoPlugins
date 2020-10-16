@@ -1,0 +1,143 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- ReSharper disable MarkupTextTypo -->
+<NamePresets>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>野乃花</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>櫻井</Name>
+        </FamilyNames>
+        <NickNames>
+            <Name>ののか先生</Name>
+        </NickNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Nonaka</GivenName>
+                <FamilyName>Sakurai</FamilyName>
+                <NickName>Nonoka-sensei</NickName>
+            </Translation>
+        </Translations>
+        <Notes>KK NPC</Notes>
+    </NamePreset>
+
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>麗奈</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>橋本</Name>
+        </FamilyNames>
+        <NickNames>
+            <Name>麗奈先生</Name>
+        </NickNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Reina</GivenName>
+                <FamilyName>Hashimoto</FamilyName>
+                <NickName>Reina-sensei</NickName>
+            </Translation>
+        </Translations>
+        <Notes>KK NPC</Notes>
+    </NamePreset>
+
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>ロベール</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>リナ</Name>
+        </FamilyNames>
+        <NickNames>
+            <Name>リナ先生</Name>
+        </NickNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Lina</GivenName>
+                <FamilyName>Roberts</FamilyName>
+                <NickName>Dr. Lina</NickName>
+            </Translation>
+        </Translations>
+        <Notes>KK NPC (Family/Given names are reversed on card, translation restores order)</Notes>
+    </NamePreset>
+
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>亜依</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>水瀬</Name>
+        </FamilyNames>
+        <NickNames>
+            <Name>あい</Name>
+        </NickNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Ai</GivenName>
+                <FamilyName>Minase</FamilyName>
+                <NickName>Ai</NickName>
+            </Translation>
+        </Translations>
+        <Notes>KK NPC</Notes>
+    </NamePreset>
+
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>このみ</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>柊</Name>
+        </FamilyNames>
+        <NickNames>
+            <Name>このみ</Name>
+        </NickNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Konomi</GivenName>
+                <FamilyName>Hiiragi</FamilyName>
+                <NickName>Konomi</NickName>
+            </Translation>
+        </Translations>
+        <Notes>KK NPC</Notes>
+    </NamePreset>
+
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>舞</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>姫川</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Mai</GivenName>
+                <FamilyName>Himekawa</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>KK NPC</Notes>
+    </NamePreset>
+</NamePresets>

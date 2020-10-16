@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx.Logging;
 using BepInLogLevel = BepInEx.Logging.LogLevel;
 
 namespace GeBoCommon.Utilities
 {
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class OtherExtensions
     {
         public static IEnumerable<KeyValuePair<int, T>> Enumerate<T>(this IEnumerable<T> array)

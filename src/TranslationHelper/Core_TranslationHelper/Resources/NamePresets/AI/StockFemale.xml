@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- ReSharper disable MarkupTextTypo -->
+<NamePresets>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>ツボミ</Name>
+        </GivenNames>
+       <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Tsubomi</GivenName>
+            </Translation>
+        </Translations>
+        <Notes>AI stock character (default)</Notes>
+    </NamePreset>
+
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>みさと</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>永島</Name>
+        </FamilyNames>
+       <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Misato</GivenName>
+                <FamilyName>Nagashima</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>AI stock character</Notes>
+    </NamePreset>
+
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>芽生</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>川村</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Mei</GivenName>
+                <FamilyName>Kawamura</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>AI stock character</Notes>
+    </NamePreset>
+
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>千尋</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>稲垣</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Chihiro</GivenName>
+                <FamilyName>Inagaki</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>AI stock character</Notes>
+    </NamePreset>
+
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>由莉奈</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>岩間</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Yuuna</GivenName>
+                <FamilyName>Iwama</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>AI stock character</Notes>
+    </NamePreset>
+</NamePresets>

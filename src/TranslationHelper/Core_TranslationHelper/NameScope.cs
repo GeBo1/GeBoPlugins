@@ -11,12 +11,14 @@ namespace TranslationHelperPlugin
         {
             NameType = nameType;
             Sex = sex;
+            TranslationScope = BaseScope + ((int)NameType * 16) + (int)Sex + 1;
         }
 
+        // ReSharper disable once UnusedMember.Global
         public NameScope(NameType nameType) : this(CharacterSex.Unspecified, nameType) { }
         public NameScope(CharacterSex sex) : this(sex, NameType.Unclassified) { }
         public NameScope() : this(CharacterSex.Unspecified, NameType.Unclassified) { }
-        public int TranslationScope => BaseScope + ((int)NameType * 16) + (int)Sex + 1;
+        public int TranslationScope { get; }
         public NameType NameType { get; }
         public CharacterSex Sex { get; }
 
@@ -24,12 +26,7 @@ namespace TranslationHelperPlugin
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return NameType == other.NameType && Sex == other.Sex;
-        }
-
-        public override string ToString()
-        {
-            return $"NameScope({Sex},{NameType},{TranslationScope})";
+            return TranslationScope == other.TranslationScope;
         }
 
         public override bool Equals(object obj)
@@ -42,6 +39,11 @@ namespace TranslationHelperPlugin
         public override int GetHashCode()
         {
             return TranslationScope;
+        }
+
+        public override string ToString()
+        {
+            return $"NameScope({Sex}, {NameType}, {TranslationScope})";
         }
     }
 }

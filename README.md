@@ -62,7 +62,7 @@ Removes all entries from your translation cache file that would be translated by
 - HS2 v0.5.3 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/HS2_TranslationCacheCleaner.v0.5.3.zip)
 - KK v0.5.3 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/KK_TranslationCacheCleaner.v0.5.3.zip)
 
-### TranslationHelper(src/TranslationHelper/README.md)
+### [TranslationHelper](src/TranslationHelper/README.md)
 
 Improves the experience of using XUnity.AutoTranslator in numerous ways.
 

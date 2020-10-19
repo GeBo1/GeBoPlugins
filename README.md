@@ -17,9 +17,9 @@ Contains shared code used by other plugins in this repo. Unless otherwise noted 
 
 **Note:** Requires [IllusionModdingAPI](https://github.com/IllusionMods/IllusionModdingAPI/)
 
-- AI v1.0.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/AI_GeBoCommon.v1.0.1.zip)
-- HS2 v1.0.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/HS2_GeBoCommon.v1.0.1.zip)
-- KK v1.0.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r8/KK_GeBoCommon.v1.0.1.zip)
+- AI v1.0.2 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r14/AI_GeBoCommon.v1.0.2.zip)
+- HS2 v1.0.2 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r14/HS2_GeBoCommon.v1.0.2.zip)
+- KK v1.0.2 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r14/KK_GeBoCommon.v1.0.2.zip)
 
 ### GameDialogHelper 
 
@@ -64,20 +64,13 @@ Removes all entries from your translation cache file that would be translated by
 
 ### [TranslationHelper](src/TranslationHelper/README.md)
 
-Improves the experience of using XUnity.AutoTranslator in numerous ways.
-
-- Translates card names as they're loaded (for games with separate given/family names it translates them independently, for games with a single full-name field there's the option to split before translating).
-- Registers card names with XUnity.AutoTranslator as replacements.  This keeps your translation cache clean/useful for multiple characters.  Replacements are removed when cards are unloaded.
-- Uses specific translation scopes for names, so you can have a file(s) with just name translations (detailed docs to come).
-- Maker option to toggle between saving translated names or original names for any unmodified names on the card (If you edit the name, it keeps your edit always)
-- Game specific features to update lists/trees/card previews in maker/studio/roster once card translation finishes.
-- (*KK Only*) Option to reverse fullname to return 'GivenName FamilyName' 
+Improves the experience of using XUnity.AutoTranslator in numerous ways (see [README](src/TranslationHelper/README.md) for details).
 
 Check plugin options to configure. Defaults to only using the translation cache, but for the best experience you may wish to set to `Fully Enabled`.
 
-- AI v0.9.4 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r11/AI_TranslationHelper.v0.9.4.zip)
-- HS2 v0.9.4 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r11/HS2_TranslationHelper.v0.9.4.zip)
-- KK v0.9.4 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r11/KK_TranslationHelper.v0.9.4.zip)
+- AI v1.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r14/AI_TranslationHelper.v1.0.zip)
+- HS2 v1.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r14/HS2_TranslationHelper.v1.0.zip)
+- KK v1.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r14/KK_TranslationHelper.v1.0.zip)
 
 
 

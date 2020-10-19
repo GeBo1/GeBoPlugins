@@ -137,6 +137,6 @@ TBD
 
 [//]: # (## Latest Links)
 
-[AI Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r11/AI_TranslationHelper.v0.9.4.zip "v0.9.4"
-[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r11/HS2_TranslationHelper.v0.9.4.zip "v0.9.4"
-[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r11/KK_TranslationHelper.v0.9.4.zip "v0.9.4"
+[AI Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r14/AI_TranslationHelper.v1.0.zip "v1.0"
+[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r14/HS2_TranslationHelper.v1.0.zip "v1.0"
+[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r14/KK_TranslationHelper.v1.0.zip "v1.0"

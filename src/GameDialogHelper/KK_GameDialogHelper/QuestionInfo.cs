@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Xml.Serialization;
 using BepInEx.Logging;
 using GeBoCommon.Utilities;
+using JetBrains.Annotations;
 
 namespace GameDialogHelperPlugin
 {
@@ -20,11 +21,10 @@ namespace GameDialogHelperPlugin
                 var result = new Dictionary<int, QuestionInfo>();
                 foreach (var qi in LoadQuestions())
                 {
-                    Logger.LogDebug(qi);
                     result[qi.Id] = qi;
                 }
 
-                Logger.LogError($"Loaded questions XML: {result.Count}");
+                Logger.LogDebug($"Loaded questions XML: {result.Count}");
                 return result;
             });
 
@@ -39,32 +39,32 @@ namespace GameDialogHelperPlugin
         {
             get
             {
-                if (string.IsNullOrEmpty(_description))
+                if (!string.IsNullOrEmpty(_description)) return _description;
+                
+                // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
+                switch (QuestionType)
                 {
-                    switch (QuestionType)
-                    {
-                        case QuestionType.Likes:
-                            _description = $"Likes {LikeTarget}";
-                            break;
+                    case QuestionType.Likes:
+                        _description = $"Likes {LikeTarget}";
+                        break;
 
-                        case QuestionType.PhysicalAttributes:
-                            _description = $"{PhysicalAttributeTarget} preference";
-                            break;
+                    case QuestionType.PhysicalAttributes:
+                        _description = $"{PhysicalAttributeTarget} preference";
+                        break;
 
-                        case QuestionType.Invitation:
-                            _description = $"Invitation to {InvitationTarget}";
+                    case QuestionType.Invitation:
+                        _description = $"Invitation to {InvitationTarget}";
 
-                            break;
+                        break;
 
-                        default:
-                            _description = $"{QuestionType}";
-                            break;
-                    }
+                    default:
+                        _description = $"{QuestionType}";
+                        break;
+                }
 
-                    if (RelationshipLevel != RelationshipLevel.Anyone)
-                    {
-                        _description += $" (from {RelationshipLevel})";
-                    }
+                if (RelationshipLevel != RelationshipLevel.Anyone)
+                {
+                    _description += $" (from {RelationshipLevel})";
                 }
 
                 return _description;
@@ -97,12 +97,7 @@ namespace GameDialogHelperPlugin
             {
                 if (stream == null) return new QuestionInfo[0];
 
-                var result = serializer.Deserialize(stream) as List<QuestionInfo>;
-                Logger.LogFatal(result);
-                if (result != null)
-                {
-                    return result;
-                }
+                if (serializer.Deserialize(stream) is List<QuestionInfo> result) return result;
             }
 
             return new QuestionInfo[0];
@@ -114,5 +109,6 @@ namespace GameDialogHelperPlugin
         }
     }
 
+    [UsedImplicitly]
     public class QuestionInfos : List<QuestionInfo> { }
 }

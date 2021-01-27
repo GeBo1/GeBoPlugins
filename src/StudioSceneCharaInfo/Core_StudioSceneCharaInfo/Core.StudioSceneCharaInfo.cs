@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
 using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
-using BepInEx.Harmony;
 using BepInEx.Logging;
 using GeBoCommon;
 using GeBoCommon.Studio;
 using GeBoCommon.Utilities;
 using HarmonyLib;
+using JetBrains.Annotations;
 using Studio;
 using TranslationHelperPlugin;
 using UnityEngine;
@@ -21,7 +20,7 @@ namespace StudioSceneCharaInfoPlugin
 {
     [BepInDependency(TranslationHelper.GUID)]
     [BepInDependency(GeBoAPI.GUID, GeBoAPI.Version)]
-    [BepInDependency(HSPEGUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(HspeGuid, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(GUID, PluginName, Version)]
     [BepInProcess(Constants.StudioProcessName)]
     public partial class StudioSceneCharaInfo : BaseUnityPlugin
@@ -30,31 +29,27 @@ namespace StudioSceneCharaInfoPlugin
         public const string PluginName = "Studio Scene Chara Info";
         public const string Version = "0.2.0";
 
+        // ReSharper disable once InconsistentNaming
         private const char DQ = '"';
 
-        private static Action ResetHSPEWrapper;
+        private static Action _resetHspeWrapper;
 
         private static SceneLoadScene _studioInitObject;
 
         internal static new ManualLogSource Logger;
 
-        private static bool dumping;
+        private static bool _dumping;
 
-        private readonly HashSet<string> ProcessedScenes = new HashSet<string>();
+        private readonly HashSet<string> _processedScenes = new HashSet<string>();
 
         public StudioSceneCharaInfo()
         {
-            ResetHSPEWrapper = LazyResetHSPE;
+            _resetHspeWrapper = LazyResetHspe;
         }
 
         public SceneLoadScene StudioInitObject => _studioInitObject;
 
         public static ConfigEntry<KeyboardShortcut> SceneCharaInfoDumpHotkey { get; private set; }
-
-        public List<string> GetListPath()
-        {
-            return SceneUtils.GetSceneLoaderPaths(StudioInitObject);
-        }
 
         internal void Awake()
         {
@@ -67,65 +62,62 @@ namespace StudioSceneCharaInfoPlugin
 
         internal void Start()
         {
-            HarmonyWrapper.PatchAll(typeof(StudioSceneCharaInfo));
-        }
-
-        internal static void HSPE_Prefix_Patch()
-        {
-            if (dumping)
-            {
-                ResetHSPE();
-            }
-        }
-
-        [HarmonyPatch(typeof(SceneLoadScene), "InitInfo")]
-        [HarmonyPostfix]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
-        private static void StudioInitInfoPost(SceneLoadScene __instance)
-        {
-            _studioInitObject = __instance;
+            Harmony.CreateAndPatchAll(typeof(StudioSceneCharaInfo));
         }
 
         internal void Update()
         {
-            if (StudioInitObject != null && !dumping && SceneCharaInfoDumpHotkey.Value.IsDown())
+            if (StudioInitObject == null || _dumping || !SceneCharaInfoDumpHotkey.Value.IsDown()) return;
+            _dumping = true;
+            try
             {
-                dumping = true;
-                try
-                {
-                    Logger.LogInfo("Start dump.");
-                    ExecuteDump();
-                }
-                finally
-                {
-                    dumping = false;
-                    Singleton<Studio.Studio>.Instance.colorPalette.visible = true;
-                }
+                Logger.LogInfo("Start dump.");
+                ExecuteDump();
+            }
+            finally
+            {
+                _dumping = false;
+                Singleton<Studio.Studio>.Instance.colorPalette.visible = true;
             }
         }
 
+        public List<string> GetListPath()
+        {
+            return SceneUtils.GetSceneLoaderPaths(StudioInitObject);
+        }
+
+        [HarmonyPatch(typeof(SceneLoadScene), "InitInfo")]
+        [HarmonyPostfix]
+        internal static void StudioInitInfoPost(SceneLoadScene __instance)
+        {
+            _studioInitObject = __instance;
+        }
+
+        [UsedImplicitly]
         private void CollectCharInfos(ObjectInfo oICharInfo, ref List<ObjectInfo> charInfos)
         {
             var children = new List<ObjectInfo>();
-            if (oICharInfo is OICharInfo charInfo)
+            switch (oICharInfo)
             {
-                charInfos.Add(oICharInfo);
-                foreach (var kids in charInfo.child.Values)
+                case OICharInfo charInfo:
                 {
-                    children.AddRange(kids);
+                    charInfos.Add(oICharInfo);
+                    foreach (var kids in charInfo.child.Values)
+                    {
+                        children.AddRange(kids);
+                    }
+
+                    break;
                 }
-            }
-            else if (oICharInfo is OIItemInfo itemInfo)
-            {
-                children.AddRange(itemInfo.child);
-            }
-            else if (oICharInfo is OIFolderInfo folderInfo)
-            {
-                children.AddRange(folderInfo.child);
-            }
-            else if (oICharInfo is OIRouteInfo routeInfo)
-            {
-                children.AddRange(routeInfo.child);
+                case OIItemInfo itemInfo:
+                    children.AddRange(itemInfo.child);
+                    break;
+                case OIFolderInfo folderInfo:
+                    children.AddRange(folderInfo.child);
+                    break;
+                case OIRouteInfo routeInfo:
+                    children.AddRange(routeInfo.child);
+                    break;
             }
 
             foreach (var child in children)
@@ -186,32 +178,32 @@ namespace StudioSceneCharaInfoPlugin
                 .Replace('/', Path.DirectorySeparatorChar));
         }
 
-        private static void LazyResetHSPE()
+        private static void LazyResetHspe()
         {
             Action wrapper = null;
-            if (Chainloader.PluginInfos.TryGetValue(HSPEGUID, out var kkpeInfo))
+            if (Chainloader.PluginInfos.TryGetValue(HspeGuid, out var hspeInfo))
             {
-                var assembly = kkpeInfo.Instance.GetType().Assembly;
-                var SceneInfo_Import_Patches = assembly.GetType("SceneInfo_Import_Patches");
-                if (SceneInfo_Import_Patches != null)
+                var assembly = hspeInfo.Instance.GetType().Assembly;
+                var sceneInfoImportPatches = assembly.GetType("SceneInfo_Import_Patches");
+                if (sceneInfoImportPatches != null)
                 {
-                    var method = AccessTools.Method(SceneInfo_Import_Patches, "Prefix", new Type[0]);
+                    var method = AccessTools.Method(sceneInfoImportPatches, "Prefix", new Type[0]);
                     if (method != null)
                     {
                         Logger.LogInfo(
-                            $"Installing workaround for {kkpeInfo.Metadata.Name} {kkpeInfo.Metadata.Version}");
+                            $"Installing workaround for {hspeInfo.Metadata.Name} {hspeInfo.Metadata.Version}");
                         wrapper = () => method.Invoke(null, new object[0]);
                     }
                 }
             }
 
-            ResetHSPEWrapper = wrapper;
+            _resetHspeWrapper = wrapper;
             wrapper?.Invoke();
         }
 
-        private static void ResetHSPE()
+        private static void ResetHspe()
         {
-            ResetHSPEWrapper?.Invoke();
+            _resetHspeWrapper?.Invoke();
         }
 
         private void ExecuteDump()
@@ -227,7 +219,7 @@ namespace StudioSceneCharaInfoPlugin
             var outputFile = Path.GetFullPath(Path.Combine(dirName, "SceneCharaInfo.csv"));
 
             var append = false;
-            ProcessedScenes.Clear();
+            _processedScenes.Clear();
             if (File.Exists(outputFile))
             {
                 append = true;
@@ -244,12 +236,12 @@ namespace StudioSceneCharaInfoPlugin
                             fPath = fPath.Substring(1, fPath.Length - 2);
                         }
 
-                        ProcessedScenes.Add(fPath);
+                        _processedScenes.Add(fPath);
                     }
                 }
             }
 
-            Logger.LogDebug($"ProcessedScenes: \n\t{string.Join("\n\t", ProcessedScenes.ToArray())}");
+            Logger.LogDebug($"ProcessedScenes: \n\t{string.Join("\n\t", _processedScenes.ToArray())}");
 
             Logger.LogInfoMessage($"Dumping {scenes.Count} scenes to {outputFile}");
 
@@ -259,11 +251,11 @@ namespace StudioSceneCharaInfoPlugin
                 var i = 0;
                 foreach (var pth in scenes)
                 {
-                    ResetHSPE();
+                    ResetHspe();
                     i++;
                     var displayPath = PrepPath(pth);
                     //writer.Write($"{q}{displayPath}{q}");
-                    if (ProcessedScenes.Contains(displayPath))
+                    if (_processedScenes.Contains(displayPath))
                     {
                         continue;
                     }
@@ -282,6 +274,7 @@ namespace StudioSceneCharaInfoPlugin
                             */
                         Logger.LogDebug($"finished {displayPath} ({i}/{scenes.Count})");
                     }
+#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception err)
                     {
                         //writer.Write($",{q}ERROR PROCESSING FILE{q}");
@@ -289,6 +282,7 @@ namespace StudioSceneCharaInfoPlugin
                         line.Add($"{err}".Replace(DQ, '\''));
                         Logger.LogError($"error processing {displayPath}: {err}");
                     }
+#pragma warning restore CA1031 // Do not catch general exception types
 
                     writer.Write(DQ);
                     try
@@ -300,12 +294,12 @@ namespace StudioSceneCharaInfoPlugin
                         writer.WriteLine(DQ);
                     }
 
-                    ProcessedScenes.Add(displayPath);
+                    _processedScenes.Add(displayPath);
                 }
             }
 
             Logger.LogInfo($"Completed dumping {scenes.Count} scenes to {outputFile}");
-            if (ResetHSPEWrapper != null)
+            if (_resetHspeWrapper != null)
             {
                 Logger.LogWarningMessage("Dump complete. Reset or load new scene before proceeding");
             }
@@ -329,7 +323,7 @@ namespace StudioSceneCharaInfoPlugin
                     {
                         var dummy = reader.ReadInt32();
                         var num2 = reader.ReadInt32();
-                        ObjectInfo oICharInfo = null;
+                        ObjectInfo oICharInfo;
 
                         switch (num2)
                         {
@@ -363,9 +357,11 @@ namespace StudioSceneCharaInfoPlugin
                                 oICharInfo = new OICameraInfo(Studio.Studio.GetNewIndex());
                                 break;
                             }
+                            default:
+                                continue;
                         }
 
-                        ResetHSPE();
+                        ResetHspe();
                         oICharInfo.Load(reader, version, true);
                         infos.Add(oICharInfo);
                         CollectNames(oICharInfo, ref names);

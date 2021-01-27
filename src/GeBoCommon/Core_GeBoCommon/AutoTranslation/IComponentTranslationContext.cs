@@ -1,7 +1,8 @@
-﻿using System;
+﻿using JetBrains.Annotations;
 
 namespace GeBoCommon.AutoTranslation
 {
+    [PublicAPI]
     public interface IComponentTranslationContext
     {
         object Component { get; }

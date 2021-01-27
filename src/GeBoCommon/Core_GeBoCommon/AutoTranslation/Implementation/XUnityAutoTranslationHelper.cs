@@ -227,8 +227,8 @@ namespace GeBoCommon.AutoTranslation.Implementation
                 Action<IComponentTranslationContext> context)
             {
                 if (_contextWrappers.TryGetValue(context, out var wrappedContext)) return wrappedContext;
-                return (_contextWrappers[context] =
-                    innerContext => context(new ComponentTranslationContext(innerContext)));
+                return _contextWrappers[context] =
+                    innerContext => context(new ComponentTranslationContext(innerContext));
             }
         }
     }

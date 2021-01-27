@@ -1,9 +1,7 @@
-﻿using BepInEx;
-
-namespace StudioSceneCharaInfoPlugin
+﻿namespace StudioSceneCharaInfoPlugin
 {
     public partial class StudioSceneCharaInfo
     {
-        internal const string HSPEGUID = "com.joan6694.kkplugins.kkpe";
+        internal const string HspeGuid = "com.joan6694.kkplugins.kkpe";
     }
 }

@@ -1,7 +1,11 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using ActionGame.Communication;
+using ADV;
+using ADV.Commands.Base;
 using HarmonyLib;
+using TMPro;
+using Info = ActionGame.Communication.Info;
 
 namespace GameDialogHelperPlugin
 {
@@ -12,16 +16,14 @@ namespace GameDialogHelperPlugin
             [HarmonyPrefix]
             [HarmonyPatch(typeof(Info), "CreateSelectADV", typeof(Info.SelectInfo), typeof(ChangeValueSelectInfo))]
             [HarmonyPatch(typeof(Info), "CreateSelectADV", typeof(Info.SelectInfo), typeof(int))]
-            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
-            // ReSharper disable once InconsistentNaming
-            //internal static void Info_CreateSelectADV_Prefix(Info __instance, ref Info.SelectInfo _info)
+            [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]
             internal static void Info_CreateSelectADV_Prefix(Info __instance, Info.SelectInfo _info)
             {
                 if (EnabledForCurrentHeroine())
                 {
                     var id = _info.GetQuestionId();
-                    Logger.LogError($"{_info.row} {_info.introduction.file} {id}");
-                    SetCurrentDialog(_info.GetQuestionId(), InfoCheckSelectConditions(__instance, _info.conditions), _info.choice.Length);
+                    SetCurrentDialog(id, InfoCheckSelectConditions(__instance, _info.conditions),
+                        _info.choice.Length);
 
                     if (CurrentDialog.QuestionInfo.Id == -1)
                     {
@@ -44,35 +46,43 @@ namespace GameDialogHelperPlugin
             }
             */
 
-            [HarmonyPrefix]
-            [HarmonyPatch(typeof(ADV.Program.Transfer), nameof(ADV.Program.Transfer.Create))]
-            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
-            internal static bool Transfer_Create_Prefix(bool multi, ADV.Command command, string[] args)
+            [HarmonyPostfix]
+            [HarmonyPatch(typeof(Choice), nameof(Choice.Do))]
+            [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]
+            internal static void Choice_Do_Postfix(List<Choice.ChoiceData> ___choices)
             {
-                _ = multi;
-                var myargs = args.Select(a => new string(a.ToCharArray())).ToArray();
-                if (CurrentlyEnabled && command == ADV.Command.Choice)
+                if (CurrentDialogHighlights.Count == 0) return;
+                var answerId = -1;
+                foreach (var choice in ___choices)
                 {
-                    HighlightSelections(ref myargs);
-                    //return new ADV.Program.Transfer(new ADV.ScenarioData.Param(multi, command, args));
+                    answerId++;
+                    var text = choice.transform.GetComponentInChildren<TextMeshProUGUI>();
+                    if (text == null) continue;
+                    ApplyHighlightSelections(answerId, text);
                 }
 
-                return true;
+                CurrentDialogHighlights.Clear();
+            }
+
+            [HarmonyPrefix]
+            [HarmonyPatch(typeof(Program.Transfer), nameof(Program.Transfer.Create))]
+            internal static void Transfer_Create_Prefix(bool multi, Command command, string[] args)
+            {
+                _ = multi;
+                if (args.IsNullOrEmpty()) return;
+                if (CurrentlyEnabled && command == Command.Choice)
+                {
+                    SaveHighlightSelections(args);
+                }
             }
 
             [HarmonyPostfix]
-            [HarmonyPatch(typeof(ADV.Commands.Base.Choice), "ButtonProc")]
-            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
+            [HarmonyPatch(typeof(Choice), "ButtonProc")]
             internal static void Choice_ButtonProc_Postfix(int __result)
             {
-                Logger.LogError($"Clicked on {__result}");
-                if (CurrentDialog == null)
-                {
-                    return;
-                }
-
+                if (CurrentDialog == null) return;
                 CurrentDialog.RecordAnswer(__result);
-                ProcessDialogAnswered();
+                ProcessDialogAnswered(__result == CurrentDialog.CorrectAnswerId);
                 ClearCurrentDialog();
             }
         }

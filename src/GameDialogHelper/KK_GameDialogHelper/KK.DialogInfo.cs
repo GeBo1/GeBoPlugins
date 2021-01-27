@@ -1,7 +1,10 @@
 ﻿using BepInEx.Logging;
+using GeBoCommon.Utilities;
+using JetBrains.Annotations;
 
 namespace GameDialogHelperPlugin
 {
+    [PublicAPI]
     public class DialogInfo
     {
         private static ManualLogSource Logger => GameDialogHelper.Logger;
@@ -31,6 +34,7 @@ namespace GameDialogHelperPlugin
 
         public void RecordAnswer(int answerId)
         {
+            Logger.DebugLogDebug($"{nameof(RecordAnswer)}: {answerId}");
             SelectedAnswerId = answerId;
         }
     }

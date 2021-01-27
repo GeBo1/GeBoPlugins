@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using ActionGame.Communication;
 using BepInEx;
 using BepInEx.Configuration;
-using BepInEx.Harmony;
 using BepInEx.Logging;
 using ExtensibleSaveFormat;
 using GameDialogHelperPlugin.PluginModeLogic;
@@ -13,6 +12,9 @@ using GeBoCommon.Utilities;
 using HarmonyLib;
 using KKAPI;
 using KKAPI.Chara;
+using KKAPI.MainGame;
+using TMPro;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace GameDialogHelperPlugin
@@ -29,7 +31,12 @@ namespace GameDialogHelperPlugin
     {
         public const string GUID = "com.gebo.BepInEx.GameDialogHelper";
         public const string PluginName = "Game Dialog Helper";
-        public const string Version = "0.9.1";
+        public const string Version = "0.9.9";
+
+        public const int CurrentHeroineGuidVersion = 2;
+        public const int MaxHeroineGuidVersion = CurrentHeroineGuidVersion;
+
+        private const float ColorDelta = 2f / 3f;
 
         internal static new ManualLogSource Logger;
         internal static GameDialogHelper Instance;
@@ -38,7 +45,7 @@ namespace GameDialogHelperPlugin
             new SimpleLazy<InfoCheckSelectConditionsDelegate>(() =>
             {
                 var csc = AccessTools.Method(typeof(Info), "CheckSelectConditions");
-                return (InfoCheckSelectConditionsDelegate) Delegate.CreateDelegate(
+                return (InfoCheckSelectConditionsDelegate)Delegate.CreateDelegate(
                     typeof(InfoCheckSelectConditionsDelegate), csc);
             });
 
@@ -47,24 +54,41 @@ namespace GameDialogHelperPlugin
 
         private static IPluginModeLogic _logic;
 
-        private readonly HashSet<string> _supportedSceneNames = new HashSet<string>(new[] {"Talk"});
-        internal static DialogInfo CurrentDialog { get; private set; }
+        private static readonly Dictionary<int, HighlightType> CurrentDialogHighlights =
+            new Dictionary<int, HighlightType>();
 
+        internal static Color DefaultColor = new Color(1f, 1f, 1f);
+        internal static Color DefaultCorrectColor = new Color(ColorDelta, 1f, ColorDelta);
+        internal static Color DefaultIncorrectColor = new Color(1f, ColorDelta, ColorDelta);
+
+        private readonly HashSet<string> _supportedSceneNames = new HashSet<string>(new[] {"Talk"});
+
+        internal readonly HashSet<SaveData.Heroine> LoadedFromCard = new HashSet<SaveData.Heroine>();
+
+
+        internal static DialogInfo CurrentDialog { get; private set; }
         public static ConfigEntry<PluginMode> CurrentPluginMode { get; private set; }
         public static ConfigEntry<RelationshipLevel> MinimumRelationshipLevel { get; private set; }
         public static ConfigEntry<string> CorrectHighlight { get; private set; }
         public static ConfigEntry<string> IncorrectHighlight { get; private set; }
+        public static ConfigEntry<HighlightMode> HighlightMode { get; private set; }
         public static bool CurrentlyEnabled { get; private set; }
-
         private static IAutoTranslationHelper AutoTranslator => GeBoAPI.Instance.AutoTranslationHelper;
+
+        public Guid CurrentSessionGuid { get; internal set; } = Guid.Empty;
+        public Guid CurrentSaveGuid { get; internal set; } = Guid.Empty;
 
         public static SaveData.Heroine TargetHeroine
         {
             get
             {
                 if (!CurrentlyEnabled) return null;
-                if (_targetHeroine == null) FindObjectOfType<TalkScene>().SafeProcObject(
+                if (_targetHeroine == null)
+                {
+                    FindObjectOfType<TalkScene>().SafeProcObject(
                         ts => _targetHeroine = ts.targetHeroine);
+                }
+
                 return _targetHeroine;
             }
         }
@@ -75,11 +99,13 @@ namespace GameDialogHelperPlugin
         internal static void SetCurrentDialog(int questionId, int correctAnswerId, int numChoices)
         {
             CurrentDialog = new DialogInfo(questionId, correctAnswerId, numChoices);
+            CurrentDialogHighlights.Clear();
         }
 
         internal static void ClearCurrentDialog()
         {
             CurrentDialog = null;
+            CurrentDialogHighlights.Clear();
         }
 
         public void Main()
@@ -90,14 +116,18 @@ namespace GameDialogHelperPlugin
             CurrentPluginMode = Config.Bind("Config", "Plugin Mode", PluginMode.RelationshipBased,
                 "Controls how plugin operates");
 
-            CorrectHighlight = Config.Bind("General", "Highlight (correct)", "←",
+            HighlightMode = Config.Bind("General", "Highlight Mode", GameDialogHelperPlugin.HighlightMode.ChangeColor,
+                "How to signify if an answer is right or wrong");
+
+            CorrectHighlight = Config.Bind("General", "Highlight Character (correct)", "←",
                 "String to append to highlighting correct answers");
-            IncorrectHighlight = Config.Bind("General", "Highlight (incorrect)", "∅",
+            IncorrectHighlight = Config.Bind("General", "Highlight Character (incorrect)", "Х",
                 "String to append when highlighting incorrect answers");
 
             MinimumRelationshipLevel = Config.Bind("Relationship Mode", "Minimum Relationship",
                 RelationshipLevel.Friend,
                 "Highlight correct choice if relationship with character is the selected level or higher");
+
 
             CurrentPluginMode.SettingChanged += CurrentPluginMode_SettingChanged;
 
@@ -132,32 +162,51 @@ namespace GameDialogHelperPlugin
             Instance = this;
             Logger = base.Logger;
 
-            Logger.LogError($"Not configuring {nameof(GameDialogHelper)} because it's broken");
-            return;
+            CharacterApi.RegisterExtraBehaviour<GameDialogHelperCharaController>(GUID);
+            CharacterApi.GetRegisteredBehaviour(typeof(GameDialogHelperCharaController)).MaintainState = true;
 
-            CharacterApi.RegisterExtraBehaviour<GameDialogHelperController>(GUID);
+            GameAPI.RegisterExtraBehaviour<GameDialogHelperGameController>(GUID);
 
             Harmony.CreateAndPatchAll(typeof(Hooks));
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
             SceneManager.sceneUnloaded += SceneManager_sceneUnloaded;
         }
 
+
         private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
         {
-            if (_supportedSceneNames.Contains(arg0.name))
+            if (arg1 == LoadSceneMode.Single && arg0.name == "Title")
             {
-                CurrentlyEnabled = true;
-                _targetHeroine = null;
+                DoReset();
+                return;
             }
+
+            if (!_supportedSceneNames.Contains(arg0.name)) return;
+            CurrentlyEnabled = true;
+            _targetHeroine = null;
         }
 
         private void SceneManager_sceneUnloaded(Scene arg0)
         {
-            if (_supportedSceneNames.Contains(arg0.name))
-            {
-                CurrentlyEnabled = false;
-                _targetHeroine = null;
-            }
+            if (!_supportedSceneNames.Contains(arg0.name)) return;
+            _targetHeroine.SafeProc(h => h.PersistData());
+            CurrentlyEnabled = false;
+            _targetHeroine = null;
+        }
+
+        internal static void DoReset()
+        {
+            GameDialogHelperGameController.DoReset();
+            GameDialogHelperCharaController.DoReset();
+
+            Instance.OnReset();
+        }
+
+        private void OnReset()
+        {
+            LoadedFromCard.Clear();
+            CurrentSessionGuid = Guid.NewGuid();
+            CurrentSaveGuid = Guid.Empty;
         }
 
 
@@ -170,15 +219,16 @@ namespace GameDialogHelperPlugin
 
         internal static bool EnabledForCurrentQuestion()
         {
-            var result = CurrentlyEnabled && CurrentDialog != null && _logic.EnabledForQuestion(TargetHeroine, CurrentDialog);
+            var result = CurrentlyEnabled && CurrentDialog != null &&
+                         _logic.EnabledForQuestion(TargetHeroine, CurrentDialog);
             Logger.LogDebug($"EnabledForCurrentQuestion => {result}");
             return result;
         }
 
         internal static bool EnabledForCurrentQuestionAnswer(int answer)
         {
-            var result =  CurrentlyEnabled && CurrentDialog != null &&
-                   _logic.EnableForAnswer(TargetHeroine, CurrentDialog, answer);
+            var result = CurrentlyEnabled && CurrentDialog != null &&
+                         _logic.EnableForAnswer(TargetHeroine, CurrentDialog, answer);
             Logger.LogDebug($"EnabledForCurrentQuestionAnswer({answer}) => {result}");
             return result;
         }
@@ -198,38 +248,101 @@ namespace GameDialogHelperPlugin
         }
         */
 
-        internal static void HighlightSelections(ref string[] args)
+        internal static void SaveHighlightSelections(string[] args)
         {
-            Logger.LogDebug($"HighlightSelections for {CurrentDialog.QuestionInfo}");
-            if (EnabledForCurrentQuestion())
+            CurrentDialogHighlights.Clear();
+            if (!CurrentlyEnabled || !EnabledForCurrentQuestion()) return;
+            // skip first entry in array
+            for (var i = 1; i < args.Length; i++)
             {
-                // skip first entry in array
-                for (var i = 1; i < args.Length; i++)
-                {
-                    var answerId = i - 1;
-                    if (!EnabledForCurrentQuestionAnswer(answerId)) continue;
+                var answerId = i - 1;
+                if (!EnabledForCurrentQuestionAnswer(answerId)) continue;
 
-                    var suffix = answerId == CurrentDialog.CorrectAnswerId
-                        ? _logic.CorrectHighlight
-                        : _logic.IncorrectHighlight;
-                    if (string.IsNullOrEmpty(suffix)) continue;
 
-                    var tmp = args[i].Split(Splitter, 2, StringSplitOptions.None);
-                    if (tmp.Length != 2) continue;
-                    Logger.LogDebug($"HighlightSelections: {i}: {args[i]}");
+                var tmp = args[i].Split(Splitter, 2, StringSplitOptions.None);
+                if (tmp.Length != 2) continue;
 
-                    if (AutoTranslator.TryTranslate(tmp[0], out var translatedText))
-                    {
-                        tmp[0] = translatedText;
-                    }
+                var value = answerId == CurrentDialog.CorrectAnswerId
+                    ? HighlightType.Correct
+                    : HighlightType.Incorrect;
 
-                    args[i] = string.Join(string.Empty, new[] {tmp[0], suffix, Splitter[0], tmp[1]});
-                }
+                Logger.LogDebug($"SaveHighlightSelections: {answerId} {value}");
+                CurrentDialogHighlights[answerId] = value;
             }
         }
 
-        internal static void ProcessDialogAnswered() => _logic.ProcessDialogAnswered(TargetHeroine, CurrentDialog);
-        
+
+        internal static void ApplyHighlightSelections(int answerId, TextMeshProUGUI text)
+        {
+            text.color = DefaultColor;
+            if (!CurrentlyEnabled) return;
+            if (!CurrentDialogHighlights.TryGetValue(answerId, out _)) return;
+
+            _logic.ApplyHighlightSelection(answerId, text);
+        }
+
+#if DEADCODE
+        internal static void HighlightSelections(ref string[] args)
+        {
+            Logger.LogDebug($"HighlightSelections for {CurrentDialog.QuestionInfo}");
+            if (!EnabledForCurrentQuestion()) return;
+            // skip first entry in array
+            for (var i = 1; i < args.Length; i++)
+            {
+                var answerId = i - 1;
+                if (!EnabledForCurrentQuestionAnswer(answerId)) continue;
+
+                var suffix = answerId == CurrentDialog.CorrectAnswerId
+                    ? _logic.CorrectHighlight
+                    : _logic.IncorrectHighlight;
+                if (string.IsNullOrEmpty(suffix)) continue;
+
+                var tmp = args[i].Split(Splitter, 2, StringSplitOptions.None);
+                if (tmp.Length != 2) continue;
+                Logger.LogDebug($"HighlightSelections: {i}: {args[i]}");
+
+                if (AutoTranslator.TryTranslate(tmp[0], out var translatedText))
+                {
+                    tmp[0] = translatedText;
+                }
+
+                args[i] = string.Join(string.Empty, new[] {tmp[0], suffix, Splitter[0], tmp[1]});
+            }
+        }
+#endif
+
+        internal static void ProcessDialogAnswered(bool isCorrect = false)
+        {
+            _logic.ProcessDialogAnswered(TargetHeroine, CurrentDialog, isCorrect);
+        }
+
+        public static void DefaultApplyHighlightSelection(int answerId, TextMeshProUGUI text)
+        {
+            if (!CurrentlyEnabled) return;
+            var isCorrect = answerId == CurrentDialog.CorrectAnswerId;
+            switch (HighlightMode.Value)
+            {
+                case GameDialogHelperPlugin.HighlightMode.AppendText:
+                    var suffix = isCorrect
+                        ? _logic.CorrectHighlight
+                        : _logic.IncorrectHighlight;
+                    if (string.IsNullOrEmpty(suffix)) break;
+                    var answer = text.text;
+                    if (AutoTranslator.TryTranslate(answer, out var translatedText))
+                    {
+                        answer = translatedText;
+                    }
+
+                    text.text = StringUtils.JoinStrings(" ", answer, suffix);
+                    break;
+
+                case GameDialogHelperPlugin.HighlightMode.ChangeColor:
+
+                    text.color = isCorrect ? DefaultCorrectColor : DefaultIncorrectColor;
+                    break;
+            }
+        }
+
 
         internal delegate int InfoCheckSelectConditionsDelegate(Info obj, int conditions);
     }

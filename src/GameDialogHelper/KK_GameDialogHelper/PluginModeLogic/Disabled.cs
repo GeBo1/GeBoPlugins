@@ -1,4 +1,6 @@
-﻿namespace GameDialogHelperPlugin.PluginModeLogic
+﻿using TMPro;
+
+namespace GameDialogHelperPlugin.PluginModeLogic
 {
     public class Disabled : IPluginModeLogic
     {
@@ -12,6 +14,8 @@
 
         public bool EnableForAnswer(SaveData.Heroine heroine, DialogInfo dialogInfo, int answer) => false;
 
-        public void ProcessDialogAnswered(SaveData.Heroine heroine, DialogInfo dialogInfo) { }
+        public void ProcessDialogAnswered(SaveData.Heroine heroine, DialogInfo dialogInfo, bool isCorrect) { }
+
+        public void ApplyHighlightSelection(int answerId, TextMeshProUGUI text) { }
     }
 }

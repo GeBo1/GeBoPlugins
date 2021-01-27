@@ -1,4 +1,6 @@
-﻿namespace GameDialogHelperPlugin.PluginModeLogic
+﻿using TMPro;
+
+namespace GameDialogHelperPlugin.PluginModeLogic
 {
     public class RelationshipBased : IPluginModeLogic
 
@@ -16,6 +18,11 @@
 
         public bool EnableForAnswer(SaveData.Heroine heroine, DialogInfo dialogInfo, int answer) => EnabledForQuestion(heroine, dialogInfo) && answer == dialogInfo.CorrectAnswerId;
 
-        public void ProcessDialogAnswered(SaveData.Heroine heroine, DialogInfo dialogInfo) { }
+        public void ProcessDialogAnswered(SaveData.Heroine heroine, DialogInfo dialogInfo, bool isCorrect) { }
+
+        public void ApplyHighlightSelection(int answerId, TextMeshProUGUI text)
+        {
+            GameDialogHelper.DefaultApplyHighlightSelection(answerId, text);
+        }
     }
 }

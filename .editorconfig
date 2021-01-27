@@ -4,8 +4,8 @@
 # Keep things 3.5 Friendly    #
 ###############################
 [*.cs]
-dotnet_diagnostic.RCS1058.severity = none
-dotnet_diagnostic.CA1825.severity = none
+dotnet_diagnostic.ca1825.severity = none
+dotnet_diagnostic.rcs1058.severity = none
 dotnet_style_prefer_compound_assignment = false:silent
 
 
@@ -15,6 +15,10 @@ dotnet_style_prefer_compound_assignment = false:silent
 # All files
 [*]
 indent_style = space
+
+# ReSharper properties
+resharper_place_accessorholder_attribute_on_same_line = false
+resharper_place_field_attribute_on_same_line = false
 # Code files
 [*.{cs,csx,vb,vbx}]
 indent_size = 4
@@ -65,20 +69,23 @@ dotnet_style_prefer_conditional_expression_over_return = true:silent
 # avoid for unity objects
 dotnet_style_null_propagation = true:silent
 
+# don't complain about ReSharper attributes
+dotnet_remove_unnecessary_suppression_exclusions = category:ReSharper
+
 ###############################
 # Naming Conventions          #
 ###############################
 
 # Style Definitions
-dotnet_naming_style.pascal_case_style.capitalization             = pascal_case
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case
 
-# Use PascalCase for constant fields  
+# Use PascalCase for constant fields
 dotnet_naming_rule.constant_fields_should_be_pascal_case.severity = suggestion
-dotnet_naming_rule.constant_fields_should_be_pascal_case.symbols  = constant_fields
-dotnet_naming_rule.constant_fields_should_be_pascal_case.style    = pascal_case_style
-dotnet_naming_symbols.constant_fields.applicable_kinds            = field
-dotnet_naming_symbols.constant_fields.applicable_accessibilities  = *
-dotnet_naming_symbols.constant_fields.required_modifiers          = const
+dotnet_naming_rule.constant_fields_should_be_pascal_case.symbols = constant_fields
+dotnet_naming_rule.constant_fields_should_be_pascal_case.style = pascal_case_style
+dotnet_naming_symbols.constant_fields.applicable_kinds = field
+dotnet_naming_symbols.constant_fields.applicable_accessibilities = *
+dotnet_naming_symbols.constant_fields.required_modifiers = const
 
 ###############################
 # C# Coding Conventions       #
@@ -119,14 +126,14 @@ csharp_prefer_simple_default_expression = true:suggestion
 csharp_style_pattern_local_over_anonymous_function = true:suggestion
 csharp_style_inlined_variable_declaration = true:suggestion
 
-resharper_apply_auto_detected_rules=false
-resharper_braces_for_for=required_for_multiline_statement
-resharper_braces_for_foreach=required_for_multiline_statement
-resharper_braces_for_ifelse=required_for_multiline_statement
-resharper_braces_for_while=required_for_multiline_statement
-resharper_csharp_empty_block_style=together_same_line
-resharper_csharp_empty_block_style=together_same_line
-resharper_enforce_line_ending_style=true
+resharper_apply_auto_detected_rules = false
+resharper_braces_for_for = required_for_multiline_statement
+resharper_braces_for_foreach = required_for_multiline_statement
+resharper_braces_for_ifelse = required_for_multiline_statement
+resharper_braces_for_while = required_for_multiline_statement
+resharper_csharp_empty_block_style = together_same_line
+resharper_csharp_empty_block_style = together_same_line
+resharper_enforce_line_ending_style = true
 
 ###############################
 # C# Formatting Rules         #
@@ -166,6 +173,7 @@ csharp_preserve_single_line_blocks = true:none
 ###############################
 # VB Coding Conventions       #
 ###############################
+
 [*.vb]
 # Modifier preferences
 visual_basic_preferred_modifier_order = Partial,Default,Private,Protected,Public,Friend,NotOverridable,Overridable,MustOverride,Overloads,Overrides,MustInherit,NotInheritable,Static,Shared,Shadows,ReadOnly,WriteOnly,Dim,Const,WithEvents,Widening,Narrowing,Custom,Async:suggestion

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using JetBrains.Annotations;
 
 namespace GameDressForSuccessPlugin
 {
@@ -14,6 +15,7 @@ namespace GameDressForSuccessPlugin
 
     public enum ResetToAutomaticMode
     {
+        [UsedImplicitly]
         [Description("Default game behavior")]
         Never = 0,
 

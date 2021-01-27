@@ -1,52 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ActionGame;
+﻿using ActionGame;
 using BepInEx.Logging;
 using GeBoCommon.Utilities;
 using KKAPI.MainGame;
 
 namespace GameDressForSuccessPlugin
 {
-    class DressForSuccessController : GameCustomFunctionController
+    internal class DressForSuccessController : GameCustomFunctionController
     {
         protected static ManualLogSource Logger =>
             GameDressForSuccess.Instance != null ? GameDressForSuccess.Instance.Logger : null;
 
+        private static void HandleResetToAutomatic(ResetToAutomaticMode minimumMode)
+        {
+            if (GameDressForSuccess.ResetToAutomatic.Value < minimumMode) return;
+            GameDressForSuccess.Instance.SafeProcObject(o => o.SetPlayerClothesToAutomatic());
+        }
+
         protected override void OnPeriodChange(Cycle.Type period)
         {
             Logger?.DebugLogDebug($"{GetType().FullName}.{nameof(OnPeriodChange)}({period})");
-            if (GameDressForSuccess.ResetToAutomatic.Value >= ResetToAutomaticMode.PeriodChange)
-            {
-                GameDressForSuccess.Instance.SafeProcObject(o => o.SetPlayerClothesToAutomatic());
-            }
+            HandleResetToAutomatic(ResetToAutomaticMode.PeriodChange);
             base.OnPeriodChange(period);
         }
-
-
-
-        protected override void OnEnterNightMenu()
+        
+        protected override void OnGameSave(GameSaveLoadEventArgs args)
         {
-            // Doing in both OnEnterNightMenu and OnDayChange to handle before saving and after loading
-            Logger?.DebugLogDebug($"{GetType().FullName}.{nameof(OnEnterNightMenu)}()");
-            if (GameDressForSuccess.ResetToAutomatic.Value >= ResetToAutomaticMode.DayChange)
-            {
-                GameDressForSuccess.Instance.SafeProcObject(o => o.SetPlayerClothesToAutomatic());
-            }
-            base.OnEnterNightMenu();
+            Logger?.DebugLogDebug($"{GetType().FullName}.{nameof(OnGameSave)}()");
+            HandleResetToAutomatic(ResetToAutomaticMode.DayChange);
+            base.OnGameSave(args);
         }
 
         protected override void OnDayChange(Cycle.Week day)
         {
-            // Doing in both OnEnterNightMenu and OnDayChange to handle before saving and after loading
             Logger?.DebugLogDebug($"{GetType().FullName}.{nameof(OnDayChange)}({day})");
-            if (GameDressForSuccess.ResetToAutomatic.Value >= ResetToAutomaticMode.DayChange)
-            {
-                GameDressForSuccess.Instance.SafeProcObject(o => o.SetPlayerClothesToAutomatic());
-            }
+            HandleResetToAutomatic(ResetToAutomaticMode.DayChange);
             base.OnDayChange(day);
         }
-
     }
 }

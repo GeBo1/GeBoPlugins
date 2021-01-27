@@ -21,7 +21,7 @@ namespace GameDressForSuccessPlugin
     {
         public const string GUID = "com.gebo.BepInEx.GameDressForSuccess";
         public const string PluginName = "Dress for Success";
-        public const string Version = "1.1.2";
+        public const string Version = "1.2";
 
         internal static GameDressForSuccess Instance;
         private int _initialCoordinateType = -1;
@@ -55,11 +55,11 @@ namespace GameDressForSuccessPlugin
 
         internal void DressPlayer(ChaFileDefine.CoordinateType newCoordinateType)
         {
-            if (!_monitoringChange || Singleton<Game>.Instance == null) return;
+            if (!_monitoringChange || !Game.IsInstance() || Game.Instance == null) return;
 
-            var player = Singleton<Game>.Instance.Player;
-
+            var player = Game.Instance.Player;
             if (player == null) return;
+
 
             var mode = Mode.Value;
 
@@ -70,46 +70,35 @@ namespace GameDressForSuccessPlugin
 
             if (!playerShouldChange) return;
 
-            if (player.chaCtrl.ChangeCoordinateTypeAndReload(newCoordinateType))
+            player.chaCtrl.SafeProc(cc =>
             {
-                Logger.LogDebug($"Changed player clothes to {newCoordinateType}");
-                if (!playerClothesIsAuto)
+                if (cc.ChangeCoordinateTypeAndReload(newCoordinateType))
                 {
-                    // update selected clothes to match so you can change back
-                    player.changeClothesType = (int)newCoordinateType;
+                    Logger.LogDebug($"Changed player clothes to {newCoordinateType}");
+                    if (!playerClothesIsAuto)
+                    {
+                        // update selected clothes to match so you can change back
+                        player.changeClothesType = (int)newCoordinateType;
+                    }
                 }
-            }
+            });
 
             _monitoringChange = false;
         }
 
         private void TravelingStart(SaveData.Heroine heroine)
         {
-            if (heroine == null) return;
-            _monitoringChange = true;
-            heroine.chaCtrl.SafeProc(
-                cc => cc.chaFile.SafeProc(
-                    cf => cf.status.SafeProc(
-                        s => s.coordinateType.SafeProc(
-                            c => _initialCoordinateType = c))));
+            // don't run on NPC chars            
+            _initialCoordinateType = heroine.IsNullOrNpc() ? -1 : heroine.GetCoordinateType();
+            _monitoringChange = _initialCoordinateType != -1;
         }
 
         private void TravelingDone(SaveData.Heroine heroine)
         {
-            if (!_monitoringChange)
+            if (_monitoringChange && _initialCoordinateType != -1 && !heroine.IsNullOrNpc())
             {
-                _initialCoordinateType = -1;
-            }
-
-            if (_initialCoordinateType != -1 && heroine != null)
-            {
-                var currentCoordinateType = _initialCoordinateType;
-                heroine.chaCtrl.SafeProc(
-                    cc => cc.chaFile.SafeProc(
-                        cf => cf.status.SafeProc(
-                            s => s.coordinateType.SafeProc(
-                                c => currentCoordinateType = c))));
-                if (currentCoordinateType != _initialCoordinateType)
+                var currentCoordinateType = heroine.GetCoordinateType();
+                if (currentCoordinateType != -1 && currentCoordinateType != _initialCoordinateType)
                 {
                     DressPlayer((ChaFileDefine.CoordinateType)currentCoordinateType);
                 }
@@ -123,22 +112,12 @@ namespace GameDressForSuccessPlugin
         {
             if (Game.IsInstance())
             {
-                var player = Singleton<Game>.Instance.Player;
-                if (player != null)
-                {
-                    Logger.DebugLogDebug($"{nameof(SetPlayerClothesToAutomatic)}: setting Player.changeClothesType");
-                    player.changeClothesType = -1;
-                }
+                Game.Instance.SafeProc(i => i.Player.SafeProc(p => p.changeClothesType = -1));
             }
 
             if (CustomBase.IsInstance())
             {
-                var customBase = Singleton<CustomBase>.Instance;
-                if (customBase != null)
-                {
-                    Logger.DebugLogDebug($"{nameof(SetPlayerClothesToAutomatic)}: setting CustomBase.autoClothesState");
-                    customBase.autoClothesState = true;
-                }
+                CustomBase.Instance.SafeProc(i => i.autoClothesState = true);
             }
         }
     }

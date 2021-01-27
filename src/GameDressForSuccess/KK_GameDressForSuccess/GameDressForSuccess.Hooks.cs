@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using ADV;
@@ -27,90 +27,134 @@ namespace GameDressForSuccessPlugin
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(MapChange), "Do")]
-            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
             internal static void StartTravelingHook(MapChange __instance)
             {
-                if (!Enabled.Value || Instance == null) return;
-                __instance.SafeProc(
-                    i => i.scenario.SafeProc(
-                        s => s.currentHeroine.SafeProc(h => Instance.TravelingStart(h))));
+                try
+                {
+                    if (!Enabled.Value || Instance == null) return;
+                    __instance.SafeProc(
+                        i => i.scenario.SafeProc(
+                            s => s.currentHeroine.SafeProc(Instance.TravelingStart)));
+                }
+#pragma warning disable CA1031
+                catch (Exception err)
+                {
+                    Logger.LogWarning($"Unexpected error: {err.Message}");
+                    Logger.LogDebug(err);
+                }
+#pragma warning restore CA1031
             }
 
             [HarmonyPrefix]
             [HarmonyPatch(typeof(ADV.Commands.Effect.SceneFade), "Do")]
             [HarmonyPatch(typeof(Text), "Do")]
-            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
             internal static void StopTravelingHook(CommandBase __instance)
             {
-                if (!Enabled.Value || Instance == null) return;
-                __instance.SafeProc(
-                    i => i.scenario.SafeProc(
-                        s => s.currentHeroine.SafeProc(h => Instance.TravelingDone(h))));
+                try
+                {
+                    if (!Enabled.Value || Instance == null) return;
+                    __instance.SafeProc(
+                        i => i.scenario.SafeProc(
+                            s => s.currentHeroine.SafeProc(Instance.TravelingDone)));
+                }
+#pragma warning disable CA1031
+                catch (Exception err)
+                {
+                    Logger.LogWarning($"Unexpected error: {err.Message}");
+                    Logger.LogDebug(err);
+                }
+#pragma warning restore CA1031
             }
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(Coordinate), "Do")]
-            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
-            internal static void CoordinateDoPostfix(Coordinate __instance)
+            [SuppressMessage("ReSharper", "InconsistentNaming")]
+            internal static void CoordinateDoPostfix(Coordinate __instance, int ___no,
+                ChaFileDefine.CoordinateType ___type)
             {
-                Logger.DebugLogDebug(
-                    $"CoordinateDoPostfix: monitoringChange={(Instance != null && Instance._monitoringChange)}");
-                if (Instance == null || !Enabled.Value || !Instance._monitoringChange || __instance == null) return;
+                try
+                {
+                    Logger.DebugLogDebug(
+                        $"{nameof(CoordinateDoPostfix)}: no={___no}, type={___type}, monitoringChange={Instance != null && Instance._monitoringChange}");
+                    if (Instance == null || !Enabled.Value || !Instance._monitoringChange) return;
 
-
-                var typeField = Traverse.Create(__instance).Field("type");
-
-                if (!typeField.FieldExists()) return;
-
-                Instance.DressPlayer(typeField.GetValue<ChaFileDefine.CoordinateType>());
+                    __instance.SafeProc(coord => coord.scenario.SafeProcObject(s =>
+                        s.commandController.SafeProcObject(cc =>
+                        {
+                            if (!cc.GetChara(___no).IsNullOrNpc()) Instance.DressPlayer(___type);
+                        })));
+                }
+#pragma warning disable CA1031
+                catch (Exception err)
+                {
+                    Logger.LogWarning($"Unexpected error: {err.Message}");
+                    Logger.LogDebug(err);
+                }
+#pragma warning restore CA1031
             }
 
             #region Right Click Clothing Support
 
             [HarmonyPrefix]
             [HarmonyPatch(typeof(Toggle), nameof(Toggle.OnPointerClick))]
-            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
             internal static void ToggleOnPointerClickPrefix(Toggle __instance,
                 ref PointerEventData eventData, out Toggle __state)
             {
-                Logger.DebugLogDebug("ToggleOnPointerClickPrefix");
                 __state = null;
-                if (!Enabled.Value ||
-                    eventData.button != PointerEventData.InputButton.Right ||
-                    __instance == null || __instance.name == null || !__instance.name.StartsWith(TogglePrefix))
+                try
                 {
-                    return;
+                    Logger.DebugLogDebug(nameof(ToggleOnPointerClickPrefix));
+                    if (!Enabled.Value ||
+                        eventData.button != PointerEventData.InputButton.Right ||
+                        __instance == null || __instance.name.IsNullOrEmpty() ||
+                        !__instance.name.StartsWith(TogglePrefix))
+                    {
+                        return;
+                    }
+
+                    // everything after this point will fire the default left-click event
+                    eventData.button = PointerEventData.InputButton.Left;
+
+
+                    if (__instance.name == AutoToggleName) return;
+
+                    var autoEnabled = (CustomBase.IsInstance() && CustomBase.Instance.autoClothesState) ||
+                                      (Game.IsInstance() && Game.Instance.Player.changeClothesType < 0);
+
+                    if (!autoEnabled) return;
+
+                    Toggle autoToggle = null;
+                    __instance.group.SafeProc(g =>
+                        autoToggle = g.ActiveToggles().FirstOrDefault(t => t.name == AutoToggleName));
+                    __state = autoToggle;
                 }
-
-                // everything after this point will fire the default left-click event
-                eventData.button = PointerEventData.InputButton.Left;
-
-
-                if (__instance.name == AutoToggleName) return;
-
-                var autoEnabled = (CustomBase.IsInstance() &&
-                                   Singleton<CustomBase>.Instance.autoClothesState) ||
-                                  (Game.IsInstance() &&
-                                   Singleton<Game>.Instance.Player.changeClothesType < 0);
-
-                if (!autoEnabled) return;
-
-                var togglesField = Traverse.Create(__instance.group).Field("m_Toggles");
-
-                __state = togglesField.FieldExists()
-                    ? togglesField.GetValue<List<Toggle>>().FirstOrDefault(t => t.name == AutoToggleName)
-                    : null;
+#pragma warning disable CA1031
+                catch (Exception err)
+                {
+                    Logger.LogWarning($"Unexpected error: {err.Message}");
+                    Logger.LogDebug(err);
+                }
+#pragma warning restore CA1031
             }
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(Toggle), nameof(Toggle.OnPointerClick))]
-            [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
             internal static void ToggleOnPointerClickPostfix(Toggle __state)
             {
-                Logger.DebugLogDebug("ToggleOnPointerClickPostfix");
-                if (__state == null) return;
-                // if we get here, click the automatic button afterwards
-                __state.OnSubmit(null);
+                try
+                {
+                    Logger.DebugLogDebug(nameof(ToggleOnPointerClickPostfix));
+                    if (__state == null) return;
+                    // if we get here, click the automatic button afterwards
+                    __state.OnSubmit(null);
+                }
+#pragma warning disable CA1031
+                catch (Exception err)
+                {
+                    Logger.LogWarning($"Unexpected error: {err.Message}");
+                    Logger.LogDebug(err);
+                }
+#pragma warning restore CA1031
             }
 
             #endregion

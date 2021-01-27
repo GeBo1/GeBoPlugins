@@ -1,32 +1,26 @@
-﻿using BepInEx.Logging;
-using HarmonyLib;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using HarmonyLib;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
+
 namespace GeBoCommon.Utilities
 {
-    public sealed class HookedSimpleCache<TKey, TValue, THookTarget> : SimpleCache<TKey, TValue>, IHookedCache where THookTarget : MonoBehaviour
+    public sealed class HookedSimpleCache<TKey, TValue, THookTarget> : SimpleCache<TKey, TValue>, IHookedCache
+        where THookTarget : MonoBehaviour
     {
         public delegate TKey HookConverter(THookTarget hookTarget);
-        public delegate void HookEventHandler(HookedSimpleCache<TKey, TValue, THookTarget> sender, HookedSimpleCacheEventArgs<TKey> e);
 
-        public event HookEventHandler HookPrefix;
-        public event HookEventHandler HookPostfix;
+        public delegate void HookEventHandler(HookedSimpleCache<TKey, TValue, THookTarget> sender,
+            HookedSimpleCacheEventArgs<TKey> e);
 
         private readonly HookConverter _convertTargetToKey;
 
-        // if true clear instance on activeSceneChanged
-        public bool EmptyCacheOnSceneChange { get; }
-
-        // if true remove from this cache instance when the parent THookTarget's OnDestroy fires.
-        public bool UseDefaultRemovalHook { get; }
-
-        private static ManualLogSource Logger => GeBoAPI.Instance.Logger;
-
-        public HookedSimpleCache(CacheDataLoader loader, HookConverter converter, bool useDefaultRemovalHook = false, bool emptyCacheOnSceneChange = false) : base(loader)
+        public HookedSimpleCache(CacheDataLoader loader, HookConverter converter, bool useDefaultRemovalHook = false,
+            bool emptyCacheOnSceneChange = false) : base(loader)
         {
             _convertTargetToKey = converter;
             EmptyCacheOnSceneChange = emptyCacheOnSceneChange;
@@ -60,10 +54,36 @@ namespace GeBoCommon.Utilities
             {
                 HookPrefix += DefaultRemovalHook;
             }
+
             HookedSimpleCacheState.RegisterCache(typeof(THookTarget), this);
         }
 
-        private void DefaultRemovalHook(HookedSimpleCache<TKey, TValue, THookTarget> sender, HookedSimpleCacheEventArgs<TKey> e)
+        // if true clear instance on activeSceneChanged
+        public bool EmptyCacheOnSceneChange { get; }
+
+        // if true remove from this cache instance when the parent THookTarget's OnDestroy fires.
+        public bool UseDefaultRemovalHook { get; }
+
+        object IHookedCache.ConvertTargetToKey(object obj)
+        {
+            return _convertTargetToKey((THookTarget)obj);
+        }
+
+        public void OnHookPrefix(IHookedCacheEventArgs e)
+        {
+            OnHookPrefix((HookedSimpleCacheEventArgs<TKey>)e);
+        }
+
+        public void OnHookPostfix(IHookedCacheEventArgs e)
+        {
+            OnHookPostfix((HookedSimpleCacheEventArgs<TKey>)e);
+        }
+
+        public event HookEventHandler HookPrefix;
+        public event HookEventHandler HookPostfix;
+
+        private void DefaultRemovalHook(HookedSimpleCache<TKey, TValue, THookTarget> sender,
+            HookedSimpleCacheEventArgs<TKey> e)
         {
             Assert.IsNotNull(this);
             sender.Remove(e.Target);
@@ -107,38 +127,25 @@ namespace GeBoCommon.Utilities
                 cache.OnHookPostfix(new HookedSimpleCacheEventArgs<TKey>((TKey)key));
             }
         }
-
-        object IHookedCache.ConvertTargetToKey(object obj)
-        {
-            return _convertTargetToKey((THookTarget)obj);
-        }
-
-        public void OnHookPrefix(IHookedCacheEventArgs e)
-        {
-            OnHookPrefix((HookedSimpleCacheEventArgs<TKey>)e);
-        }
-
-        public void OnHookPostfix(IHookedCacheEventArgs e)
-        {
-            OnHookPostfix((HookedSimpleCacheEventArgs<TKey>)e);
-        }
     }
 
     public class HookedSimpleCacheEventArgs<TEventTarget> : CancelEventArgs, IHookedCacheEventArgs
     {
-        public TEventTarget Target { get; }
-        object IHookedCacheEventArgs.Target => Target;
-
         public HookedSimpleCacheEventArgs(TEventTarget target)
         {
             Cancel = false;
             Target = target;
         }
+
+        public TEventTarget Target { get; }
+        object IHookedCacheEventArgs.Target => Target;
     }
 
     internal static class HookedSimpleCacheState
     {
-        internal static readonly Dictionary<string, List<WeakReference>> CacheRegistry = new Dictionary<string, List<WeakReference>>();
+        internal static readonly Dictionary<string, List<WeakReference>> CacheRegistry =
+            new Dictionary<string, List<WeakReference>>();
+
         internal static readonly HashSet<string> NeedsCleanupSet = new HashSet<string>();
 
         private static string TypeToKey(Type typ)
@@ -167,6 +174,7 @@ namespace GeBoCommon.Utilities
                     dirty = true;
                 }
             }
+
             if (dirty)
             {
                 NeedsCleanupSet.Add(key);
@@ -180,10 +188,11 @@ namespace GeBoCommon.Utilities
             {
                 CacheRegistry[key] = registeredCaches = new List<WeakReference>();
             }
+
             registeredCaches.Add(new WeakReference(cache));
         }
 
-        // ReSharper disable once UnusedMember.Global
+        [UsedImplicitly]
         internal static bool IsRegistered(Type typ)
         {
             return IsRegistered(TypeToKey(typ));
@@ -216,7 +225,7 @@ namespace GeBoCommon.Utilities
                 return;
             }
 
-            CacheRegistry[key].RemoveAll((c) => !c.IsAlive);
+            CacheRegistry[key].RemoveAll(c => !c.IsAlive);
             NeedsCleanupSet.Remove(key);
         }
     }

@@ -3,15 +3,17 @@
 <NamePresets>
     <NamePreset>
         <Sex>Female</Sex>
-        <GivenNames>
+        <GivenNames>商人</GivenNames>
+        <NickNames>
             <Name>シャン</Name>
-        </GivenNames>
+        </NickNames>
         <Translations>
             <Translation>
                 <TargetLanguages>
                     <Language>en</Language>
                 </TargetLanguages>
-                <GivenName>Shan</GivenName>
+                <GivenName>Merchant</GivenName>
+                <NickName>Shan</NickName>
             </Translation>
         </Translations>
         <Notes>AI NPC</Notes>

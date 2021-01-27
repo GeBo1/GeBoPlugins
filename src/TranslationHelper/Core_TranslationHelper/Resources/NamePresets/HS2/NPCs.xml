@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-
+<!-- ReSharper disable MarkupTextTypo -->
 <NamePresets>
     <NamePreset>
         <Sex>Female</Sex>
@@ -12,6 +12,22 @@
                     <Language>en</Language>
                 </TargetLanguages>
                 <GivenName>Fur</GivenName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 NPC</Notes>
+    </NamePreset>
+
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>シトリー</Name>
+        </GivenNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Sitri</GivenName>
             </Translation>
         </Translations>
         <Notes>HS2 NPC</Notes>

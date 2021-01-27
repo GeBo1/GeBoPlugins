@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+
 <!-- ReSharper disable MarkupTextTypo -->
-<!-- most HS2 stock chars are from AI -->
 <NamePresets>
     <NamePreset>
         <Sex>Female</Sex>
@@ -21,5 +21,214 @@
         </Translations>
         <Notes>HS2 stock character (default)</Notes>
     </NamePreset>
-   
+
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>美紀</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>土田</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <GivenName>Miki</GivenName>
+                <FamilyName>Tsuchida</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 stock character</Notes>
+    </NamePreset>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>彩花</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>林</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <GivenName>Ayaka</GivenName>
+                <FamilyName>Hayashi</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 stock character</Notes>
+    </NamePreset>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>梨花</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>大橋</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <GivenName>Rika</GivenName>
+                <FamilyName>Ohashi</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 stock character</Notes>
+    </NamePreset>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>優奈</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>奥田</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <GivenName>Yuna</GivenName>
+                <FamilyName>Okuta</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 stock character</Notes>
+    </NamePreset>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>渚砂</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>新田</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <GivenName>Nagisa</GivenName>
+                <FamilyName>Nitta</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 stock character</Notes>
+    </NamePreset>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>はずむ</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>金谷</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <GivenName>Hazumu</GivenName>
+                <FamilyName>Kanaya</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 stock character</Notes>
+    </NamePreset>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>渚</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>山岡</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <GivenName>Nagisa</GivenName>
+                <FamilyName>Yamaoka</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 stock character</Notes>
+    </NamePreset>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>哀</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>毛利</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <GivenName>Ai</GivenName>
+                <FamilyName>Mori</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 stock character</Notes>
+    </NamePreset>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>神楽</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>川島</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <GivenName>Kagura</GivenName>
+                <FamilyName>Kawashima</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 stock character</Notes>
+    </NamePreset>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>めぐみ</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>長井</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <GivenName>Megumi</GivenName>
+                <FamilyName>Nagai</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 stock character</Notes>
+    </NamePreset>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>美羽</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>武田</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <GivenName>Miu</GivenName>
+                <FamilyName>Takeda</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 stock character</Notes>
+    </NamePreset>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>恵</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>塚本</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <GivenName>Megumi</GivenName>
+                <FamilyName>Tsukamoto</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 stock character</Notes>
+    </NamePreset>
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>希</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>星野</Name>
+        </FamilyNames>
+        <Translations>
+            <Translation>
+                <GivenName>Nozomi</GivenName>
+                <FamilyName>Hoshino</FamilyName>
+            </Translation>
+        </Translations>
+        <Notes>HS2 stock character</Notes>
+    </NamePreset>
+
 </NamePresets>

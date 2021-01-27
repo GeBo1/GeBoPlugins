@@ -1,8 +1,9 @@
-﻿using GeBoCommon.Chara;
+﻿using System.Diagnostics.CodeAnalysis;
+using GeBoCommon.Chara;
 
 namespace TranslationHelperPlugin.Utils
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     public partial interface ICharaFileInfo
     {
         int Index { get; }

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
-using BepInEx.Logging;
 using GeBoCommon.Chara;
 using HarmonyLib;
+using JetBrains.Annotations;
 
 namespace TranslationHelperPlugin.Utils
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     internal static partial class CharaFileInfoWrapper
     {
         private static readonly Dictionary<string, Type> WrapperTypes = new Dictionary<string, Type>();
@@ -20,11 +21,13 @@ namespace TranslationHelperPlugin.Utils
                 {
                     return (ICharaFileInfo)Activator.CreateInstance(wrapperType, target);
                 }
+#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception err)
                 {
                     TranslationHelper.Logger.LogDebug(
                         $"CreateWrapper: Registered wrapper {wrapperType} for {targetType} failed, falling back to default wrapper: {err}");
                 }
+#pragma warning restore CA1031 // Do not catch general exception types
             }
 
             wrapperType = typeof(CharaFileInfoWrapper<>).MakeGenericType(targetType);
@@ -36,6 +39,7 @@ namespace TranslationHelperPlugin.Utils
             return CreateWrapper(typeof(T), target);
         }
 
+        [UsedImplicitly]
         public static void RegisterWrapperType(Type targetType, Type wrapperType)
         {
             WrapperTypes[targetType.FullName ?? targetType.Name] = wrapperType;
@@ -43,14 +47,14 @@ namespace TranslationHelperPlugin.Utils
     }
 
 
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     internal partial class CharaFileInfoWrapper<T> : ICharaFileInfo
     {
         private static readonly Func<T, int> IndexGetter = CreateGetter<int>("index");
         private static readonly Func<T, string> NameGetter = CreateGetter<string>("name");
         private static readonly Action<T, string> NameSetter = CreateSetter<string>("name");
 
-        // ReSharper disable once StringLiteralTypo
+        // ReSharper disable once StringLiteralTypo - that's the whole point
         private static readonly Func<T, string> FullPathGetter =
             CreateGetter<string>("FullPath", "fullpath", "fullPath");
 
@@ -81,10 +85,12 @@ namespace TranslationHelperPlugin.Utils
                 {
                     return (CharacterSex)InnerSexGetter(_target);
                 }
+#pragma warning disable CA1031 // Do not catch general exception types
                 catch
                 {
                     return this.GuessSex();
                 }
+#pragma warning restore CA1031 // Do not catch general exception types
             }
         }
 
@@ -93,43 +99,38 @@ namespace TranslationHelperPlugin.Utils
             if (names.Length < 1) throw new ArgumentException($"{nameof(names)} can not be empty");
             var targetType = typeof(T);
 
-            var first = true;
             foreach (var name in names)
             {
-                var propSetter = AccessTools.PropertySetter(targetType, name);
-                if (propSetter == null)
-                {
-                    first = false;
-                    continue;
-                }
+                var prop = targetType.GetProperty(name, AccessTools.all);
+                //var propGetter = targetType.GetProperty(name).AccessTools.PropertySetter(targetType, name);
+                var propSetter = prop?.GetSetMethod(false) ?? prop?.GetSetMethod(true);
+                if (propSetter == null) continue;
 
-                if (!first)
-                {
-                    // log if found beyond first attempt because AccessTools will have warned of missing property
-                    TranslationHelper.Logger.LogInfo(
-                        $"Found property for type {targetType.FullName} with name {name}");
-                }
+                TranslationHelper.Logger.LogDebug(
+                    $"Found {names[0]} property for type {targetType.FullName} with name {name}");
 
                 try
                 {
-                    return (Action<T, TValue>)Delegate.CreateDelegate(typeof(Action<T, TValue>), null,
-                        propSetter);
+                    return AccessTools.MethodDelegate<Action<T, TValue>>(propSetter);
                 }
+#pragma warning disable CA1031 // Do not catch general exception types
                 catch
                 {
                     Expression<Action<T, TValue>> setter =
                         (obj, value) => propSetter.Invoke(obj, new object[] {value});
                     return setter.Compile();
                 }
+#pragma warning restore CA1031 // Do not catch general exception types
             }
 
             foreach (var name in names)
             {
-                var field = AccessTools.Field(targetType, name);
+                var field = targetType.GetField(name, AccessTools.all);
                 if (field == null) continue;
                 Expression<Action<T, TValue>> setter = (obj, value) => field.SetValue(obj, value);
                 // log if found as field because AccessTools will have warned of missing property
-                TranslationHelper.Logger.LogInfo($"Found field for type {targetType.FullName} with name {name}");
+                TranslationHelper.Logger.LogDebug(
+                    $"Found field {names[0]} for type {targetType.FullName} with name {name}");
                 return setter.Compile();
             }
 
@@ -143,43 +144,42 @@ namespace TranslationHelperPlugin.Utils
             if (names.Length < 1) throw new ArgumentException($"{nameof(names)} can not be empty");
             var targetType = typeof(T);
             // prefer properties
-            var first = true;
+
             foreach (var name in names)
             {
-                var propGetter = AccessTools.PropertyGetter(targetType, name);
+                var prop = targetType.GetProperty(name, AccessTools.all);
+                //var propGetter = targetType.GetProperty(name). AccessTools.PropertyGetter(targetType, name);
+                var propGetter = prop?.GetGetMethod(false) ?? prop?.GetGetMethod(true);
 
-                if (propGetter == null)
-                {
-                    first = false;
-                    continue;
-                }
-                if (!first)
-                {
-                    // log if found beyond first attempt because AccessTools will have warned of missing property
-                    TranslationHelper.Logger.LogInfo(
-                        $"Found property for type {targetType.FullName} with name {name}");
-                }
+                if (propGetter == null) continue;
+
+
+                TranslationHelper.Logger.LogDebug(
+                    $"Found property {names[0]} for type {targetType.FullName} with name {name}");
+
 
                 try
                 {
-                    return (Func<T, TResult>)Delegate.CreateDelegate(typeof(Func<T, TResult>), null,
-                        propGetter);
+                    return AccessTools.MethodDelegate<Func<T, TResult>>(propGetter);
                 }
+#pragma warning disable CA1031 // Do not catch general exception types
                 catch
                 {
-                    Expression<Func<T, TResult>> setter =
+                    Expression<Func<T, TResult>> getter =
                         obj => (TResult)propGetter.Invoke(obj, new object[0]);
-                    return setter.Compile();
+                    return getter.Compile();
                 }
+#pragma warning restore CA1031 // Do not catch general exception types
             }
 
             foreach (var name in names)
             {
-                var field = AccessTools.Field(targetType, name);
+                //var field = AccessTools.Field(targetType, name);
+                var field = targetType.GetField(name, AccessTools.all);
                 if (field == null) continue;
                 Expression<Func<T, TResult>> getter = obj => (TResult)field.GetValue(obj);
-                // log if found as field because AccessTools will have warned of missing property
-                TranslationHelper.Logger.LogInfo($"Found field for type {targetType.FullName} with name {name}");
+                TranslationHelper.Logger.LogDebug(
+                    $"Found field {names[0]} for type {targetType.FullName} with name {name}");
                 return getter.Compile();
             }
 

@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
+using JetBrains.Annotations;
+
 #if AI || HS2
 using AIChara;
 
@@ -9,8 +10,7 @@ using AIChara;
 
 namespace GeBoCommon
 {
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
+    [PublicAPI]
     public interface IGeBoAPI
     {
         /// <summary>

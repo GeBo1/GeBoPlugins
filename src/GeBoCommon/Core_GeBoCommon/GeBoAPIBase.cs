@@ -34,34 +34,37 @@ namespace GeBoCommon
     {
         public const string GUID = "com.gebo.BepInEx.GeBoAPI";
         public const string PluginName = "GeBo Modding API";
-        public const string Version = "1.0.2";
+        public const string Version = "1.1";
 
         private static readonly Dictionary<string, bool> NotificationSoundsEnabled = new Dictionary<string, bool>();
+
         /// <summary>
-        /// Gets the instance of GeBoAPI for the current execution.
+        ///     Gets the instance of GeBoAPI for the current execution.
         /// </summary>
         /// <value>
-        /// The instance.
+        ///     The instance.
         /// </value>
-        public static GeBoAPI Instance { get; private set; }
-
-        internal new ManualLogSource Logger;
-
-        public GeBoAPI()
+        public static GeBoAPI Instance
         {
-            _autoTranslationHelper = new SimpleLazy<IAutoTranslationHelper>(AutoTranslationHelperLoader);
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = FindObjectOfType<GeBoAPI>();
+                }
+
+                return _instance;
+            }
         }
 
+        internal new ManualLogSource Logger => base.Logger;
 
-        internal void Main()
-        {
-            Instance = this;
-            Logger = base.Logger;
-        }
+        private static GeBoAPI _instance;
 
-        private readonly SimpleLazy<IAutoTranslationHelper> _autoTranslationHelper;
+        private readonly SimpleLazy<IAutoTranslationHelper> _autoTranslationHelper =
+            new SimpleLazy<IAutoTranslationHelper>(AutoTranslationHelperLoader);
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public IAutoTranslationHelper AutoTranslationHelper => _autoTranslationHelper.Value;
 
         public int ChaFileNameCount => ChaFileNamesInternal.Count;
@@ -69,10 +72,15 @@ namespace GeBoCommon
         private readonly SimpleLazy<IList<string>> _chaFileNames =
             new SimpleLazy<IList<string>>(() => ChaFileNamesInternal.Select(n => n.Key).ToList());
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public IList<string> ChaFileNames => _chaFileNames.Value;
 
-        private IAutoTranslationHelper AutoTranslationHelperLoader()
+        private void Awake()
+        {
+            _instance = this;
+        }
+
+        private static IAutoTranslationHelper AutoTranslationHelperLoader()
         {
             if (Chainloader.PluginInfos.ContainsKey(XUAPluginData.Identifier))
             {
@@ -83,7 +91,7 @@ namespace GeBoCommon
         }
 
         /// <summary>
-        /// Setups the notification sound configuration for a plugin.
+        ///     Setups the notification sound configuration for a plugin.
         /// </summary>
         /// <param name="guid">The plugin GUID you're configuring notifications for.</param>
         /// <param name="configEntry">The configuration entry.</param>
@@ -101,7 +109,7 @@ namespace GeBoCommon
         }
 
         /// <summary>
-        /// Plays the notification sound.
+        ///     Plays the notification sound.
         /// </summary>
         /// <param name="notificationSound">The notification sound to play </param>
         /// <param name="guid">The plugin GUID. If provided will check the per-plugin config if sounds are enabled.</param>
@@ -118,20 +126,20 @@ namespace GeBoCommon
             PlayNotification(notificationSound);
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public int ChaFileNameToIndex(string chaName)
         {
             return ChaFileNames.IndexOf(chaName);
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public NameType ChaFileIndexToNameType(int index)
         {
             if (index < 0 || index > ChaFileNamesInternal.Count) return NameType.Unclassified;
             return ChaFileNamesInternal[index].Value;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public string ChaFileIndexToName(int index)
         {
             if (index < 0 || index > ChaFileNamesInternal.Count) return null;

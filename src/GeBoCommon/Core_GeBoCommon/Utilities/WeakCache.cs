@@ -1,32 +1,25 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace GeBoCommon.Utilities
 {
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
+    [PublicAPI]
     public class WeakCache<TKey, TValue> : IDictionary<TKey, TValue>
     {
-        private int _nextKey;
-        private readonly Dictionary<int, TValue> _values = new Dictionary<int, TValue>();
-
         private readonly Dictionary<WeakReference, int> _keyLookup = new Dictionary<WeakReference, int>();
+        private readonly Dictionary<int, TValue> _values = new Dictionary<int, TValue>();
+        private int _nextKey;
 
-        public ICollection<TKey> Keys => this.Select((e) => e.Key).ToList();
+        public ICollection<TKey> Keys => this.Select(e => e.Key).ToList();
 
-        public ICollection<TValue> Values => this.Select((e) => e.Value).ToList();
+        public ICollection<TValue> Values => this.Select(e => e.Value).ToList();
 
         public int Count => Keys.Count;
 
         public bool IsReadOnly => false;
-
-        private int GetNextKey()
-        {
-            return _nextKey++;
-        }
 
         public TValue this[TKey key]
         {
@@ -39,14 +32,16 @@ namespace GeBoCommon.Utilities
                     valKey = GetNextKey();
                     _keyLookup[keyRef] = valKey;
                 }
+
                 _values[valKey] = value;
             }
         }
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            var live = _keyLookup.Where((k) => k.Key.IsAlive);
-            return live.Select((k) => new KeyValuePair<TKey, TValue>((TKey)k.Key.Target, _values[k.Value])).GetEnumerator();
+            var live = _keyLookup.Where(k => k.Key.IsAlive);
+            return live.Select(k => new KeyValuePair<TKey, TValue>((TKey)k.Key.Target, _values[k.Value]))
+                .GetEnumerator();
         }
 
         public void Add(TKey key, TValue value)
@@ -79,6 +74,7 @@ namespace GeBoCommon.Utilities
                 value = _values[valKey];
                 return true;
             }
+
             value = default;
             return false;
         }
@@ -126,9 +122,14 @@ namespace GeBoCommon.Utilities
             return _keyLookup.ContainsKey(keyRef);
         }
 
+        private int GetNextKey()
+        {
+            return _nextKey++;
+        }
+
         public void Cleanup()
         {
-            var toRemove = _keyLookup.Where((k) => !k.Key.IsAlive);
+            var toRemove = _keyLookup.Where(k => !k.Key.IsAlive);
             foreach (var entry in toRemove)
             {
                 _values.Remove(entry.Value);

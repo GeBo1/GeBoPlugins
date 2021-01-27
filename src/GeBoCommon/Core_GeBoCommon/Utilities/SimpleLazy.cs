@@ -1,20 +1,17 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
-
+using JetBrains.Annotations;
 #if (HS || PH || KK)
 using System.Runtime.CompilerServices;
 using System.Threading;
-
 #endif
 
 namespace GeBoCommon.Utilities
 {
     /// <summary>
-    /// Basic implementation of .NET Lazy
+    ///     Basic implementation of .NET Lazy
     /// </summary>
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
 #if (HS || PH || KK)
+    [PublicAPI]
     public class SimpleLazy<T>
     {
         private readonly object _basicLock;
@@ -82,8 +79,14 @@ namespace GeBoCommon.Utilities
             _real = new Lazy<T>(valueFactory, true);
         }
 
-        public override string ToString() => _real.ToString();
+        public override string ToString()
+        {
+            return _real.ToString();
+        }
+
+        [UsedImplicitly]
         public bool IsValueCreated => _real.IsValueCreated;
+
         public T Value => _real.Value;
     }
 #endif

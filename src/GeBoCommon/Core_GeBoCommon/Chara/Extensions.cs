@@ -86,10 +86,12 @@ namespace GeBoCommon.Chara
             {
                 return (CharacterSex)chaFile.parameter.sex;
             }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch
             {
                 return CharacterSex.Unspecified;
             }
+#pragma warning restore CA1031 // Do not catch general exception types
         }
     }
 }

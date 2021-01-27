@@ -1,25 +1,28 @@
-﻿using GeBoCommon.Utilities;
-using HarmonyLib;
-using Studio;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Reflection;
+using GeBoCommon.Utilities;
+using HarmonyLib;
+using JetBrains.Annotations;
+using Studio;
 
 namespace GeBoCommon.Studio
 {
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class SceneUtils
     {
-        private static readonly FieldInfo SceneLoadSceneListPath = AccessTools.Field(typeof(SceneLoadScene), "listPath");
+        private static readonly SimpleLazy<Func<SceneLoadScene, List<string>>> SceneLoadSceneListPathGetter =
+            new SimpleLazy<Func<SceneLoadScene, List<string>>>(() =>
+                Delegates.LazyReflectionInstanceGetter<SceneLoadScene, List<string>>("listPath"));
 
-        public static readonly string StudioSceneRootFolder = PathUtils.NormalizePath(Path.Combine(UserData.Path, @"studio\scene")).ToLowerInvariant();
+        public static readonly string StudioSceneRootFolder =
+            PathUtils.NormalizePath(Path.Combine(UserData.Path, @"studio\scene")).ToLowerInvariant();
 
         public static List<string> GetSceneLoaderPaths(SceneLoadScene loader)
         {
-            return loader != null ? new List<string>((IEnumerable<string>)SceneLoadSceneListPath.GetValue(loader)) : new List<string>();
+            return loader != null ? new List<string>(SceneLoadSceneListPathGetter.Value(loader)) : new List<string>();
         }
 
+        [UsedImplicitly]
         public static OCIChar GetMainChara(object instance)
         {
             return Traverse.Create(instance).Property("ociChar").GetValue<OCIChar>();

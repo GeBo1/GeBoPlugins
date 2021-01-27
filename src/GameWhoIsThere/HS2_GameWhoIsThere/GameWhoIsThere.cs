@@ -15,7 +15,7 @@ namespace GameWhoIsTherePlugin
     {
         public const string GUID = "com.gebo.bepinex.whoisthere";
         public const string PluginName = "Who Is There?";
-        public const string Version = "1.0";
+        public const string Version = "1.0.1";
 
         public static GameWhoIsThere Instance;
         internal static new ManualLogSource Logger;

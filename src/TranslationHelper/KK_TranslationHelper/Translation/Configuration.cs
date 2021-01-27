@@ -41,6 +41,7 @@ namespace TranslationHelperPlugin.Translation
         {
             ListInfoNameTranslatedMap.Clear();
             LoadCharaFileTranslatedMap.Clear();
+            if (TranslationHelper.IsShuttingDown) return;
             TranslationHelper.Instance.StartCoroutine(TranslationHelper.WaitOnCardTranslations()
                 .AppendCo(ClearCaches));
         }

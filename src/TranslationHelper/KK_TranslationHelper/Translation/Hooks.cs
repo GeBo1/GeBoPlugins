@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using ChaCustom;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
 using HarmonyLib;
+using JetBrains.Annotations;
 using TranslationHelperPlugin.Chara;
 using TranslationHelperPlugin.Utils;
 using UnityEngine;
@@ -21,7 +21,6 @@ namespace TranslationHelperPlugin.Translation
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CustomCharaFile), "Initialize")]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void CustomCharaFileInitializePrefix()
         {
             Configuration.LoadCharaFileMonitorEnabled = true;
@@ -29,12 +28,12 @@ namespace TranslationHelperPlugin.Translation
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CustomCharaFile), "Initialize")]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void CustomCharaFileInitializePostfix()
         {
             Configuration.LoadCharaFileMonitorEnabled = false;
         }
 
+        [UsedImplicitly]
         internal static string ProcessTranslationResult(byte sex, string origName, string fullPath,
             ITranslationResult result)
         {
@@ -46,7 +45,10 @@ namespace TranslationHelperPlugin.Translation
         {
             Assert.AreEqual(origName, origName);
             if (result.Succeeded)
+            {
                 CharaFileInfoTranslationManager.CacheRecentTranslation(sexOnlyScope, fullPath, result.TranslatedText);
+            }
+
             return result.TranslatedText;
         }
 
@@ -54,11 +56,10 @@ namespace TranslationHelperPlugin.Translation
         [HarmonyPostfix]
         [HarmonyPatch(typeof(ChaFileControl), nameof(ChaFileControl.LoadCharaFile), typeof(string), typeof(byte),
             typeof(bool), typeof(bool))]
-        [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "HarmonyPatch")]
         private static void ChaFileControl_LoadCharaFile_Postfix(ChaFileControl __instance, string filename,
             bool __result)
         {
-            // ReSharper disable once RedundantAssignment
+            // ReSharper disable once RedundantAssignment - used in DEBUG
             var start = Time.realtimeSinceStartup;
             try
             {
@@ -96,7 +97,7 @@ namespace TranslationHelperPlugin.Translation
         internal static void FileListCtrlAddListPrefix(CustomFileListCtrl __instance, ICharaFileInfo info)
         {
             if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
-            // ReSharper disable once RedundantAssignment
+            // ReSharper disable once RedundantAssignment - used in DEBUG
             var start = Time.realtimeSinceStartup;
             try
             {
@@ -118,10 +119,12 @@ namespace TranslationHelperPlugin.Translation
                         {
                             index = x.index;
                         }
+#pragma warning disable CA1031 // Do not catch general exception types
                         catch
                         {
                             index = -1;
                         }
+#pragma warning restore CA1031 // Do not catch general exception types
 
                         if (index == -1)
                         {
@@ -170,7 +173,6 @@ namespace TranslationHelperPlugin.Translation
             }
 
             if (textDrawName != null) textDrawName.text = name;
-
 
 
             _pointerEnterCoroutine = TranslationHelper.Instance.StartCoroutine(

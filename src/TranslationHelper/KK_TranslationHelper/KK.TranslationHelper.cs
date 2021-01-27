@@ -2,6 +2,7 @@
 using System.Linq;
 using BepInEx;
 using BepInEx.Configuration;
+using JetBrains.Annotations;
 
 namespace TranslationHelperPlugin
 {
@@ -33,6 +34,7 @@ namespace TranslationHelperPlugin
             OnBehaviorChanged(e);
         }
 
+        [UsedImplicitly]
         internal static string ProcessFullnameString(string input)
         {
             if (!ShowGivenNameFirst) return input;

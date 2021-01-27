@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using ChaCustom;
 using HarmonyLib;
+using JetBrains.Annotations;
 using KKAPI.Maker;
 using TranslationHelperPlugin.Chara;
 using UnityEngine.Assertions;
@@ -17,14 +19,15 @@ namespace TranslationHelperPlugin.Maker
 
         private static IEnumerable<KeyValuePair<string, string[]>> GetNameInputFieldInfos()
         {
-            // ReSharper disable once StringLiteralTypo
+            // ReSharper disable once StringLiteralTypo - inherited
             const string top = "CharactorTop";
             yield return new KeyValuePair<string, string[]>("firstname", new[] {top, "InputName", "InpFirstName"});
             yield return new KeyValuePair<string, string[]>("lastname", new[] {top, "InputName", "InpLastName"});
             yield return new KeyValuePair<string, string[]>("nickname", new[] {top, "InputNickName", "InpNickName"});
         }
 
-        private static IEnumerator GameSpecificUpdateUICoroutine(Controller controller)
+        [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
+        private static IEnumerator GameSpecificUpdateUICoroutine([NotNull] Controller controller)
         {
             Assert.IsNotNull(controller);
             var makerBase = MakerAPI.GetMakerBase();

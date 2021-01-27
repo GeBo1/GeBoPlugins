@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Collections.Generic;
 using GeBoCommon;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
@@ -7,8 +7,10 @@ using HarmonyLib;
 using KKAPI.MainGame;
 using TMPro;
 using TranslationHelperPlugin.Chara;
+using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace TranslationHelperPlugin.MainGame
 {
@@ -44,14 +46,13 @@ namespace TranslationHelperPlugin.MainGame
             typeof(ChaFileControl))]
         [HarmonyPatch(typeof(CharaHInfoComponent), nameof(CharaHInfoComponent.SetCharaInfo),
             typeof(ChaFileControl))]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
-        internal static void RosterSetCharaInfoPrefix(Component __instance, ChaFileControl chaFileCtrl, ref object __state)
+        internal static void RosterSetCharaInfoPrefix(Component __instance, ChaFileControl chaFileCtrl,
+            ref object __state)
         {
-            // ReSharper disable once RedundantAssignment
+            // ReSharper disable once RedundantAssignment - used in DEBUG
             var start = Time.realtimeSinceStartup;
             try
             {
-                
                 __state = false;
                 if (!ShouldProcess(__instance, chaFileCtrl) ||
                     !GeBoAPI.Instance.AutoTranslationHelper.IsTranslatable(chaFileCtrl.GetFullName()))
@@ -73,10 +74,9 @@ namespace TranslationHelperPlugin.MainGame
             typeof(ChaFileControl))]
         [HarmonyPatch(typeof(CharaHInfoComponent), nameof(CharaHInfoComponent.SetCharaInfo),
             typeof(ChaFileControl))]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void RosterSetCharaInfoPostfix(Component __instance, ChaFileControl chaFileCtrl, object __state)
         {
-            if (__state == null ||  !(bool)__state) return;
+            if (__state == null || !(bool)__state) return;
 
             void UpdateDisplayedCard(string name)
             {
@@ -87,6 +87,7 @@ namespace TranslationHelperPlugin.MainGame
                     textName.text = name;
                 }
             }
+
             chaFileCtrl.TranslateFullName(UpdateDisplayedCard);
 
             FreeHUpdateUI();
@@ -101,34 +102,96 @@ namespace TranslationHelperPlugin.MainGame
             var member = Traverse.Create(freeHScene).Field<FreeHScene.Member>("member")?.Value;
             if (member == null) return;
 
-            void Update3P(string fieldName, string value)
+            Action<string> GetUpdateUIField(string fieldName)
             {
-                if (string.IsNullOrEmpty(value)) return;
-                var field = Traverse.Create(freeHScene).Field<TextMeshProUGUI>(fieldName)?.Value;
-                if (field == null) return;
-                field.text = value;
+                void Callback(string value)
+                {
+                    if (string.IsNullOrEmpty(value)) return;
+                    var field = Traverse.Create(freeHScene).Field<TextMeshProUGUI>(fieldName)?.Value;
+                    if (field == null) return;
+                    field.text = value;
+                }
+
+                return Callback;
             }
 
-            var heroineMap = new Dictionary<string, SaveData.Heroine>();
+            Action<string> GetUpdateTextCallback(string path)
+            {
+                void Callback(string value)
+                {
+                    if (string.IsNullOrEmpty(value)) return;
+
+                    var obj = GameObject.Find(path);
+                    if (obj == null) return;
+                    var uiText = obj.GetComponent<Text>();
+                    if (uiText == null) return;
+                    uiText.text = value;
+                }
+
+                return Callback;
+            }
+
+            var callbackMap = new Dictionary<SaveData.Heroine, List<Action<string>>>();
+
             if (member.resultHeroine.HasValue && member.resultHeroine.Value != null)
             {
-                heroineMap["textFemaleName1"] = member.resultHeroine.Value;
+                if (!callbackMap.TryGetValue(member.resultHeroine.Value, out var callbacks))
+                {
+                    callbackMap[member.resultHeroine.Value] = callbacks = new List<Action<string>>();
+                }
+
+                callbacks.Add(GetUpdateUIField("textFemaleName1"));
             }
 
             if (member.resultPartner.HasValue && member.resultPartner.Value != null)
             {
-                heroineMap["textFemaleName2"] = member.resultPartner.Value;
+                if (!callbackMap.TryGetValue(member.resultPartner.Value, out var callbacks))
+                {
+                    callbackMap[member.resultPartner.Value] = callbacks = new List<Action<string>>();
+                }
+
+                callbacks.Add(GetUpdateUIField("textFemaleName2"));
             }
 
-            foreach (var entry in heroineMap)
+            var resultDarkHeroine = Traverse.Create(member)
+                .Field<ReactiveProperty<SaveData.Heroine>>("resultDarkHeroine")?.Value;
+            if (resultDarkHeroine != null && resultDarkHeroine.HasValue && resultDarkHeroine.Value != null)
             {
-                foreach (var heroineChaFile in entry.Value.GetRelatedChaFiles())
+                if (!callbackMap.TryGetValue(resultDarkHeroine.Value, out var callbacks))
+                {
+                    callbackMap[resultDarkHeroine.Value] = callbacks = new List<Action<string>>();
+                }
+
+                callbacks.Add(
+                    // ReSharper disable once StringLiteralTypo
+                    GetUpdateTextCallback("/FreeHScene/Canvas/Panel/Dark/FemaleInfomation/Name/TextMeshPro Text"));
+            }
+
+            foreach (var entry in callbackMap)
+            {
+                foreach (var heroineChaFile in entry.Key.GetRelatedChaFiles())
                 {
                     heroineChaFile.TranslateFullName(
-                        translated => Update3P(entry.Key, translated));
+                        translated =>
+                        {
+                            foreach (var callback in entry.Value)
+                            {
+                                try
+                                {
+                                    callback(translated);
+                                }
+#pragma warning disable CA1031 // Do not catch general exception types
+                                catch (Exception err)
+                                {
+                                    Logger.LogWarning($"FreeHUpdateUI: {err.Message}");
+                                }
+#pragma warning restore CA1031 // Do not catch general exception types
+                            }
+                        });
                 }
             }
-            heroineMap.Clear();
+
+            callbackMap.Clear();
         }
     }
 }

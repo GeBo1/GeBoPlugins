@@ -16,12 +16,11 @@ namespace TranslationHelperPlugin.Translation.Standard
             Harmony.CreateAndPatchAll(typeof(Hooks));
         }
 
-        // ReSharper disable once IdentifierTypo
         // used in maker, starting new game, editing roster
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CustomFileListCtrl), nameof(CustomFileListCtrl.AddList))]
         [HarmonyPatch(typeof(ClassRoomFileListCtrl), nameof(ClassRoomFileListCtrl.AddList))]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
+        [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "HarmonyPatch")]
         internal static void FileListCtrlAddListPrefix(CustomFileListCtrl __instance, int index, ref string name,
             string club, string personality, string fullpath)
         {
@@ -34,7 +33,6 @@ namespace TranslationHelperPlugin.Translation.Standard
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CustomFileListCtrl), nameof(CustomFileListCtrl.OnPointerEnter))]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         public static void OnPointerEnterPostfix(CustomFileListCtrl __instance, GameObject obj)
         {
             if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
@@ -51,13 +49,11 @@ namespace TranslationHelperPlugin.Translation.Standard
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CustomFileListCtrl), nameof(CustomFileListCtrl.OnPointerExit))]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         public static void OnPointerExitPrefix() => Translation.Hooks.OnPointerExitPrefix();
 
         // Free H version
         [HarmonyPostfix]
         [HarmonyPatch(typeof(ClassRoomFileListCtrl), nameof(ClassRoomFileListCtrl.Create))]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         public static void ClassRoomFileListCtrlCreatePostfix(ClassRoomFileListCtrl __instance)
         {
             void OnEnter(CustomFileInfo info)
@@ -80,7 +76,6 @@ namespace TranslationHelperPlugin.Translation.Standard
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CustomFileListCtrl), nameof(CustomFileListCtrl.ChangeItem))]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         public static void ChangeItemPostfix(CustomFileListCtrl __instance, GameObject obj)
         {
             if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;

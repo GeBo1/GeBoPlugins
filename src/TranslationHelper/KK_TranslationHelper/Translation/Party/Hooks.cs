@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using ChaCustom;
 using HarmonyLib;
+using TranslationHelperPlugin.Utils;
 using UnityEngine;
 
 namespace TranslationHelperPlugin.Translation.Party
@@ -22,7 +22,6 @@ namespace TranslationHelperPlugin.Translation.Party
 
             if (onPointerEnter != null && onPointerExit != null)
             {
-
                 var onPointerEnterPostfix = AccessTools.Method(typeof(Hooks), nameof(OnPointerEnterPostfix));
                 var onPointerExitPrefix =
                     AccessTools.Method(typeof(Translation.Hooks), nameof(Translation.Hooks.OnPointerExitPrefix));
@@ -35,10 +34,12 @@ namespace TranslationHelperPlugin.Translation.Party
                         harmony.Patch(onPointerExit, new HarmonyMethod(onPointerExitPrefix));
                         patched = true;
                     }
+#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception err)
                     {
                         TranslationHelper.Logger.LogError($"{typeof(Hooks).FullName}: {err.Message}");
                     }
+#pragma warning restore CA1031 // Do not catch general exception types
                 }
             }
 
@@ -51,10 +52,9 @@ namespace TranslationHelperPlugin.Translation.Party
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CustomFileListCtrl), "Add", typeof(CustomFileInfo))]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void PartyFileListCtrlAddListPrefix(CustomFileListCtrl __instance, CustomFileInfo info)
         {
-            Translation.Hooks.FileListCtrlAddListPrefix(__instance, Utils.CharaFileInfoWrapper.CreateWrapper(info));
+            Translation.Hooks.FileListCtrlAddListPrefix(__instance, CharaFileInfoWrapper.CreateWrapper(info));
         }
 
         /*
@@ -69,9 +69,7 @@ namespace TranslationHelperPlugin.Translation.Party
             if (info == null) return;
             var infoType = Traverse.Create(fic).Property("info").GetValueType();
             Translation.Hooks.OnPointerEnterPostfix(__instance,
-                Utils.CharaFileInfoWrapper.CreateWrapper(infoType, info));
+                CharaFileInfoWrapper.CreateWrapper(infoType, info));
         }
-
-
     }
 }

@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.IO;
+﻿using System.IO;
 using GeBoCommon.Studio;
 using GeBoCommon.Utilities;
 using HarmonyLib;
@@ -13,18 +12,15 @@ namespace StudioSceneNavigationPlugin
         {
             [HarmonyPatch(typeof(SceneLoadScene), "InitInfo")]
             [HarmonyPostfix]
-            [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "HarmonyPatch")]
-            private static void StudioInitInfoPost(SceneLoadScene __instance)
+            internal static void StudioInitInfoPost(SceneLoadScene __instance)
             {
                 _currentSceneFolder = string.Empty;
                 ScenePaths = SceneUtils.GetSceneLoaderPaths(__instance);
                 _normalizedScenePaths = null;
-                if (ScenePaths.Count > 0)
+                if (ScenePaths?.Count > 0)
                 {
                     _currentSceneFolder = PathUtils.NormalizePath(Path.GetDirectoryName(ScenePaths[0]));
                 }
-
-                _sceneLoadScene = __instance;
             }
         }
     }

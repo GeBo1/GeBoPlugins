@@ -7,6 +7,7 @@ using System.Text;
 using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using ExtensibleSaveFormat;
 using GeBoCommon;
 using GeBoCommon.Studio;
@@ -18,7 +19,6 @@ using KKAPI.Studio.SaveLoad;
 using KKAPI.Utilities;
 using Studio;
 using UnityEngine;
-using BepInLogLevel = BepInEx.Logging.LogLevel;
 
 namespace StudioSceneNavigationPlugin
 {
@@ -31,15 +31,22 @@ namespace StudioSceneNavigationPlugin
     {
         public const string GUID = "com.gebo.bepinex.studioscenenavigation";
         public const string PluginName = "Studio Scene Navigation";
-        public const string Version = "0.8.7";
+        public const string Version = "1.0";
 
         internal static readonly char[] TrackingFileEntrySplit = {'\0'};
+        internal static new ManualLogSource Logger;
 
         private static List<string> _normalizedScenePaths;
         private static string _currentSceneFolder = string.Empty;
         private static readonly object SavePendingLock = new object();
         private static bool _setPage;
-        private static SceneLoadScene _sceneLoadScene;
+
+        private static readonly ExpiringSimpleCache<string, string> SceneRelativePathCache =
+            new ExpiringSimpleCache<string, string>(CalculateSceneRelativePath, 360);
+
+        private static readonly SimpleLazy<Action<int>> SceneLoadScenePageSetter = new SimpleLazy<Action<int>>(() =>
+            Delegates.LazyReflectionSetter<int>(() => typeof(SceneLoadScene), "page"));
+
 
         private static readonly string TrackLastLoadedSceneFile = PathUtils.CombinePaths(
             "BepInEx", "config", StringUtils.JoinStrings(".", GUID, "LastLoadedScene", "data"));
@@ -85,7 +92,6 @@ namespace StudioSceneNavigationPlugin
                                                                 new List<string>(
                                                                     ScenePaths.Select(PathUtils.NormalizePath)));
 
-
         private Func<string, bool> IsSceneValid => _isSceneValid.Value;
 
         private bool SavePending
@@ -109,30 +115,10 @@ namespace StudioSceneNavigationPlugin
         public static ConfigEntry<bool> NotificationSoundsEnabled { get; private set; }
         public static ConfigEntry<bool> TrackLastLoadedSceneEnabled { get; private set; }
 
-        private bool IsSaveReady()
-        {
-            return Time.realtimeSinceStartup > _saveReady;
-        }
-
-        internal void Main()
-        {
-            NavigateNextSceneShortcut = Config.Bind("Keyboard Shortcuts", "Navigate Next",
-                new KeyboardShortcut(KeyCode.F3, KeyCode.LeftShift), "Navigate to the next (newer) scene");
-            NavigatePrevSceneShortcut = Config.Bind("Keyboard Shortcuts", "Navigate Previous",
-                new KeyboardShortcut(KeyCode.F4, KeyCode.LeftShift), "Navigate to the previous (older) scene");
-            ReloadCurrentSceneShortcut = Config.Bind("Keyboard Shortcuts", "Reload Current",
-                new KeyboardShortcut(KeyCode.F5, KeyCode.LeftShift), "Reload the currently loaded scene");
-            NotificationSoundsEnabled = Config.Bind("Config", "Notification Sounds", true,
-                "When enabled, notification sounds will play when scene loading is complete, or navigation fails");
-            TrackLastLoadedSceneEnabled = Config.Bind("Config", "Track Last Loaded Scene", true,
-                "When enabled, the last loaded scene will be tracked externally and can be reloaded upon return");
-            GeBoAPI.Instance.SetupNotificationSoundConfig(GUID, NotificationSoundsEnabled);
-        }
-
         internal void Awake()
         {
+            Logger = base.Logger;
             if (_currentSceneFolder.IsNullOrEmpty()) _currentSceneFolder = SceneUtils.StudioSceneRootFolder;
-
             Harmony.CreateAndPatchAll(typeof(Hooks));
             ExtendedSave.SceneBeingLoaded += ExtendedSave_SceneBeingLoaded;
             StudioSaveLoadApi.SceneLoad += StudioSaveLoadApi_SceneLoad;
@@ -164,6 +150,33 @@ namespace StudioSceneNavigationPlugin
             }
         }
 
+
+        private static string CalculateSceneRelativePath(string scenePath)
+        {
+            return PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, scenePath);
+        }
+
+        private bool IsSaveReady()
+        {
+            return Time.realtimeSinceStartup > _saveReady;
+        }
+
+        internal void Main()
+        {
+            Logger = base.Logger;
+            NavigateNextSceneShortcut = Config.Bind("Keyboard Shortcuts", "Navigate Next",
+                new KeyboardShortcut(KeyCode.F3, KeyCode.LeftShift), "Navigate to the next (newer) scene");
+            NavigatePrevSceneShortcut = Config.Bind("Keyboard Shortcuts", "Navigate Previous",
+                new KeyboardShortcut(KeyCode.F4, KeyCode.LeftShift), "Navigate to the previous (older) scene");
+            ReloadCurrentSceneShortcut = Config.Bind("Keyboard Shortcuts", "Reload Current",
+                new KeyboardShortcut(KeyCode.F5, KeyCode.LeftShift), "Reload the currently loaded scene");
+            NotificationSoundsEnabled = Config.Bind("Config", "Notification Sounds", true,
+                "When enabled, notification sounds will play when scene loading is complete, or navigation fails");
+            TrackLastLoadedSceneEnabled = Config.Bind("Config", "Track Last Loaded Scene", true,
+                "When enabled, the last loaded scene will be tracked externally and can be reloaded upon return");
+            GeBoAPI.Instance.SetupNotificationSoundConfig(GUID, NotificationSoundsEnabled);
+        }
+
         private void PlayNotificationSound(NotificationSound notificationSound)
         {
             GeBoAPI.Instance.PlayNotificationSound(notificationSound, GUID);
@@ -172,9 +185,6 @@ namespace StudioSceneNavigationPlugin
         private void StudioSaveLoadApi_SceneLoad(object sender, SceneLoadEventArgs e)
         {
             UpdateSaveReady();
-#if DEBUG
-            //Logger.LogDebug( $"StudioSaveLoadApi_SceneLoad({sender}, {e}) {CurrentScenePathCandidate}, {e.Operation}");
-#endif
             if (e.Operation == SceneOperationKind.Clear)
             {
                 _currentScenePath = _currentScenePathCandidate = string.Empty;
@@ -235,7 +245,7 @@ namespace StudioSceneNavigationPlugin
             var relativeScenes = new Dictionary<string, string>();
             foreach (var entry in LastLoadedScenes)
             {
-                relativeScenes[PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, entry.Key)] =
+                relativeScenes[SceneRelativePathCache.Get(entry.Key)] =
                     Path.GetFileName(entry.Value);
             }
 
@@ -283,16 +293,8 @@ namespace StudioSceneNavigationPlugin
                 finally
                 {
                     relativeScenes.Clear();
-
-                    if (File.Exists(oldFile))
-                    {
-                        File.Delete(oldFile);
-                    }
-
-                    if (File.Exists(newFile))
-                    {
-                        File.Delete(newFile);
-                    }
+                    if (File.Exists(oldFile)) File.Delete(oldFile);
+                    if (File.Exists(newFile)) File.Delete(newFile);
                 }
             }
         }
@@ -474,7 +476,12 @@ namespace StudioSceneNavigationPlugin
             if (navigated) _setPage = true;
         }
 
-        private IEnumerator SetPageCoroutine(string scenePath)
+        private static void SetPage(int pageNum)
+        {
+            SceneLoadScenePageSetter.Value(pageNum);
+        }
+
+        private static IEnumerator SetPageCoroutine(string scenePath)
         {
             if (!_setPage) yield break;
 
@@ -482,9 +489,7 @@ namespace StudioSceneNavigationPlugin
             yield return null;
             var page = NormalizedScenePaths.IndexOf(scenePath) / ImagesPerPage;
             if (page < 0) yield break;
-
-            _sceneLoadScene.SafeProcObject(sls =>
-                sls.GetType().GetField("page", AccessTools.all)?.SetValue(null, page));
+            SetPage(page);
         }
 
         public IEnumerator SaveTrackingFileCouroutine()

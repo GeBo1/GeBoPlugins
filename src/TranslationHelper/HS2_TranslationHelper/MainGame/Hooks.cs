@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using AIChara;
 using GameLoadCharaFileSystem;
+using GeBoCommon;
 using GeBoCommon.AutoTranslation;
 using HarmonyLib;
 using HS2;
@@ -14,23 +15,10 @@ namespace TranslationHelperPlugin.MainGame
 {
     internal partial class Hooks
     {
-        // ReSharper disable IdentifierTypo
-        private static bool _inMapSelecCursorEnter;
-
-        private static int _inMapSelecCursorEnterIndex;
-
-        private static readonly List<Text> InMapSelecCursorLabels = new List<Text> {null, null};
-
-        // ReSharper disable once IdentifierTypo
-        private static readonly IEnumerator WaitWhileInMapSelecCursorEnter = new WaitWhile(IsInMapSelecCursorEnter);
-
-
-        // ReSharper restore IdentifierTypo
-        // ReSharper disable InconsistentNaming
         [HarmonyPrefix]
         [HarmonyPatch(typeof(LobbyParameterUI), nameof(LobbyParameterUI.SetParameter), typeof(GameCharaFileInfo),
             typeof(int), typeof(int))]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
+        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]
         internal static void LobbySetGameCharaFileInfoPrefix(GameCharaFileInfo _info)
         {
             Translation.Hooks.TranslateFileInfo(_info);
@@ -39,7 +27,7 @@ namespace TranslationHelperPlugin.MainGame
         [HarmonyPostfix]
         [HarmonyPatch(typeof(LobbyParameterUI), nameof(LobbyParameterUI.SetParameter), typeof(GameCharaFileInfo),
             typeof(int), typeof(int))]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
+        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]
         internal static void LobbySetGameCharaFileInfoPostfix(LobbyParameterUI __instance, GameCharaFileInfo _info)
         {
             if (_info == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
@@ -59,7 +47,6 @@ namespace TranslationHelperPlugin.MainGame
         [HarmonyPostfix]
         [HarmonyPatch(typeof(ChaFileControl), nameof(ChaFileControl.LoadCharaFile), typeof(string), typeof(byte),
             typeof(bool), typeof(bool))]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void ChaFileControl_LoadCharaFile_Postfix(ChaFileControl __instance)
         {
             if (!_inMapSelecCursorEnter || __instance == null) return;
@@ -68,21 +55,18 @@ namespace TranslationHelperPlugin.MainGame
             _inMapSelecCursorEnterIndex++;
 
             if (label == null || !TranslationHelper.CardNameManager.CardNeedsTranslation(__instance)) return;
-
             __instance.TranslateFullName(r =>
             {
                 if (string.IsNullOrEmpty(r)) return;
                 TranslationHelper.Instance.StartCoroutine(UpdateText(label, r));
             });
         }
-        // ReSharper enable InconsistentNaming
 
 
-        // ReSharper disable once IdentifierTypo
-        // ReSharper disable once StringLiteralTypo
         [HarmonyPrefix]
+        // ReSharper disable once StringLiteralTypo
         [HarmonyPatch(typeof(MapSelectUI), "MapSelecCursorEnter")]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
+        [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "Inherited naming")]
         internal static void MapSelecCursorEnterPrefix(MapSelectUI __instance)
         {
             if (__instance == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
@@ -93,29 +77,30 @@ namespace TranslationHelperPlugin.MainGame
             {
                 try
                 {
-                    InMapSelecCursorLabels[i] = Traverse.Create(__instance)?.Field(uiName)
+                    var label = InMapSelecCursorLabels[i] = Traverse.Create(__instance)?.Field(uiName)
                         ?.Field<Text>("text")?.Value;
+                    GeBoAPI.Instance.AutoTranslationHelper.IgnoreTextComponent(label);
                 }
+#pragma warning disable CA1031 // Do not catch general exception types
                 catch
                 {
                     InMapSelecCursorLabels[i] = null;
                 }
+#pragma warning restore CA1031 // Do not catch general exception types
 
                 i++;
             }
         }
 
-        // ReSharper disable once IdentifierTypo
-        // ReSharper disable once StringLiteralTypo
+        // ReSharper disable once StringLiteralTypo IdentifierTypo
         [HarmonyPostfix]
         [HarmonyPatch(typeof(MapSelectUI), "MapSelecCursorEnter")]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void MapSelecCursorEnterPostfix()
         {
             _inMapSelecCursorEnter = false;
         }
 
-        // ReSharper disable once IdentifierTypo
+        [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "Inherited naming")]
         private static bool IsInMapSelecCursorEnter()
         {
             return _inMapSelecCursorEnter;
@@ -126,8 +111,18 @@ namespace TranslationHelperPlugin.MainGame
         {
             // wait for CursorEnter to finish or it may overwrite
             yield return WaitWhileInMapSelecCursorEnter;
-            if (label.text == "???") yield break;
-            label.text = value;
+            if (label.text != "???") label.text = value;
+            GeBoAPI.Instance.AutoTranslationHelper.UnignoreTextComponent(label);
         }
+
+        // ReSharper disable IdentifierTypo
+        private static bool _inMapSelecCursorEnter;
+
+        private static int _inMapSelecCursorEnterIndex;
+
+        private static readonly List<Text> InMapSelecCursorLabels = new List<Text> {null, null};
+
+        private static readonly IEnumerator WaitWhileInMapSelecCursorEnter = new WaitWhile(IsInMapSelecCursorEnter);
+        // ReSharper restore IdentifierTypo
     }
 }

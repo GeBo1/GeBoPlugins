@@ -11,8 +11,7 @@ namespace TranslationHelperPlugin.Translation
         [HarmonyPatch(typeof(LobbyCharaSelectInfoScrollController), nameof(LobbyCharaSelectInfoScrollController.Init))]
         [HarmonyPatch(typeof(LobbyCharaSelectInfoScrollController1),
             nameof(LobbyCharaSelectInfoScrollController1.Init))]
-        [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "HarmonyPatch")]
-        // ReSharper disable once InconsistentNaming
+        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]    
         private static void LobbyCharaSelectInfoScrollControllerInitPrefix(List<GameCharaFileInfo> _lst)
         {
             TranslateFileInfos(_lst);

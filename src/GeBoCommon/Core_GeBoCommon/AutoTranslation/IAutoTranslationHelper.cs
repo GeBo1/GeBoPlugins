@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using BepInEx.Logging;
+using JetBrains.Annotations;
+using XUnity.AutoTranslator.Plugin.Core;
 
 namespace GeBoCommon.AutoTranslation
 {
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
+    [PublicAPI]
     public interface IAutoTranslationHelper
     {
         ManualLogSource Logger { get; }
@@ -15,11 +15,17 @@ namespace GeBoCommon.AutoTranslation
         bool TryTranslate(string untranslatedText, out string translatedText);
         bool TryTranslate(string untranslatedText, int scope, out string translatedText);
 
-        [SuppressMessage("Naming", "RCS1047", Justification = "Inherited naming")]
         void TranslateAsync(string untranslatedText, Action<ITranslationResult> onCompleted);
 
-        [SuppressMessage("Naming", "RCS1047", Justification = "Inherited naming")]
         void TranslateAsync(string untranslatedText, int scope, Action<ITranslationResult> onCompleted);
+
+        void IgnoreTextComponent( object textComponent );
+
+        void UnignoreTextComponent( object textComponent );
+
+        void RegisterOnTranslatingCallback( Action<IComponentTranslationContext> context );
+
+        void UnregisterOnTranslatingCallback(Action<IComponentTranslationContext> context);
 
         void AddTranslationToCache(string key, string value, bool persistToDisk, int translationType, int scope);
         void ReloadTranslations();

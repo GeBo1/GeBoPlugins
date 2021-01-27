@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 using BepInEx.Logging;
 using GeBoCommon.Utilities;
 using HarmonyLib;
@@ -12,6 +12,12 @@ namespace GeBoCommon.AutoTranslation.Implementation
 {
     internal class XUnityAutoTranslationHelper : AutoTranslationHelperBase, IAutoTranslationHelper
     {
+        private static readonly
+            Dictionary<Action<IComponentTranslationContext>,
+                Action<XUnity.AutoTranslator.Plugin.Core.ComponentTranslationContext>> _contextWrappers =
+                new Dictionary<Action<IComponentTranslationContext>,
+                    Action<XUnity.AutoTranslator.Plugin.Core.ComponentTranslationContext>>();
+
         private readonly SimpleLazy<AddTranslationToCacheDelegate> _addTranslationToCache;
         private readonly SimpleLazy<object> _defaultCache;
         private readonly Func<string> _getAutoTranslationsFilePath;
@@ -53,7 +59,6 @@ namespace GeBoCommon.AutoTranslation.Implementation
             return DefaultTranslator.TryTranslate(untranslatedText, scope, out translatedText);
         }
 
-        [SuppressMessage("Naming", "RCS1047", Justification = "Inherited naming")]
         public void TranslateAsync(string untranslatedText, Action<ITranslationResult> onCompleted)
         {
             DefaultTranslator.TranslateAsync(untranslatedText, result => onCompleted(new TranslationResult(result)));
@@ -81,6 +86,7 @@ namespace GeBoCommon.AutoTranslation.Implementation
         }
 
         ManualLogSource IAutoTranslationHelper.Logger => Logger;
+
         public Dictionary<string, string> GetReplacements()
         {
             return _getReplacements();
@@ -106,6 +112,29 @@ namespace GeBoCommon.AutoTranslation.Implementation
             return _getRegisteredSplitterRegexes();
         }
 
+        public void IgnoreTextComponent(object textComponent)
+        {
+            DefaultTranslator.IgnoreTextComponent(textComponent);
+        }
+
+        public void UnignoreTextComponent(object textComponent)
+        {
+            DefaultTranslator.UnignoreTextComponent(textComponent);
+        }
+
+        public void RegisterOnTranslatingCallback(Action<IComponentTranslationContext> context)
+        {
+            var a = ComponentTranslationContext.GetContextWrapper(context);
+            var b = ComponentTranslationContext.GetContextWrapper(context);
+            Logger.LogFatal($"comparing ContextWrappers for {context}: {a} == {b}? {a == b}");
+            DefaultTranslator.RegisterOnTranslatingCallback(ComponentTranslationContext.GetContextWrapper(context));
+        }
+
+        public void UnregisterOnTranslatingCallback(Action<IComponentTranslationContext> context)
+        {
+            DefaultTranslator.UnregisterOnTranslatingCallback(ComponentTranslationContext.GetContextWrapper(context));
+        }
+
         private AddTranslationToCacheDelegate AddTranslationToCacheLoader()
         {
             AddTranslationToCacheDelegate addTranslationToCache;
@@ -122,8 +151,13 @@ namespace GeBoCommon.AutoTranslation.Implementation
                 {
                     Logger.LogDebug(
                         $"Mono bug preventing delegate creation for {method.Name} ({e.Message}), using workaround instead");
-                    addTranslationToCache = (key, value, persistToDisk, translationType, scope) =>
-                        method.Invoke(DefaultCache, new object[] {key, value, persistToDisk, translationType, scope});
+
+                    Expression<AddTranslationToCacheDelegate> workaround =
+                        (key, value, persistToDisk, translationType, scope) =>
+                            method.Invoke(DefaultCache,
+                                new object[] {key, value, persistToDisk, translationType, scope});
+
+                    addTranslationToCache = workaround.Compile();
                 }
             }
             else
@@ -157,6 +191,45 @@ namespace GeBoCommon.AutoTranslation.Implementation
             public bool Succeeded { get; }
             public string TranslatedText { get; }
             public string ErrorMessage { get; }
+        }
+
+        public class ComponentTranslationContext : IComponentTranslationContext
+        {
+            protected readonly XUnity.AutoTranslator.Plugin.Core.ComponentTranslationContext Source;
+
+            public ComponentTranslationContext(XUnity.AutoTranslator.Plugin.Core.ComponentTranslationContext src)
+            {
+                Source = src;
+            }
+
+            public object Component => Source?.Component;
+
+            public string OriginalText => Source?.OriginalText;
+
+            public string OverriddenTranslatedText => Source?.OverriddenTranslatedText;
+
+            public void ResetBehaviour()
+            {
+                Source?.ResetBehaviour();
+            }
+
+            public void OverrideTranslatedText(string translation)
+            {
+                Source?.OverrideTranslatedText(translation);
+            }
+
+            public void IgnoreComponent()
+            {
+                Source?.IgnoreComponent();
+            }
+
+            public static Action<XUnity.AutoTranslator.Plugin.Core.ComponentTranslationContext> GetContextWrapper(
+                Action<IComponentTranslationContext> context)
+            {
+                if (_contextWrappers.TryGetValue(context, out var wrappedContext)) return wrappedContext;
+                return (_contextWrappers[context] =
+                    innerContext => context(new ComponentTranslationContext(innerContext)));
+            }
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using BepInEx.Logging;
 
 namespace GeBoCommon.AutoTranslation.Implementation
@@ -45,7 +44,6 @@ namespace GeBoCommon.AutoTranslation.Implementation
             return FallbackTryTranslate(untranslatedText, out translatedText);
         }
 
-        [SuppressMessage("Naming", "RCS1047", Justification = "Inherited naming")]
         public void TranslateAsync(string untranslatedText, Action<ITranslationResult> onCompleted)
         {
             FallbackTranslateAsync(untranslatedText, onCompleted,
@@ -68,6 +66,14 @@ namespace GeBoCommon.AutoTranslation.Implementation
         {
             return FallbackIsTranslatable(text);
         }
+
+        public void IgnoreTextComponent(object textComponent) { }
+
+        public void UnignoreTextComponent(object textComponent) { }
+
+        public void RegisterOnTranslatingCallback(Action<IComponentTranslationContext> context) { }
+
+        public void UnregisterOnTranslatingCallback(Action<IComponentTranslationContext> context) { }
 
         public class TranslationResult : ITranslationResult
         {

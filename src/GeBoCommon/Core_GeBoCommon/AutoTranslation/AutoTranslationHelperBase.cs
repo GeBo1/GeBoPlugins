@@ -26,7 +26,6 @@ namespace GeBoCommon.AutoTranslation
 
         protected bool FallbackIsTranslatable(string _) => false;
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "RCS1047", Justification = "Inherited naming")]
         protected void FallbackTranslateAsync(string _, Action<ITranslationResult> onCompleted, ITranslationResult cannedResult)
         {
             onCompleted(cannedResult);

@@ -1,12 +1,13 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using JetBrains.Annotations;
 
 namespace GeBoCommon.AutoTranslation
 {
-    [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
     public interface ITranslationResult
     {
         bool Succeeded { get; }
         string TranslatedText { get; }
+
+        [UsedImplicitly]
         string ErrorMessage { get; }
     }
 }

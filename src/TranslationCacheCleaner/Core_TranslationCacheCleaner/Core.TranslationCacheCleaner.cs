@@ -23,7 +23,7 @@ namespace TranslationCacheCleanerPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationcachecleaner";
         public const string PluginName = "Translation Cache Cleaner";
-        public const string Version = "0.5.3";
+        public const string Version = "0.6";
 
         private const float NotifySeconds = 10f;
         private const float YieldSeconds = 0.1f;
@@ -199,117 +199,10 @@ namespace TranslationCacheCleanerPlugin
 
         public IEnumerator PostCleanupCoroutine()
         {
-            if (!_latestBackup.IsNullOrWhiteSpace() && File.Exists(_latestBackup))
-            {
-                Logger.LogWarning("Something unexpected happened. Restoring previous translation cache.");
-                MoveReplaceFile(_latestBackup, AutoTranslationsFilePath);
-                yield return StartCoroutine(CoroutineUtils.CreateCoroutine(ReloadTranslations));
-            }
-        }
-
-        public void CleanTranslationCache()
-        {
-            Logger.LogMessage("Attempting to clean translation cache, please be patient...");
-            var cache = GeBoAPI.Instance.AutoTranslationHelper.DefaultCache;
-
-            if (cache == null)
-            {
-                Logger.LogError("Unable to access translation cache");
-                return;
-            }
-
-            var translations = GeBoAPI.Instance.AutoTranslationHelper.GetTranslations() ??
-                               new Dictionary<string, string>();
-            var regexes = new List<Regex>();
-
-            var tmp = GeBoAPI.Instance.AutoTranslationHelper.GetRegisteredRegexes(); 
-            if (tmp != null)
-            {
-                regexes.AddRange(tmp.Select(s => new Regex(s)));
-            }
-
-            tmp = GeBoAPI.Instance.AutoTranslationHelper.GetRegisteredSplitterRegexes();
-            if (tmp != null)
-            {
-                regexes.AddRange(tmp.Select(s => new Regex(s)));
-            }
-
-            var newFile = GetWorkFileName(Path.GetDirectoryName(AutoTranslationsFilePath),
-                Path.GetFileName(AutoTranslationsFilePath), "new");
-            var backupFile = GetWorkFileName(Path.GetDirectoryName(AutoTranslationsFilePath),
-                Path.GetFileName(AutoTranslationsFilePath), "bak");
-            MoveReplaceFile(AutoTranslationsFilePath, backupFile);
-            Logger.LogInfo("Reloading translations without existing cache file");
-            ReloadTranslations();
-
-            var completed = false;
-
-            try
-            {
-                char[] splitter = {'='};
-                var changed = 0;
-                using (var outStream = File.Open(newFile, FileMode.CreateNew, FileAccess.Write))
-                using (var writer = new StreamWriter(outStream, Encoding.UTF8))
-                using (var inStream = File.Open(backupFile, FileMode.Open, FileAccess.Read))
-                using (var reader = new StreamReader(inStream, Encoding.UTF8))
-                {
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        var parts = line.Split(splitter, StringSplitOptions.None);
-                        if (parts.Length == 2 && !parts[0].StartsWith("//", StringComparison.InvariantCulture))
-                        {
-                            if (translations.ContainsKey(parts[0]))
-                            {
-                                Logger.LogInfo($"Removing cached line (static match): {line.TrimEnd()}");
-                                changed++;
-                                continue;
-                            }
-
-                            if (regexes.Any(r => r.IsMatch(parts[0])))
-                            {
-                                Logger.LogInfo($"Removing cached line (regex match): {line.TrimEnd()}");
-                                changed++;
-                                continue;
-                            }
-                        }
-
-                        writer.WriteLine(line);
-                    }
-                }
-
-                if (changed > 0)
-                {
-                    Logger.LogMessage($"Done. Removed {changed} entries from cache. Reloading translations.");
-                    MoveReplaceFile(newFile, AutoTranslationsFilePath);
-                }
-                else
-                {
-                    Logger.LogMessage("Done. No changes made. Restoring/reloading translations");
-                    MoveReplaceFile(backupFile, AutoTranslationsFilePath);
-                }
-
-                ReloadTranslations();
-                completed = true;
-            }
-            catch (Exception e)
-            {
-                Logger.LogFatal(e.Message);
-                Logger.LogError(e.StackTrace);
-                throw;
-            }
-            finally
-            {
-                if (!completed)
-                {
-                    if (File.Exists(backupFile))
-                    {
-                        Logger.LogWarning("Something unexpected happened. Restoring previous translation cache.");
-                        MoveReplaceFile(backupFile, AutoTranslationsFilePath);
-                        ReloadTranslations();
-                    }
-                }
-            }
+            if (_latestBackup.IsNullOrWhiteSpace() || !File.Exists(_latestBackup)) yield break;
+            Logger.LogWarning("Something unexpected happened. Restoring previous translation cache.");
+            MoveReplaceFile(_latestBackup, AutoTranslationsFilePath);
+            yield return StartCoroutine(CoroutineUtils.CreateCoroutine(ReloadTranslations));
         }
     }
 }

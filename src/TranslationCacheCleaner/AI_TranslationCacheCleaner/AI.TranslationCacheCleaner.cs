@@ -1,6 +1,4 @@
-﻿using BepInEx;
-
-namespace TranslationCacheCleanerPlugin
+﻿namespace TranslationCacheCleanerPlugin
 {
     public partial class TranslationCacheCleaner { }
 }

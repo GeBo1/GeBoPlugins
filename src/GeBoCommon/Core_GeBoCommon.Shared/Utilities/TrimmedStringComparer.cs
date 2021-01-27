@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace GeBoCommon.Utilities
 {
     /// <summary>
     ///     Represents a string comparison operation that pre-processes the strings by trimming them.
     /// </summary>
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    [PublicAPI]
     public class TrimmedStringComparer : StringComparer
     {
         private readonly StringComparer _baseStringComparer;
@@ -16,11 +16,12 @@ namespace GeBoCommon.Utilities
 
         private TrimmedStringComparer(char[] extraTrimChars, StringComparer stringComparer)
         {
-            _extraTrimChars = (extraTrimChars == null || extraTrimChars.Length == 0) ? null : extraTrimChars;
+            _extraTrimChars = extraTrimChars == null || extraTrimChars.Length == 0 ? null : extraTrimChars;
             _baseStringComparer = stringComparer ?? CurrentCulture;
         }
 
         public TrimmedStringComparer(StringComparer stringComparer) : this(null, stringComparer) { }
+
         public TrimmedStringComparer(params char[] extraTrimChars) : this(extraTrimChars, null) { }
 
         public TrimmedStringComparer() : this(new char[0]) { }

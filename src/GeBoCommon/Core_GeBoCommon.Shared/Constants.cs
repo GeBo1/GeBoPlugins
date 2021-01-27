@@ -1,10 +1,9 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 
 namespace GeBoCommon
 {
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    [PublicAPI]
     public static class Constants
     {
 #if AI
@@ -44,17 +43,5 @@ namespace GeBoCommon
         public const string Prefix = "KK";
         public const RegexOptions SupportedRegexCompilationOption = RegexOptions.None;
 #endif
-        // ReSharper disable once IdentifierTypo
-        [Obsolete("Use SupportedRegexCompilationOption instead")]
-        public const RegexOptions SupportedRegexComplitationOption = SupportedRegexCompilationOption;
-
-        [Obsolete("Use MainGameProcessName instead")]
-        public const string GameProcessName = MainGameProcessName;
-
-#if (KK||AI)
-        [Obsolete("Use MainGameProcessNameSteam instead")]
-        public const string AltGameProcessName = MainGameProcessNameSteam;
-#endif
-
     }
 }

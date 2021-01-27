@@ -1,10 +1,10 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+﻿using System.Linq;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 
 namespace GeBoCommon.Utilities
 {
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    [PublicAPI]
     public static class StringUtils
     {
         private static readonly Regex ContainsJapaneseCharRegex = new Regex(
@@ -12,11 +12,11 @@ namespace GeBoCommon.Utilities
             Constants.SupportedRegexCompilationOption);
 
         /// <summary>
-        /// Determines whether the specified input contains non-ASCII characters.
+        ///     Determines whether the specified input contains non-ASCII characters.
         /// </summary>
         /// <param name="input">The input.</param>
         /// <returns>
-        ///   <c>true</c> if the specified input contains non-ASCII characters; otherwise, <c>false</c>.
+        ///     <c>true</c> if the specified input contains non-ASCII characters; otherwise, <c>false</c>.
         /// </returns>
         public static bool ContainsNonAscii(string input)
         {
@@ -24,11 +24,11 @@ namespace GeBoCommon.Utilities
         }
 
         /// <summary>
-        /// Determines whether the specified input contains Japanese characters.
+        ///     Determines whether the specified input contains Japanese characters.
         /// </summary>
         /// <param name="input">The input.</param>
         /// <returns>
-        ///   <c>true</c> if the specified input contains Japanese characters; otherwise, <c>false</c>.
+        ///     <c>true</c> if the specified input contains Japanese characters; otherwise, <c>false</c>.
         /// </returns>
         public static bool ContainsJapaneseChar(string input)
         {
@@ -36,7 +36,7 @@ namespace GeBoCommon.Utilities
         }
 
         /// <summary>
-        /// Wrapper for <see cref="string.Join(string, string[])" /> to workaround lack of params usage in .NET 3.5.
+        ///     Wrapper for <see cref="string.Join(string, string[])" /> to workaround lack of params usage in .NET 3.5.
         /// </summary>
         /// <param name="separator">The separator.</param>
         /// <param name="value">strings to join</param>
@@ -50,7 +50,7 @@ namespace GeBoCommon.Utilities
 
 
         /// <summary>
-        /// Joins the strings.
+        ///     Joins the strings.
         /// </summary>
         /// <param name="separator">The separator.</param>
         /// <param name="value">strings to join</param>

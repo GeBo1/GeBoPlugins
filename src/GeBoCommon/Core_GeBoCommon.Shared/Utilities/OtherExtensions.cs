@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx.Logging;
+using JetBrains.Annotations;
 using BepInLogLevel = BepInEx.Logging.LogLevel;
 
 namespace GeBoCommon.Utilities
 {
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    [PublicAPI]
     public static class OtherExtensions
     {
         public static IEnumerable<KeyValuePair<int, T>> Enumerate<T>(this IEnumerable<T> array)
@@ -39,6 +39,11 @@ namespace GeBoCommon.Utilities
         public static void LogWarningMessage(this ManualLogSource logger, object obj)
         {
             logger.Log(BepInLogLevel.Message | BepInLogLevel.Warning, obj);
+        }
+
+        public static ulong Sum(this IEnumerable<ulong> source)
+        {
+            return source.Aggregate((a,c) => a + c);
         }
     }
 }

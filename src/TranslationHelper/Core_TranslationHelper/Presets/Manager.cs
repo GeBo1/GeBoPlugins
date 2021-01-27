@@ -6,6 +6,7 @@ using BepInEx.Logging;
 using GeBoCommon;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
+using JetBrains.Annotations;
 using TranslationHelperPlugin.Chara;
 using TranslationHelperPlugin.Presets.Data;
 using UnityEngine;
@@ -90,19 +91,23 @@ namespace TranslationHelperPlugin.Presets
 
         internal void Reset()
         {
-            _nicknamesSupported = GeBoAPI.Instance.ChaFileNameToIndex("nickname") >= 0;
+
+            ResetCache(_cardCache);
+            ResetCache(_fullNameCache, TranslationHelper.StringCacheInitializer);
+            ResetCache(_nickNameCache);
+
+            if (TranslationHelper.IsShuttingDown) return;
+
+            _nicknamesSupported = GeBoAPI.Instance != null && GeBoAPI.Instance.ChaFileNameToIndex("nickname") >= 0;
 
             var presetCount = 0;
             _hasEntries = false;
 
             _reverseNames = TranslationHelper.ShowGivenNameFirst;
 
-            ResetCache(_cardCache);
-            ResetCache(_fullNameCache, TranslationHelper.StringCacheInitializer);
-            ResetCache(_nickNameCache);
 
             // don't load presets if we're not going to use them
-            if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
+            if (TranslationHelper.Instance == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
 
             var nameCacheDone = new Dictionary<CharacterSex, HashSet<string>>(
                 EnumEqualityComparer<CharacterSex>.Comparer);
@@ -231,8 +236,7 @@ namespace TranslationHelperPlugin.Presets
             return cacheBase.FullName ?? BuildFullName(cacheBase.FamilyName, cacheBase.GivenName);
         }
 
-        // ReSharper disable once UnusedMember.Local
-        private IEnumerable<string> BuildFullNames(IEnumerable<string> familyNames, IEnumerable<string> givenNames)
+        protected IEnumerable<string> BuildFullNames(IEnumerable<string> familyNames, IEnumerable<string> givenNames)
         {
             return (from family in familyNames
                 from given in givenNames

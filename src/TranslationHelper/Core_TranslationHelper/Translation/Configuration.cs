@@ -1,8 +1,9 @@
-﻿using BepInEx.Logging;
+﻿using System.Diagnostics.CodeAnalysis;
+using BepInEx.Logging;
 
 namespace TranslationHelperPlugin.Translation
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     internal static partial class Configuration
     {
         internal static ManualLogSource Logger => TranslationHelper.Logger;

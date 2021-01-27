@@ -14,10 +14,9 @@ using IllusionStudio = Studio.Studio;
 
 namespace TranslationHelperPlugin.Studio
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     internal partial class Hooks
     {
-        // ReSharper disable InconsistentNaming
         internal static ManualLogSource Logger => TranslationHelper.Logger;
         private static readonly CoroutineLimiter TreeNodeLimiter = new CoroutineLimiter(30, nameof(TreeNodeLimiter));
 
@@ -28,7 +27,7 @@ namespace TranslationHelperPlugin.Studio
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(TreeNodeCtrl), "RefreshVisibleLoop")]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
+        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]
         internal static void RefreshVisibleLoopPatch(TreeNodeObject _source)
         {
             if (TranslationHelper.Instance == null || !IllusionStudio.IsInstance() ||
@@ -70,7 +69,6 @@ namespace TranslationHelperPlugin.Studio
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CharaList), "InitCharaList")]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void CharaList_InitCharaList_Postfix(CharaList __instance, ref object __state)
         {
             TranslateDisplayList(__instance);
@@ -147,7 +145,7 @@ namespace TranslationHelperPlugin.Studio
 
         private static void TranslateDisplayList(CharaList charaList)
         {
-            // ReSharper disable once RedundantAssignment
+            // ReSharper disable once RedundantAssignment - used in DEBUG
             var start = Time.realtimeSinceStartup;
             try
             {
@@ -170,6 +168,7 @@ namespace TranslationHelperPlugin.Studio
 
                 void Finished()
                 {
+                    // ReSharper disable once AccessToModifiedClosure
                     jobs--;
                     if (jobs < 1)
                     {

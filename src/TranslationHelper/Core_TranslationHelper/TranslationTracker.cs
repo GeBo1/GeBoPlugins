@@ -5,6 +5,7 @@ using System.Linq;
 using BepInEx.Logging;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Utilities;
+using JetBrains.Annotations;
 using KKAPI.Utilities;
 
 namespace TranslationHelperPlugin
@@ -26,6 +27,7 @@ namespace TranslationHelperPlugin
             TranslationHelper.BehaviorChanged += TranslationHelper_BehaviorChanged;
         }
 
+        [UsedImplicitly]
         public TranslationTracker() : this(nameof(TranslationTracker)) { }
 
 
@@ -34,7 +36,7 @@ namespace TranslationHelperPlugin
         private void TranslationHelper_BehaviorChanged(object sender, EventArgs e)
         {
             CancelOutstandingCoroutines();
-            _trackers.Clear();
+            _trackers?.Clear();
         }
 
         private void CancelOutstandingCoroutines()
@@ -46,16 +48,20 @@ namespace TranslationHelperPlugin
                     Logger.DebugLogDebug($"canceling {coroutine}");
                     TranslationHelper.Instance.StartCoroutine(coroutine);
                 }
+#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e)
                 {
+                    if (TranslationHelper.IsShuttingDown) continue;
                     Logger.LogWarning(
                         $"{_trackerName}.{nameof(CancelOutstandingCoroutines)}: unable to stop {coroutine}: {e.Message}");
                 }
+#pragma warning restore CA1031 // Do not catch general exception types
             }
 
             _outstandingCoroutines.Clear();
         }
 
+        [UsedImplicitly]
         public void TrackTranslationFunction(Action<IEnumerable<TranslationResultHandler>> translationFunction,
             NameScope scope, string trackedKey, IEnumerable<TranslationResultHandler> handlers)
         {
@@ -141,11 +147,13 @@ namespace TranslationHelperPlugin
             _trackers[scope].CallHandlers(trackedKey, result);
         }
 
+        [PublicAPI]
         public bool IsTracking(NameScope scope, string trackedKey)
         {
             return _trackers[scope].IsTracking(trackedKey);
         }
 
+        [PublicAPI]
         public IEnumerator WaitUntilDoneTracking(NameScope scope, string trackedKey)
         {
             return _trackers[scope].WaitUntilDoneTracking(trackedKey);

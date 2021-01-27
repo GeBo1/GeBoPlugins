@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using GeBoCommon.AutoTranslation;
 
 namespace TranslationHelperPlugin.Translation
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     public static partial class Handlers
     {
         public static TranslationResultHandler CallbackWrapper(Action<string> callback, string failureValue = null)

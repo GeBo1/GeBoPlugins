@@ -8,6 +8,7 @@ using ExtensibleSaveFormat;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
+using JetBrains.Annotations;
 using KKAPI.Utilities;
 using Studio;
 using TranslationHelperPlugin.Chara;
@@ -66,9 +67,9 @@ namespace TranslationHelperPlugin
 
         public void ClearCaches()
         {
-            CacheRecentTranslationsHelper.Clear();
-            RecentTranslationsByPath.Clear();
-            _pathsInProgress.Clear();
+            CacheRecentTranslationsHelper?.Clear();
+            RecentTranslationsByPath?.Clear();
+            _pathsInProgress?.Clear();
         }
 
         public bool AreFileInfosInProgress()
@@ -76,6 +77,7 @@ namespace TranslationHelperPlugin
             return _pathsInProgress.Count > 0;
         }
 
+        [PublicAPI]
         public IEnumerator WaitOnFileInfoTranslations()
         {
             yield return _waitWhileFileInfosInProgress;
@@ -86,6 +88,7 @@ namespace TranslationHelperPlugin
             return StringUtils.ContainsJapaneseChar(fileInfo.Name);
         }
 
+        [PublicAPI]
         public IEnumerator WaitOnFileInfo(ICharaFileInfo fileInfo)
         {
             if (fileInfo == null) yield break;
@@ -133,8 +136,11 @@ namespace TranslationHelperPlugin
 
         public static void CacheRecentTranslation(ICharaFileInfo fileInfo, string translatedName)
         {
-            // ReSharper disable once RedundantAssignment
+            
+            // ReSharper disable RedundantAssignment - used in DEBUG
+            var added = false;
             var start = Time.realtimeSinceStartup;
+            // ReSharper restore RedundantAssignment
             var key = new {fileInfo.FullPath, translatedName};
             try
             {
@@ -146,24 +152,26 @@ namespace TranslationHelperPlugin
                 {
                     return;
                 }
-
-                if (!TranslationHelper.NameStringComparer.Equals(fileInfo.Name, translatedName))
-                {
-                    RecentTranslationsByPath[new NameScope(fileInfo.Sex)][fileInfo.FullPath] = translatedName;
-                }
+                if (TranslationHelper.NameStringComparer.Equals(fileInfo.Name, translatedName)) return;
+                RecentTranslationsByPath[new NameScope(fileInfo.Sex)][PathUtils.NormalizePath(fileInfo.FullPath)] =
+                    translatedName;
+                // ReSharper disable once RedundantAssignment - used in DEBUG
+                added = true;
             }
             finally
             {
                 CacheRecentTranslationsHelper.RecordCall(key);
                 Logger.DebugLogDebug(
-                    $"CardFileInfoTranslationManager.CacheRecentTranslation(fileInfo): {Time.realtimeSinceStartup - start:000.0000000000}");
+                    $"CardFileInfoTranslationManager.CacheRecentTranslation(fileInfo): {Time.realtimeSinceStartup - start:000.0000000000}: added={added}");
             }
         }
 
         public static void CacheRecentTranslation(NameScope scope, string path, string translatedName)
         {
-            // ReSharper disable once RedundantAssignment
+            // ReSharper disable RedundantAssignment - used in DEBUG
+            var added = false;
             var start = Time.realtimeSinceStartup;
+            // ReSharper restore RedundantAssignment
             var key = new {path, translatedName};
             try
             {
@@ -172,12 +180,21 @@ namespace TranslationHelperPlugin
                     $"CharaFileInfoTranslationManager.CacheRecentTranslation({scope}, {path}, {translatedName})");
                 if (scope.Sex == CharacterSex.Unspecified || translatedName.IsNullOrEmpty() ||
                     path.IsNullOrEmpty()) return;
+
+                // this is less "safe" than the other version, so bail if we've already got cache data
+                if (RecentTranslationsByPath[scope].ContainsKey(path)) return;
+
+                // this is the slowest check, keep until last
+                if (StringUtils.ContainsJapaneseChar(translatedName)) return;
+
                 RecentTranslationsByPath[scope][PathUtils.NormalizePath(path)] = translatedName;
+                // ReSharper disable once RedundantAssignment - used in DEBUG
+                added = true;
             }
             finally
             {
                 CacheRecentTranslationsHelper.RecordCall(key);
-                Logger.DebugLogDebug($"CardFileInfoTranslationManager.CacheRecentTranslation(path): {Time.realtimeSinceStartup - start:000.0000000000}");
+                Logger.DebugLogDebug($"CardFileInfoTranslationManager.CacheRecentTranslation(path): {Time.realtimeSinceStartup - start:000.0000000000}: added={added}");
             }
 
         }
@@ -239,9 +256,10 @@ namespace TranslationHelperPlugin
                 _pathsInProgress.Remove(path);
                 if (result.Succeeded)
                 {
-                    fileInfo.Name = result.TranslatedText;
                     CacheRecentTranslation(fileInfo, result.TranslatedText);
                     CardNameTranslationManager.CacheRecentTranslation(scope, originalName, result.TranslatedText);
+                    // must be set after CacheRecentTranslation   
+                    fileInfo.Name = result.TranslatedText;
                 }
 
                 done = true;

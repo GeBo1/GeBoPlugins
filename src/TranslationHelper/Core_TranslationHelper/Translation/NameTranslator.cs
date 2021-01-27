@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using BepInEx.Logging;
 using GeBoCommon;
 using GeBoCommon.AutoTranslation;
@@ -23,11 +22,11 @@ namespace TranslationHelperPlugin.Translation
         }
         */
 
-        [SuppressMessage("Naming", "RCS1047", Justification = "Inherited naming")]
         public void TranslateNameAsync(string untranslatedText, NameScope nameScope,
             Action<ITranslationResult> onCompleted)
         {
-            GeBoAPI.Instance.AutoTranslationHelper.TranslateAsync(untranslatedText, nameScope.TranslationScope, onCompleted);
+            GeBoAPI.Instance.AutoTranslationHelper.TranslateAsync(untranslatedText, nameScope.TranslationScope,
+                onCompleted);
         }
 
         /*

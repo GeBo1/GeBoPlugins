@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx.Logging;
 using GeBoCommon;
+using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
 using KKAPI;
@@ -11,7 +13,6 @@ using KKAPI.Utilities;
 using TranslationHelperPlugin.Chara;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
 #if AI || HS2
 using AIChara;
 
@@ -95,7 +96,8 @@ namespace TranslationHelperPlugin
             return GeBoAPI.Instance.AutoTranslationHelper.GetReplacements();
         }
 
-        // ReSharper disable once UnusedMethodReturnValue.Local
+
+        [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Local")]
         private bool CounterAdd(string name, string regId)
         {
             UpdateLastBusyTime();
@@ -118,7 +120,7 @@ namespace TranslationHelperPlugin
             }
         }
 
-        // ReSharper disable once UnusedMethodReturnValue.Local
+        [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Local")]
         private bool CounterRemove(string name, string regId)
         {
             UpdateLastBusyTime();
@@ -160,7 +162,7 @@ namespace TranslationHelperPlugin
         public bool HaveNamesChanged(ChaFile chaFile)
         {
             //return trackedRegistrationIDs.Contains(chaFile.GetRegistrationID());
-            var current = new HashSet<string>(GetNamesToRegister(chaFile));
+            var current = new HashSet<string>(GetNamesToRegister(chaFile).Select(n => n.Key));
             lock (_lock)
             {
                 if (!_regIDtoNamesMap.TryGetValue(chaFile.GetRegistrationID(), out var registered))
@@ -172,19 +174,92 @@ namespace TranslationHelperPlugin
             }
         }
 
-        private IEnumerable<string> GetNamesToRegister(ChaFile chaFile)
+        private bool NameQualifiesForRegistration(string name)
+        {
+            return !name.IsNullOrEmpty() &&
+                   name.Length >= (StringUtils.ContainsJapaneseChar(name) ? MinLengthJP : MinLength);
+        }
+
+        private IEnumerable<KeyValuePair<string, string>> GetNamesToRegister(ChaFile chaFile)
         {
             var handled = new HashSet<string>();
-            foreach (var name in chaFile.EnumerateNames().Select(n => n.Value))
+            var controller = chaFile.GetTranslationHelperController();
+            foreach (var nameEntry in chaFile.EnumerateNames())
             {
+                var name = nameEntry.Value;
                 if (handled.Contains(name)) continue;
                 handled.Add(name);
-                yield return name;
+                yield return new KeyValuePair<string, string>(name, name);
+                if (controller == null) continue;
+                var origName = controller.OriginalNames[nameEntry.Key];
+                if (origName.IsNullOrEmpty() || origName == name || handled.Contains(origName)) continue;
+                handled.Add(origName);
+                yield return new KeyValuePair<string, string>(origName, origName);
             }
 
             var fullname = chaFile.GetFullName();
-            if (handled.Contains(fullname)) yield break;
-            yield return fullname;
+            foreach (var name in new[] {fullname, chaFile.GetOriginalFullName(), chaFile.GetFormattedOriginalName()})
+            {
+                if (handled.Contains(name)) continue;
+                handled.Add(name);
+                yield return new KeyValuePair<string, string>(name, name);
+            }
+        }
+
+        public void RegisterReplacementsForNames(params string[] origNames)
+        {
+            var fastReplacements = new Dictionary<string, string>();
+            var needsTranslation = new List<string>(origNames.Length);
+            foreach (var origString in origNames)
+            {
+                if (TranslationHelper.TryTranslateName(NameScope.DefaultNameScope, origString,
+                    out var translatedString))
+                {
+                    //fastReplacements[origString] = origString;
+                    fastReplacements[translatedString] = translatedString;
+                }
+                else
+                {
+                    needsTranslation.Add(origString);
+                }
+            }
+
+            if (fastReplacements.Count > 0) RegisterReplacementStrings(fastReplacements);
+            foreach (var toTranslate in needsTranslation)
+            {
+                void ResultHandler(ITranslationResult result)
+                {
+                    var replacements = new Dictionary<string, string>();
+                    if (!TranslationHelper.NameNeedsTranslation(toTranslate, NameScope.DefaultNameScope))
+                    {
+                        replacements[toTranslate] = toTranslate;
+                    }
+
+                    if (result.Succeeded)
+                    {
+                        replacements[result.TranslatedText] = result.TranslatedText;
+                    }
+
+                    RegisterReplacementStrings(replacements);
+                }
+
+
+                GeBoAPI.Instance.AutoTranslationHelper.TranslateAsync(toTranslate,
+                    NameScope.DefaultNameScope.TranslationScope, ResultHandler);
+            }
+        }
+
+        public void RegisterReplacementStrings(IEnumerable<KeyValuePair<string, string>> replacementStrings)
+        {
+            var replacements = GetReplacements();
+            if (replacements == null) return;
+            foreach (var replacementString in replacementStrings)
+            {
+                if (replacements.ContainsKey(replacementString.Key)) continue;
+                Logger.LogDebug(
+                    $"Registering as translation replacement: {replacementString.Key} => {replacementString.Value}");
+                replacements.Add(replacementString.Key, replacementString.Value);
+            }
         }
 
         public void Track(ChaFile chaFile)
@@ -203,14 +278,15 @@ namespace TranslationHelperPlugin
                 var replacements = GetReplacements();
                 if (replacements == null) return;
 
-                foreach (var name in GetNamesToRegister(chaFile))
+                foreach (var nameEntry in GetNamesToRegister(chaFile))
                 {
-                    if (name.IsNullOrEmpty()) continue;
-                    if (name.Length < (StringUtils.ContainsJapaneseChar(name) ? MinLengthJP : MinLength)) continue;
+                    var name = nameEntry.Key;
+                    Logger.LogDebug($"Possible Name: {name} => {nameEntry.Value}");
+                    if (name.IsNullOrEmpty() || !NameQualifiesForRegistration(name)) continue;
                     if (!replacements.ContainsKey(name))
                     {
-                        Logger.LogDebug($"Registering as translation replacement: {name}");
-                        replacements.Add(name, name);
+                        Logger.LogDebug($"Registering as translation replacement: {name} => {nameEntry.Value}");
+                        replacements.Add(name, nameEntry.Value);
                         _currentlyRegisteredReplacements.Add(name);
                     }
 
@@ -239,6 +315,7 @@ namespace TranslationHelperPlugin
                     if (CounterCount(name) != 0 || !_currentlyRegisteredReplacements.Contains(name)) continue;
                     toClean.Add(name);
                 }
+
                 _regIDtoCardMap.Remove(regID);
             }
 
@@ -356,7 +433,7 @@ namespace TranslationHelperPlugin
                         var removed = entry.Value.RemoveWhere(e => deadEntries.Contains(e));
                         if (removed > 0)
                         {
-                            Logger.LogDebug($"Cleanup: removed {removed} entries for {entry.Key}");
+                            Logger.DebugLogDebug($"Cleanup: removed {removed} entries for {entry.Key}");
                         }
                     }
                 }
@@ -374,6 +451,7 @@ namespace TranslationHelperPlugin
 
             CheckNamesForCleanup(namesToRemove.ToArray());
 
+            if (orig <= current) return;
             Logger.LogDebug(
                 $"{nameof(TranslatorReplacementsManager)}.{nameof(Cleanup)}: removed {orig - current} entries ({current} remain)");
         }
@@ -386,6 +464,7 @@ namespace TranslationHelperPlugin
             {
                 if (_currentCleanup != null) TranslationHelper.Instance.StopCoroutine(_currentCleanup);
                 _currentCleanup = null;
+                _cleanupIdleDelay.Reset();
                 foreach (var name in _currentlyRegisteredReplacements)
                 {
                     replacements?.Remove(name);

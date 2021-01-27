@@ -8,12 +8,12 @@ using GeBoCommon;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
+using JetBrains.Annotations;
 using TranslationHelperPlugin.Chara;
 using TranslationHelperPlugin.Translation;
 using TranslationHelperPlugin.Utils;
 using UnityEngine;
 using Handlers = TranslationHelperPlugin.Chara.Handlers;
-
 #if AI || HS2
 using AIChara;
 
@@ -149,7 +149,7 @@ namespace TranslationHelperPlugin
 
         public static void CacheRecentTranslation(NameScope scope, string originalName, string translatedName)
         {
-            // ReSharper disable once RedundantAssignment
+            // ReSharper disable once RedundantAssignment - used in DEBUG
             var start = Time.realtimeSinceStartup;
             var key = new {scope.TranslationScope, originalName, translatedName};
 
@@ -183,6 +183,13 @@ namespace TranslationHelperPlugin
                 Logger.DebugLogDebug(
                     $"CardNameTranslationManager.CacheRecentTranslation(path): {Time.realtimeSinceStartup - start:000.0000000000}");
             }
+        }
+
+        internal static bool NameNeedsTranslation(string name, NameScope scope)
+        {
+            return !name.IsNullOrWhiteSpace() &&
+                   !NoTranslate[scope].Contains(name) &&
+                   StringUtils.ContainsJapaneseChar(name);
         }
 
         public IEnumerator TranslateCardNames(ChaFile file)
@@ -416,10 +423,10 @@ namespace TranslationHelperPlugin
 
         public void ClearCaches()
         {
-            CacheRecentTranslationsHelper.Clear();
-            NoTranslate.Clear();
-            RecentTranslationsByName.Clear();
-            _cardsInProgress.Clear();
+            CacheRecentTranslationsHelper?.Clear();
+            NoTranslate?.Clear();
+            RecentTranslationsByName?.Clear();
+            _cardsInProgress?.Clear();
         }
 
         internal abstract class BaseJob<T>
@@ -491,12 +498,14 @@ namespace TranslationHelperPlugin
             internal string OriginalName { get; }
             internal string TranslatedName { get; private set; }
 
-            // ReSharper disable once UnusedMember.Global
+            [UsedImplicitly]
             internal int TranslationScope => NameScope?.TranslationScope ?? NameScope.BaseScope;
+
             internal CharacterSex Sex => NameScope?.Sex ?? CharacterSex.Unspecified;
 
-            // ReSharper disable once UnusedMember.Global
+            [UsedImplicitly]
             internal NameType NameType => NameScope?.NameType ?? NameType.Unclassified;
+
             private bool SplitNames { get; }
 
             private List<string> NameParts { get; set; }
@@ -584,7 +593,11 @@ namespace TranslationHelperPlugin
                 var scope = new NameScope(_chaFile.GetSex());
 
                 CacheRecentTranslation(scope, orig, current);
-                CharaFileInfoTranslationManager.CacheRecentTranslation(scope, _chaFile.GetFullPath(), current);
+                if (orig != current)
+                {
+                    CharaFileInfoTranslationManager.CacheRecentTranslation(scope, _chaFile.GetFullPath(), current);
+                }
+
                 TranslationHelper.Instance.AddTranslatedNameToCache(orig, current,
                     !TranslationHelper.ShowGivenNameFirst);
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using GeBoCommon.Utilities;
 using UnityEngine;
 
 namespace TranslationHelperPlugin.Utils
@@ -28,7 +29,7 @@ namespace TranslationHelperPlugin.Utils
             if (Time.fixedUnscaledTime <= _lastCheck) return;
             if (Time.fixedUnscaledTime >= _staleTime && _recentCalls.Count > 0)
             {
-                TranslationHelper.Logger.LogDebug($"FreshnessCheck clearing: {_recentCalls.Count}");
+                TranslationHelper.Logger.DebugLogDebug($"FreshnessCheck clearing: {_recentCalls.Count}");
                 _recentCalls.Clear();
             }
 

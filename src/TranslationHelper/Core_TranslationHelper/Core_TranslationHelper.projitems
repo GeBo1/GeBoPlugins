@@ -16,6 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Chara\Configuration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CardNameTranslationManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Chara\Handlers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ComponentTranslationHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Presets\Data\NamePresets.cs" />

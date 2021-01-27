@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using GeBoCommon;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
+using JetBrains.Annotations;
 using KKAPI.Chara;
 using UnityEngine;
 #if AI || HS2
@@ -17,7 +19,8 @@ using AIChara;
 
 namespace TranslationHelperPlugin.Chara
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
+    [PublicAPI]
     public static partial class Extensions
     {
         private static readonly TranslationTracker TranslateFullNameTracker =
@@ -68,7 +71,6 @@ namespace TranslationHelperPlugin.Chara
             return result;
         }
 
-        // ReSharper disable once UnusedMember.Global
         public static bool TryGetTranslationHelperController(this ChaControl chaControl, out Controller controller)
         {
             controller = GetTranslationHelperController(chaControl);

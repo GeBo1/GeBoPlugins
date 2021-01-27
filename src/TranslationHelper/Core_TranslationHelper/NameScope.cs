@@ -1,11 +1,14 @@
 ﻿using System;
 using GeBoCommon.Chara;
+using JetBrains.Annotations;
 
 namespace TranslationHelperPlugin
 {
     public class NameScope : IEquatable<NameScope>
     {
         internal const int BaseScope = 8192;
+
+        public static NameScope DefaultNameScope = new NameScope();
 
         public NameScope(CharacterSex sex, NameType nameType)
         {
@@ -14,8 +17,9 @@ namespace TranslationHelperPlugin
             TranslationScope = BaseScope + ((int)NameType * 16) + (int)Sex + 1;
         }
 
-        // ReSharper disable once UnusedMember.Global
+        [PublicAPI]
         public NameScope(NameType nameType) : this(CharacterSex.Unspecified, nameType) { }
+
         public NameScope(CharacterSex sex) : this(sex, NameType.Unclassified) { }
         public NameScope() : this(CharacterSex.Unspecified, NameType.Unclassified) { }
         public int TranslationScope { get; }

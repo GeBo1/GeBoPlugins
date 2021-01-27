@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx.Logging;
+using JetBrains.Annotations;
 using KKAPI.Chara;
 using KKAPI.Studio;
 using KKAPI.Studio.SaveLoad;
@@ -17,7 +19,7 @@ using AIChara;
 
 namespace TranslationHelperPlugin.Studio
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     internal static partial class Configuration
     {
         internal static readonly List<TryAlternateStudioCharaLoaderTranslation> AlternateStudioCharaLoaderTranslators =
@@ -58,6 +60,7 @@ namespace TranslationHelperPlugin.Studio
             chaControl.SafeProcObject(c=>UpdateTreeForChar(c.chaFile, callback));
         }
 
+        [UsedImplicitly]
         internal static void UpdateTreeForChar(ChaFile chaFile)
         {
             UpdateTreeForChar(chaFile, null);

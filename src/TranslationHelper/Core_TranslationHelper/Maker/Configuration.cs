@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx.Logging;
 using GeBoCommon;
+using GeBoCommon.AutoTranslation;
 using KKAPI.Chara;
 using KKAPI.Maker;
 using KKAPI.Maker.UI.Sidebar;
@@ -18,7 +20,7 @@ using AIChara;
 
 namespace TranslationHelperPlugin.Maker
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     internal static partial class Configuration
     {
         internal static ManualLogSource Logger => TranslationHelper.Logger;
@@ -67,6 +69,7 @@ namespace TranslationHelperPlugin.Maker
             MakerAPI.GetCharacterControl().SafeProcObject(UpdateUIForChara);
         }
 
+
         private static void SetupNameInputFields()
         {
             foreach (var entry in GetNameInputFieldInfos())
@@ -87,7 +90,6 @@ namespace TranslationHelperPlugin.Maker
         private static void MakerExiting(object sender, EventArgs e)
         {
             CharacterApi.CharacterReloaded -= MakerCharacterReloaded;
-
             TranslationHelper.NotifyBehaviorChanged(e);
         }
 

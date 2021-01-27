@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx.Logging;
 using GeBoCommon;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
+using JetBrains.Annotations;
 using KKAPI;
 using KKAPI.Chara;
 using KKAPI.Maker;
@@ -17,7 +19,7 @@ using UnityEngine;
 
 namespace TranslationHelperPlugin.Chara
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     public partial class Controller : CharaCustomFunctionController
     {
         private readonly List<IEnumerator> _monitoredCoroutines = new List<IEnumerator>();
@@ -34,7 +36,12 @@ namespace TranslationHelperPlugin.Chara
         private static bool RestoreNamesOnSave =>
             !MakerAPI.InsideAndLoaded || !TranslationHelper.MakerSaveWithTranslatedNames.Value;
 
+        [SuppressMessage("Performance", "CA1819:Properties should not return arrays",
+            Justification = "Workaround to avoid constructor in controllers")]
         public string[] TranslatedNames => _translatedNames.Value;
+
+        [SuppressMessage("Performance", "CA1819:Properties should not return arrays",
+            Justification = "Workaround to avoid constructor in controllers")]
         public string[] OriginalNames => _originalNames.Value;
 
         // ReSharper disable once MergeConditionalExpression
@@ -51,7 +58,6 @@ namespace TranslationHelperPlugin.Chara
                 {
                     _fullPath = PathUtils.NormalizePath(value);
                 }
-
                 return _fullPath;
             }
             internal set
@@ -59,13 +65,26 @@ namespace TranslationHelperPlugin.Chara
                 try
                 {
                     _fullPath = PathUtils.NormalizePath(value);
+
                 }
+#pragma warning disable CA1031 // Do not catch general exception types
                 catch
                 {
+                    Logger.LogDebug($"FullPath: Unable to normalize '{value}'");
                     // not trackable in main game
                     _fullPath = null;
                 }
+#pragma warning restore CA1031 // Do not catch general exception types
             }
+        }
+
+        protected override void OnDestroy()
+        {
+            //TranslationHelper.Logger?.LogDebug($"Controller.OnDestroy: {RegistrationID}");
+            UnregisterReplacements();
+            RestoreCardNames();
+            StopMonitoredCoroutines();
+            base.OnDestroy();
         }
 
         internal Coroutine StartMonitoredCoroutine(IEnumerator routine)
@@ -129,15 +148,6 @@ namespace TranslationHelperPlugin.Chara
             DoReload();
         }
 
-        protected override void OnDestroy()
-        {
-            //TranslationHelper.Logger?.LogDebug($"Controller.OnDestroy: {RegistrationID}");
-            UnregisterReplacements();
-            RestoreCardNames();
-            StopMonitoredCoroutines();
-            base.OnDestroy();
-        }
-
         private void StopMonitoredCoroutines()
         {
             var toStop = _monitoredCoroutines.ToList();
@@ -164,7 +174,7 @@ namespace TranslationHelperPlugin.Chara
         private void RestoreCardNames()
         {
             TranslationHelper.Logger?.DebugLogDebug($"Controller.RestoreCardNames: {RegistrationID}");
-            if (!IsTranslated) return;
+            if (!IsTranslated || TranslationHelper.IsShuttingDown) return;
             IsTranslated = false;
             for (var i = 0; i < GeBoAPI.Instance.ChaFileNames.Count; i++)
             {
@@ -201,13 +211,18 @@ namespace TranslationHelperPlugin.Chara
 
             StartMonitoredCoroutine(TranslationHelper.CardNameManager.TranslateCardNames(ChaFileControl));
 
-            StartMonitoredCoroutine(TranslationHelper.CardNameManager.WaitOnCard(ChaFileControl).AppendCo(
+            StartMonitoredCoroutine(WaitOnTranslations().AppendCo(
                 () => OnTranslationComplete(cardFullyLoaded)));
+        }
+
+        public IEnumerator WaitOnTranslations()
+        {
+            return TranslationHelper.CardNameManager.WaitOnCard(ChaFileControl);
         }
 
         public void RegisterReplacements(bool alreadyTranslated = false)
         {
-            //TranslationHelper.Logger?.LogDebug($"Controller.RegisterReplacements: {RegistrationID}");
+            //TranslationHelper.Logger?.DebugLogDebug($"Controller.RegisterReplacements: {RegistrationID}");
             if (!TranslationHelper.RegisterActiveCharacters.Value ||
                 !TranslationHelper.RegistrationGameModes.Contains(TranslationHelper.Instance.CurrentGameMode))
             {
@@ -220,7 +235,7 @@ namespace TranslationHelperPlugin.Chara
 
         public void UnregisterReplacements()
         {
-            //TranslationHelper.Logger?.LogDebug($"Controller.UnregisterReplacements: {RegistrationID}");
+            //TranslationHelper.Logger?.DebugLogDebug($"Controller.UnregisterReplacements: {RegistrationID}");
             TranslationHelper.Instance.UnregisterReplacements(ChaFileControl).RunImmediately();
         }
 
@@ -245,6 +260,7 @@ namespace TranslationHelperPlugin.Chara
             }
         }
 
+        [UsedImplicitly]
         public string GetFormattedOriginalName()
         {
 #if KK

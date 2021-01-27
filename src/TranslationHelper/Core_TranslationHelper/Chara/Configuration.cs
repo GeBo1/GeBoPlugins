@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using BepInEx.Logging;
 using GeBoCommon.Utilities;
+using JetBrains.Annotations;
 using KKAPI.Chara;
 using KKAPI.Maker;
 
@@ -12,7 +14,7 @@ using AIChara;
 
 namespace TranslationHelperPlugin.Chara
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     internal static partial class Configuration
     {
         internal const string GUID = TranslationHelper.GUID + ".chara";
@@ -51,23 +53,25 @@ namespace TranslationHelperPlugin.Chara
             {
                 filename = PathUtils.NormalizePath(filename);
             }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch
             {
                 // not trackable
                 return;
             }
+#pragma warning restore CA1031 // Do not catch general exception types
 
             var key = GetTrackingKey(chaFile, filename);
             ChaFileControlPaths[key] = filename;
         }
 
-        // ReSharper disable once UnusedMember.Global
+        [PublicAPI]
         public static void UntrackCharaFileControlPath(ChaFile chaFile, string filename)
         {
             ChaFileControlPaths.Remove(GetTrackingKey(chaFile, filename));
         }
 
-        // ReSharper disable once UnusedMember.Global
+        [PublicAPI]
         public static void UntrackCharaFileControlPath(ChaFile chaFile)
         {
             ChaFileControlPaths.Remove(GetTrackingKey(chaFile, chaFile.charaFileName));

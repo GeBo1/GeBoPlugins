@@ -1,4 +1,6 @@
-﻿#if KK
+﻿
+using JetBrains.Annotations;
+#if KK
 using GeBoCommon.Chara;
 #endif
 #if AI||HS2
@@ -12,7 +14,7 @@ namespace TranslationHelperPlugin.Presets
     {
         internal CardNameCacheKey(string familyName, string givenName) : base(familyName, givenName) { }
 
-        // ReSharper disable once UnusedMember.Global
+        [UsedImplicitly]
         internal CardNameCacheKey(string fullName) : base(fullName) { }
 
 #if KK

@@ -4,6 +4,7 @@ using System.IO;
 using BepInEx.Logging;
 using GeBoCommon.Utilities;
 using HarmonyLib;
+using JetBrains.Annotations;
 using KKAPI;
 using KKAPI.Maker;
 
@@ -13,7 +14,7 @@ using AIChara;
 
 namespace TranslationHelperPlugin.Chara
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     internal partial class Hooks
     {
         internal static ManualLogSource Logger => TranslationHelper.Logger;
@@ -34,6 +35,8 @@ namespace TranslationHelperPlugin.Chara
         }
         */
 
+        [Obsolete]
+        [UsedImplicitly]
         private static void AlternateReload(ChaFile file)
         {
             if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
@@ -64,7 +67,6 @@ namespace TranslationHelperPlugin.Chara
 #else
         [HarmonyPatch(typeof(ChaFile), "LoadFile", typeof(string), typeof(int), typeof(bool), typeof(bool))]
 #endif
-        [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "HarmonyPatch")]
         private static void ChaFileLoadFilePostfix(ChaFile __instance, string path, bool __result)
         {
             if (!__result ||
@@ -73,14 +75,13 @@ namespace TranslationHelperPlugin.Chara
             if (!MakerAPI.CharaListIsLoading && !Configuration.TrackCharaFileControlPaths) return;
 
             __instance.GetTranslationHelperController().SafeProc(c => c.FullPath = path);
-            Configuration.ChaFileControlPaths[__instance.GetRegistrationID()] = path;
+            Configuration.TrackCharaFileControlPath(__instance, path);
         }
 
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(ChaFileControl), nameof(ChaFileControl.LoadCharaFile), typeof(string), typeof(byte),
             typeof(bool), typeof(bool))]
-        [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "HarmonyPatch")]
         private static void ChaFileControlLoadCharaFilePostfix(ChaFileControl __instance, string filename,
             bool __result)
         {
@@ -95,11 +96,13 @@ namespace TranslationHelperPlugin.Chara
             {
                 filename = PathUtils.NormalizePath(filename);
             }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception err)
             {
                 Logger.LogDebug($"Unable to normalize filename '{filename}', will not track card path: {err}");
                 return;
             }
+#pragma warning restore CA1031 // Do not catch general exception types
 
             __instance.GetTranslationHelperController().SafeProc(c => c.FullPath = filename);
 
@@ -113,10 +116,9 @@ namespace TranslationHelperPlugin.Chara
 #else
         [HarmonyPostfix, HarmonyPatch(typeof(ChaFile), "SaveFile", typeof(BinaryWriter), typeof(bool), typeof(int))]
 #endif
-        [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "HarmonyPatch")]
         private static void ChaFile_SaveFile_Postfix(ChaFile __instance)
         {
-            // ReSharper disable once UseNullPropagation
+            // ReSharper disable once UseNullPropagation -- Unity
             if (__instance == null) return;
             __instance.GetTranslationHelperController()
                 .SafeProcObject(c => c.OnCardSaveComplete(KoikatuAPI.GetCurrentGameMode()));

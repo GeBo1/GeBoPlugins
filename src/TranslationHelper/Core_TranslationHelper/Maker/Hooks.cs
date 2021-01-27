@@ -1,4 +1,5 @@
-﻿using BepInEx.Logging;
+﻿using System.Diagnostics.CodeAnalysis;
+using BepInEx.Logging;
 using HarmonyLib;
 
 #if AI||HS2
@@ -7,7 +8,7 @@ using HarmonyLib;
 
 namespace TranslationHelperPlugin.Maker
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     internal partial class Hooks
     {
         internal static ManualLogSource Logger => TranslationHelper.Logger;

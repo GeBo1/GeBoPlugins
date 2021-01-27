@@ -1,9 +1,10 @@
-﻿using BepInEx.Logging;
+﻿using System.Diagnostics.CodeAnalysis;
+using BepInEx.Logging;
 using KKAPI.Studio;
 
 namespace TranslationHelperPlugin.MainGame
 {
-    // ReSharper disable once PartialTypeWithSinglePart
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     internal static partial class Configuration
     {
         internal const string GUID = TranslationHelper.GUID + ".maingame";

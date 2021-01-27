@@ -9,6 +9,7 @@ using BepInEx.Logging;
 using ExtensibleSaveFormat;
 using GeBoCommon;
 using GeBoCommon.Utilities;
+using JetBrains.Annotations;
 using KKAPI;
 using KKAPI.Maker;
 using KKAPI.Studio;
@@ -17,7 +18,6 @@ using TranslationHelperPlugin.Presets.Data;
 using TranslationHelperPlugin.Translation;
 using TranslationHelperPlugin.Utils;
 using UnityEngine.SceneManagement;
-using Configuration = TranslationHelperPlugin.Translation.Configuration;
 using PluginData = XUnity.AutoTranslator.Plugin.Core.Constants.PluginData;
 #if AI || HS2
 using AIChara;
@@ -30,12 +30,11 @@ namespace TranslationHelperPlugin
     [BepInDependency(KoikatuAPI.GUID, KoikatuAPI.VersionConst)]
     [BepInDependency(ExtendedSave.GUID)]
     [BepInDependency(PluginData.Identifier)]
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public partial class TranslationHelper
     {
         public const string GUID = "com.gebo.bepinex.translationhelper";
         public const string PluginName = "Translation Helper";
-        public const string Version = "1.0";
+        public const string Version = "1.0.1";
 
         internal static new ManualLogSource Logger;
         public static TranslationHelper Instance;
@@ -46,6 +45,21 @@ namespace TranslationHelperPlugin
         ///     loaded) even in those situations.
         /// </summary>
         public static bool AlternateLoadEventsEnabled = false;
+
+        public static bool IsShuttingDown { get; private set; }
+
+        private static bool _treatUnknownAsGameMode = false;
+
+        internal bool TreatUnknownAsGameMode
+        {
+            get => _treatUnknownAsGameMode;
+            set
+            {
+                if (_treatUnknownAsGameMode == value) return;
+                _treatUnknownAsGameMode = value;
+                UpdateCurrentCardTranslationMode();
+            }
+        }
 
         internal static bool SplitNamesBeforeTranslate;
 
@@ -84,13 +98,15 @@ namespace TranslationHelperPlugin
         private readonly SimpleLazy<NameTranslator> _nameTranslator =
             new SimpleLazy<NameTranslator>(() => new NameTranslator());
 
-        // ReSharper disable once UnusedAutoPropertyAccessor.Local
+        [UsedImplicitly]
         internal static bool ShowGivenNameFirst { get; private set; }
 
         public static string ConfigDirectory => ConfigDirectoryLoader.Value;
         public static string ConfigNamePresetDirectory => ConfigNamePresetDirectoryLoader.Value;
         public static string TranslationNamePresetDirectory => TranslationNamePresetDirectoryLoader.Value;
 
+        [Obsolete]
+        [UsedImplicitly]
         internal static bool UsingAlternateLoadEvents => !ExtendedSave.LoadEventsEnabled && AlternateLoadEventsEnabled;
 
         internal static IEqualityComparer<string> NameStringComparer => NameStringComparerLoader.Value;
@@ -107,7 +123,7 @@ namespace TranslationHelperPlugin
             CardLoadTranslationMode.Disabled;
 
         internal bool CurrentCardLoadTranslationEnabled =>
-            CurrentCardLoadTranslationMode >= CardLoadTranslationMode.CacheOnly;
+            !IsShuttingDown && CurrentCardLoadTranslationMode >= CardLoadTranslationMode.CacheOnly;
 
         public static ConfigEntry<bool> RegisterActiveCharacters { get; private set; }
         public static ConfigEntry<CardLoadTranslationMode> GameTranslateCardNameOnLoad { get; private set; }
@@ -174,7 +190,8 @@ namespace TranslationHelperPlugin
             }
             else
             {
-                CurrentGameMode = KoikatuAPI.GetCurrentGameMode();
+                var mode = KoikatuAPI.GetCurrentGameMode();
+                CurrentGameMode = (mode == GameMode.Unknown && TreatUnknownAsGameMode) ? GameMode.MainGame : mode;
 
                 if (CurrentGameMode == GameMode.MainGame)
                 {
@@ -186,6 +203,8 @@ namespace TranslationHelperPlugin
                     CurrentCardLoadTranslationMode = CardLoadTranslationMode.Disabled;
                 }
             }
+
+            if (IsShuttingDown) CurrentCardLoadTranslationMode = CardLoadTranslationMode.Disabled;
 
             if (origMode == CurrentCardLoadTranslationMode || (
                 origMode != CardLoadTranslationMode.Disabled &&
@@ -254,7 +273,7 @@ namespace TranslationHelperPlugin
             Instance = this;
             Logger = Logger ?? base.Logger;
 
-            Configuration.Setup();
+            Translation.Configuration.Setup();
             Chara.Configuration.Setup();
             if (StudioAPI.InsideStudio)
             {
@@ -269,24 +288,31 @@ namespace TranslationHelperPlugin
             GameSpecificAwake();
         }
 
-
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types",
+            Justification = "Avoid cleanup errors when exiting program")]
         internal void OnDestroy()
         {
+            IsShuttingDown = true;
             CurrentCardLoadTranslationMode = CardLoadTranslationMode.Disabled;
             try
             {
-                OnBehaviorChanged(EventArgs.Empty);
+                if (!IsShuttingDown) OnBehaviorChanged(EventArgs.Empty);
             }
-            catch { }
+            catch (Exception err)
+            {
+                Logger.LogDebug($"Error during {GetType().Name}.{nameof(OnBehaviorChanged)}(): {err}");
+            }
 
             RegistrationManager.Deactivate();
         }
 
         internal void Start()
         {
+            IsShuttingDown = false;
             GameSpecificStart();
         }
 
+        [PublicAPI]
         public static IEnumerator WaitOnCardTranslations()
         {
             return CardNameManager.WaitOnCardTranslations();
@@ -297,11 +323,13 @@ namespace TranslationHelperPlugin
             return CardNameManager.WaitOnCard(file);
         }
 
+        [PublicAPI]
         public static IEnumerator TranslateCardNames(ChaFile file)
         {
             return CardNameManager.TranslateCardNames(file);
         }
 
+        [UsedImplicitly]
         internal static IEnumerator TranslateFileInfo(ICharaFileInfo fileInfo,
             params TranslationResultHandler[] callbacks)
         {
@@ -384,6 +412,7 @@ namespace TranslationHelperPlugin
             RegistrationManager.Untrack(file);
         }
 
+        [PublicAPI]
         public static bool TryFastTranslateFullName(ICharaFileInfo fileInfo, out string translatedName)
         {
             return TryFastTranslateFullName(new NameScope(fileInfo.Sex), fileInfo.Name, fileInfo.FullPath,
@@ -392,7 +421,8 @@ namespace TranslationHelperPlugin
 
         public static bool TryFastTranslateFullName(NameScope scope, string originalName, out string translatedName)
         {
-            return TryFastTranslateFullName(scope, originalName, null, out translatedName);
+            return Instance.NamePresetManager.TryTranslateFullName(scope.Sex, originalName, out translatedName) ||
+                   CardNameTranslationManager.TryGetRecentTranslation(scope, originalName, out translatedName);
         }
 
         public static bool TryFastTranslateFullName(NameScope scope, string originalName, string path,
@@ -400,8 +430,26 @@ namespace TranslationHelperPlugin
         {
             return (path != null &&
                     CharaFileInfoTranslationManager.TryGetRecentTranslation(scope, path, out translatedName)) ||
-                   Instance.NamePresetManager.TryTranslateFullName(scope.Sex, originalName, out translatedName) ||
-                   CardNameTranslationManager.TryGetRecentTranslation(scope, originalName, out translatedName);
+                   TryFastTranslateFullName(scope, originalName, out translatedName);
+        }
+
+        public static bool TryTranslateName(NameScope scope, string originalName, out string translatedName)
+        {
+            return CardNameTranslationManager.TryGetRecentTranslation(scope, originalName, out translatedName) ||
+                   Instance.NameTranslator.TryTranslateName(originalName, scope, out translatedName);
+        }
+
+        public static bool TryTranslateName(NameScope scope, string originalName, string path,
+            out string translatedName)
+        {
+            return (!path.IsNullOrEmpty() &&
+                    CharaFileInfoTranslationManager.TryGetRecentTranslation(scope, path, out translatedName)) ||
+                   TryTranslateName(scope, originalName, out translatedName);
+        }
+
+        public static bool NameNeedsTranslation(string name, NameScope scope)
+        {
+            return CardNameTranslationManager.NameNeedsTranslation(name, scope);
         }
     }
 }

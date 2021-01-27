@@ -29,8 +29,9 @@ namespace TranslationHelperPlugin.Translation
 
         internal static void TranslateFileInfos(IEnumerable<GameCharaFileInfo> infos)
         {
-            // ReSharper disable once RedundantAssignment
+            // ReSharper disable once RedundantAssignment - used in DEBUG
             var start = Time.realtimeSinceStartup;
+
             if (infos == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
             foreach (var fileInfo in infos) TranslateFileInfo(fileInfo);
             Logger.DebugLogDebug(
@@ -39,7 +40,7 @@ namespace TranslationHelperPlugin.Translation
 
         private static void TranslateFileInfos(IEnumerable<CustomCharaFileInfo> infos)
         {
-            // ReSharper disable once RedundantAssignment
+            // ReSharper disable once RedundantAssignment - used in DEBUG
             var start = Time.realtimeSinceStartup;
             if (infos == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
             foreach (var fileInfo in infos) TranslateFileInfo(fileInfo);
@@ -49,25 +50,22 @@ namespace TranslationHelperPlugin.Translation
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(GameCharaFileInfoAssist), nameof(GameCharaFileInfoAssist.CreateCharaFileInfoList))]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
         internal static void CreateCharaFileInfoListPostfix(List<GameCharaFileInfo> __result)
         {
             TranslateFileInfos(__result);
         }
 
-        // ReSharper disable once InconsistentNaming
         [HarmonyPrefix]
         [HarmonyPatch(typeof(GameCharaFileScrollController), nameof(GameCharaFileScrollController.Init))]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
+        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]
         internal static void GameCharaFileInfoListPrefix(List<GameCharaFileInfo> _lst)
         {
             TranslateFileInfos(_lst);
         }
 
-        // ReSharper disable once InconsistentNaming
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CustomCharaScrollController), nameof(CustomCharaScrollController.CreateList))]
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "HarmonyPatch")]
+        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]
         internal static void CustomCharaFileInfoListPrefix(List<CustomCharaFileInfo> _lst)
         {
             TranslateFileInfos(_lst);

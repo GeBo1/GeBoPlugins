@@ -6,14 +6,16 @@
     <SharedGUID>7a0f3c5c-2ebc-4cd3-9fa8-e827d0e787d6</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>AI_HS2_TranslationHelper</Import_RootNamespace>
+    <Import_RootNamespace>TranslationHelperPlugin</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AILike.TranslationHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Chara\Configuration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Chara\Extensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MainGame\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MainGame\Hooks.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Maker\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Maker\Hooks.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Studio\Configuration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Translation\Configuration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Translation\Hooks.cs" />

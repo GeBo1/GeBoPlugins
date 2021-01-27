@@ -1,13 +1,18 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GeBoCommon.Utilities
 {
     public class NormalizedPathComparer : StringComparer
     {
+        private static readonly ExpiringSimpleCache<string, int> HashCodeCache =
+            new ExpiringSimpleCache<string, int>(CalculateHashCode, 180);
+
         internal NormalizedPathComparer() { }
 
-
-        private static string NormalizePathString(string input)
+        
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types")]
+        public static string NormalizePathString(string input)
         {
             try
             {
@@ -23,15 +28,17 @@ namespace GeBoCommon.Utilities
         {
             if (x == y) return true;
             if (x == null || y == null) return false;
-            // try to compare without normalizing first in case they already match
-            return OrdinalIgnoreCase.Equals(x, y) ||
-                   OrdinalIgnoreCase.Equals(NormalizePathString(x), NormalizePathString(y));
+            return GetHashCode(x) == GetHashCode(y);
         }
 
+        private static int CalculateHashCode(string obj)
+        {
+            return OrdinalIgnoreCase.GetHashCode(NormalizePathString(obj));
+        }
 
         public override int GetHashCode(string obj)
         {
-            return OrdinalIgnoreCase.GetHashCode(NormalizePathString(obj));
+            return HashCodeCache[obj];
         }
 
         public override int Compare(string x, string y)

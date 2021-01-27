@@ -1,17 +1,29 @@
-﻿using Illusion.Extensions;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using Illusion.Extensions;
+using JetBrains.Annotations;
 
 namespace GeBoCommon.Utilities
 {
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    [SuppressMessage("ReSharper", "UnusedMemberInSuper.Global")]
+    [PublicAPI]
     public static class PathUtils
     {
         private static char[] _directorySeparatorsToReplace;
+
+        private static readonly ExpiringSimpleCache<string, string> NormalizedPathCache =
+            new ExpiringSimpleCache<string, string>(CalculateNormalizedPath, 180);
+
+        private static readonly string[] NonNormalizedSubstrings =
+        {
+            Path.AltDirectorySeparatorChar.ToString(), Path.DirectorySeparatorChar + "..",
+            ".." + Path.DirectorySeparatorChar
+        };
+
+
+        public static StringComparer NormalizedPathComparer = new NormalizedPathComparer();
+
 
         private static IEnumerable<char> DirectorySeparatorsToReplace
         {
@@ -39,22 +51,13 @@ namespace GeBoCommon.Utilities
             }
         }
 
-        private static readonly string[] NonNormalizedSubstrings =
-        {
-            Path.AltDirectorySeparatorChar.ToString(),
-            Path.DirectorySeparatorChar + "..",
-            ".." + Path.DirectorySeparatorChar
-        };
-
-
-        public static StringComparer NormalizedPathComparer = new NormalizedPathComparer();
-
         /// <summary>
-        /// Determines whether the specified path is normalized (contains only standard path separators and doesn't contain relative paths)
+        ///     Determines whether the specified path is normalized (contains only standard path separators and doesn't contain
+        ///     relative paths)
         /// </summary>
         /// <param name="path">The path.</param>
         /// <returns>
-        ///   <c>true</c> if the specified path is normalized; otherwise, <c>false</c>.
+        ///     <c>true</c> if the specified path is normalized; otherwise, <c>false</c>.
         /// </returns>
         public static bool IsNormalized(string path)
         {
@@ -62,20 +65,24 @@ namespace GeBoCommon.Utilities
         }
 
         /// <summary>
-        /// Normalizes the path.
+        ///     Normalizes the path.
         /// </summary>
         /// <param name="path">The path.</param>
         /// <returns>normalized path</returns>
         public static string NormalizePath(string path)
         {
-            return string.IsNullOrEmpty(path) || IsNormalized(path)
-                ? path
-                : NormalizePathSeparators(Path.GetFullPath(Path.GetFullPath(new Uri(path).LocalPath))
-                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            return NormalizedPathCache[path];
+        }
+
+        private static string CalculateNormalizedPath(string path)
+        {
+            if (string.IsNullOrEmpty(path) || IsNormalized(path)) return path;
+            return NormalizePathSeparators(Path.GetFullPath(new Uri(path).LocalPath)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         }
 
         /// <summary>
-        /// Normalizes the path separators.
+        ///     Normalizes the path separators.
         /// </summary>
         /// <param name="path">The path.</param>
         /// <returns>path with normalized separators</returns>
@@ -89,7 +96,7 @@ namespace GeBoCommon.Utilities
         }
 
         /// <summary>
-        /// Combines path segments with normalized path separators.
+        ///     Combines path segments with normalized path separators.
         /// </summary>
         /// <param name="parts">The parts.</param>
         /// <returns>combined path</returns>
@@ -99,16 +106,19 @@ namespace GeBoCommon.Utilities
             return parts == null || parts.Length == 0
                 ? null
                 : StringUtils.JoinStrings(Path.DirectorySeparatorChar,
-                        parts.SelectMany(i => i.Split(splitChars)).ToArray());
+                    parts.SelectMany(i => i.Split(splitChars)).ToArray());
         }
 
         /// <summary>
-        /// Splits the path on path separators
+        ///     Splits the path on path separators
         /// </summary>
         /// <param name="path">The path.</param>
         /// <returns>path sections</returns>
-        public static string[] SplitPath(string path) =>
-            path?.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        public static string[] SplitPath(string path)
+        {
+            return path?.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        }
+
         public static string GetRelativePath(string relativeTo, string path)
         {
             if (relativeTo is null)

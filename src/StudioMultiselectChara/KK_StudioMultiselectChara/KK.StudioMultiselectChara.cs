@@ -1,6 +1,4 @@
-﻿using BepInEx;
-
-namespace StudioMultiSelectCharaPlugin
+﻿namespace StudioMultiSelectCharaPlugin
 {
     public partial class StudioMultiSelectChara { }
 }

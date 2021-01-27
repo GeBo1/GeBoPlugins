@@ -19,10 +19,17 @@ namespace StudioMultiSelectCharaPlugin
     {
         public const string GUID = "com.gebo.BepInEx.studiomultiselectchara";
         public const string PluginName = "Studio MultiSelect Chara";
-        public const string Version = "0.9.1";
+        public const string Version = "1.0";
         internal static new ManualLogSource Logger;
 
         private bool _busy;
+
+        internal void Update()
+        {
+            if (_busy || !Enabled.Value || !MultiSelectShortcut.Value.IsDown()) return;
+            _busy = true;
+            StartCoroutine(UpdateSelectionsCoroutine().AppendCo(() => _busy = false));
+        }
 
         internal void Main()
         {
@@ -34,15 +41,6 @@ namespace StudioMultiSelectCharaPlugin
             NotificationSoundsEnabled = Config.Bind("Config", "Notification Sounds", true,
                 "When enabled, notification sounds will play when selection is complete");
             GeBoAPI.Instance.SetupNotificationSoundConfig(GUID, NotificationSoundsEnabled);
-        }
-
-        internal void Update()
-        {
-            if (Enabled.Value && MultiSelectShortcut.Value.IsDown() && !_busy)
-            {
-                _busy = true;
-                StartCoroutine(UpdateSelectionsCoroutine().AppendCo(() => _busy = false));
-            }
         }
 
         private static bool DoesCharaMatch(CharaId charaId, OCIChar test)
@@ -79,6 +77,7 @@ namespace StudioMultiSelectCharaPlugin
                     yield return tnObj;
                 }
             }
+
             roots.Clear();
         }
 

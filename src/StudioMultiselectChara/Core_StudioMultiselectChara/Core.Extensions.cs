@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using GeBoCommon.Utilities;
 using HarmonyLib;
+using JetBrains.Annotations;
 using Studio;
 
 #if AI||HS2
@@ -10,6 +11,7 @@ using AIChara;
 
 namespace StudioMultiSelectCharaPlugin
 {
+    [PublicAPI]
     public static class Extensions
     {
         public static bool IsSelectedInWorkarea(this ObjectCtrlInfo objectCtrlInfo)
@@ -20,29 +22,21 @@ namespace StudioMultiSelectCharaPlugin
         public static void UnselectInWorkarea(this ObjectCtrlInfo objectCtrlInfo)
         {
             var treeNodeObject = objectCtrlInfo?.treeNodeObject;
-            if (treeNodeObject != null)
-            {
-                var treeNodeCtrl = treeNodeObject.GetTreeNodeCtrl();
-                // DeselectNode is slow, even when it does nothing, check first
-                if (treeNodeCtrl.CheckSelect(treeNodeObject))
-                {
-                    DeselectNode(treeNodeCtrl, treeNodeObject);
-                }
-            }
+            if (treeNodeObject == null) return;
+            var treeNodeCtrl = treeNodeObject.GetTreeNodeCtrl();
+            // DeselectNode is slow, even when it does nothing, check first
+            if (!treeNodeCtrl.CheckSelect(treeNodeObject)) return;
+            DeselectNode(treeNodeCtrl, treeNodeObject);
         }
 
         public static void MultiSelectInWorkarea(this ObjectCtrlInfo objectCtrlInfo)
         {
             var treeNodeObject = objectCtrlInfo?.treeNodeObject;
-            if (treeNodeObject != null)
-            {
-                var treeNodeCtrl = treeNodeObject.GetTreeNodeCtrl();
-                // AddSelectNode with multi=true on selected object clears it's selected status, don't want that
-                if (!treeNodeCtrl.CheckSelect(treeNodeObject))
-                {
-                    AddSelectNode(treeNodeCtrl, treeNodeObject, true);
-                }
-            }
+            if (treeNodeObject == null) return;
+            var treeNodeCtrl = treeNodeObject.GetTreeNodeCtrl();
+            // AddSelectNode with multi=true on selected object clears it's selected status, don't want that
+            if (treeNodeCtrl.CheckSelect(treeNodeObject)) return;
+            AddSelectNode(treeNodeCtrl, treeNodeObject, true);
         }
 
         public static void SelectInWorkarea(this ObjectCtrlInfo objectCtrlInfo)
@@ -106,15 +100,14 @@ namespace StudioMultiSelectCharaPlugin
             LazyAddSelectNode.Value(obj, treeNodeObject, multiple);
         }
 
-        private static readonly SimpleLazy<GetterHandler<TreeNodeObject, TreeNodeCtrl>> LazyTreeNodeCtrlGetter =
-            new SimpleLazy<GetterHandler<TreeNodeObject, TreeNodeCtrl>>(
-                () => FastAccess.CreateGetterHandler<TreeNodeObject, TreeNodeCtrl>(
-                    AccessTools.Field(typeof(TreeNodeObject), "m_TreeNodeCtrl")));
 
-        private static readonly SimpleLazy<GetterHandler<TreeNodeCtrl, List<TreeNodeObject>>> LazyTreeNodeObjectsGetter
-            = new SimpleLazy<GetterHandler<TreeNodeCtrl, List<TreeNodeObject>>>(
-                () => FastAccess.CreateGetterHandler<TreeNodeCtrl, List<TreeNodeObject>>(
-                    AccessTools.Field(typeof(TreeNodeCtrl), "m_TreeNodeObject")));
+        private static readonly SimpleLazy<Func<TreeNodeObject, TreeNodeCtrl>> LazyTreeNodeCtrlGetter =
+            new SimpleLazy<Func<TreeNodeObject, TreeNodeCtrl>>(() =>
+                Delegates.LazyReflectionInstanceGetter<TreeNodeObject, TreeNodeCtrl>("m_TreeNodeCtrl"));
+
+        private static readonly SimpleLazy<Func<TreeNodeCtrl, List<TreeNodeObject>>> LazyTreeNodeObjectsGetter
+            = new SimpleLazy<Func<TreeNodeCtrl, List<TreeNodeObject>>>(() =>
+                Delegates.LazyReflectionInstanceGetter<TreeNodeCtrl, List<TreeNodeObject>>("m_TreeNodeObject"));
 
         #endregion TreeNode reflection
 
@@ -128,7 +121,7 @@ namespace StudioMultiSelectCharaPlugin
 
         private static ChaFile CacheConverter(ChaControl chaControl)
         {
-            return chaControl?.chaFile;
+            return chaControl == null ? null : chaControl.chaFile;
         }
 
         internal static TResult CacheWrapper<T, TResult>(this T obj, Dictionary<T, TResult> cache,

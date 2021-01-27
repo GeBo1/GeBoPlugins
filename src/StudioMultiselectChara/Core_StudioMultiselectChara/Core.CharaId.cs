@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using GeBoCommon.Utilities;
+using JetBrains.Annotations;
 
 #if AI||HS2
 using AIChara;
@@ -11,10 +12,11 @@ namespace StudioMultiSelectCharaPlugin
 {
     public class CharaId : IEquatable<CharaId>, IComparable<CharaId>, IComparable
     {
-        private readonly byte[] _value;
+        private readonly SimpleLazy<int> _hashCode;
 
         private readonly SimpleLazy<string> _sortKey;
-        private readonly SimpleLazy<int> _hashCode;
+        private readonly byte[] _value;
+
         public CharaId(byte[] bytes)
         {
             _value = bytes;
@@ -22,13 +24,24 @@ namespace StudioMultiSelectCharaPlugin
             _hashCode = new SimpleLazy<int>(() => GetSortKey().GetHashCode());
         }
 
-        // ReSharper disable once UnusedMember.Global
-        public CharaId(IEnumerable<byte> bytes) : this(bytes.ToArray())
+        [UsedImplicitly]
+        public CharaId(IEnumerable<byte> bytes) : this(bytes.ToArray()) { }
+
+        public CharaId(ChaFile chaFile) : this(chaFile?.GetParameterBytes()) { }
+
+        public int CompareTo(object obj)
         {
+            return obj is CharaId charaId ? CompareTo(charaId) : GetHashCode().CompareTo(obj);
         }
 
-        public CharaId(ChaFile chaFile) : this(chaFile?.GetParameterBytes())
+        public int CompareTo(CharaId other)
         {
+            return string.Compare(GetSortKey(), other.GetSortKey(), StringComparison.Ordinal);
+        }
+
+        public bool Equals(CharaId other)
+        {
+            return !(other is null) && IsByteArrayEqual(_value, other._value);
         }
 
         private static bool IsByteArrayEqual(byte[] arr1, byte[] arr2)
@@ -42,31 +55,24 @@ namespace StudioMultiSelectCharaPlugin
             return !arr1.Where((t, i) => t != arr2[i]).Any();
         }
 
-        public bool Equals(CharaId other)
-        {
-            return !(other is null) && IsByteArrayEqual(_value, other._value);
-        }
-
         public override bool Equals(object obj)
         {
             if (obj != null)
             {
                 return ReferenceEquals(this, obj) || Equals(obj as CharaId);
             }
+
             return false;
         }
 
-        internal string GetSortKey() => _sortKey.Value;
-
-        public override int GetHashCode() => _hashCode.Value;
-        public int CompareTo(CharaId other)
+        internal string GetSortKey()
         {
-            return string.Compare(GetSortKey(), other.GetSortKey(), StringComparison.Ordinal);
+            return _sortKey.Value;
         }
 
-        public int CompareTo(object obj)
+        public override int GetHashCode()
         {
-            return obj is CharaId charaId ? CompareTo(charaId) : GetHashCode().CompareTo(obj);
+            return _hashCode.Value;
         }
 
         public static bool operator ==(CharaId left, CharaId right)
@@ -81,7 +87,7 @@ namespace StudioMultiSelectCharaPlugin
 
         public static bool operator <(CharaId left, CharaId right)
         {
-            return left is null ? (right != null) : left.CompareTo(right) < 0;
+            return left is null ? right != null : left.CompareTo(right) < 0;
         }
 
         public static bool operator <=(CharaId left, CharaId right)

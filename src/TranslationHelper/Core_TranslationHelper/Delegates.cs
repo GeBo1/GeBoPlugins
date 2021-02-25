@@ -1,18 +1,21 @@
 ﻿using System;
 using GeBoCommon.AutoTranslation;
+using JetBrains.Annotations;
 using Studio;
 #if AI||HS2
-using AIChara;
+
 #endif
 
 namespace TranslationHelperPlugin
 {
     public delegate void TranslationResultHandler(ITranslationResult translationResult);
 
-    public delegate bool TryAlternateStudioCharaLoaderTranslation(NameScope sexOnlyScope, CharaFileInfo charaFileInfo, string originalName);
+    // Slow implementations should return false immediately when fast == true
+    public delegate bool TryAlternateStudioCharaLoaderTranslation(NameScope sexOnlyScope, CharaFileInfo charaFileInfo, string originalName, bool fast);
 
     public delegate void BehaviorChangedEventHandler(object sender, EventArgs e);
 
+    [PublicAPI]
     public delegate NameScope NameScopeGetter();
 }
 

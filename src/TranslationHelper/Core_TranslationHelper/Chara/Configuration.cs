@@ -47,11 +47,21 @@ namespace TranslationHelperPlugin.Chara
             ChaFileControlPaths.Clear();
         }
 
-        public static void TrackCharaFileControlPath(ChaFile chaFile, string filename)
+        private static string GetNormalizedCharaFileControlPath(ChaFile chaFile, string filename)
+        {
+            var result = filename;
+            if (chaFile is ChaFileControl chaFileControl && Path.GetDirectoryName(filename).IsNullOrEmpty())
+            {
+                result = chaFileControl.ConvertCharaFilePath(filename, chaFileControl.parameter.sex);
+            }
+            return PathUtils.NormalizePath(result);
+        }
+
+        public static void TrackCharaFileControlPath(ChaFile chaFile, string filename, Action<string> normalizedPathCallback = null)
         {
             try
             {
-                filename = PathUtils.NormalizePath(filename);
+                filename = GetNormalizedCharaFileControlPath(chaFile, filename);
             }
 #pragma warning disable CA1031 // Do not catch general exception types
             catch
@@ -63,6 +73,7 @@ namespace TranslationHelperPlugin.Chara
 
             var key = GetTrackingKey(chaFile, filename);
             ChaFileControlPaths[key] = filename;
+            normalizedPathCallback?.Invoke(filename);
         }
 
         [PublicAPI]

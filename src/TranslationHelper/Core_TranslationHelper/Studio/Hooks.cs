@@ -17,8 +17,8 @@ namespace TranslationHelperPlugin.Studio
     [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     internal partial class Hooks
     {
-        internal static ManualLogSource Logger => TranslationHelper.Logger;
         private static readonly CoroutineLimiter TreeNodeLimiter = new CoroutineLimiter(30, nameof(TreeNodeLimiter));
+        internal static ManualLogSource Logger => TranslationHelper.Logger;
 
         internal static Harmony SetupHooks()
         {
@@ -39,17 +39,15 @@ namespace TranslationHelperPlugin.Studio
             }
 
 
-
             void Handler(string translatedName)
             {
                 if (string.IsNullOrEmpty(translatedName)) return;
-                _source.textName = translatedName;
+                _source.SafeProc(s => s.textName = translatedName);
             }
 
             oChar.charInfo.SafeProcObject(ci =>
                 ci.chaFile.SafeProc(cf =>
                     cf.TranslateFullName(Handler)));
-
         }
 
         /*
@@ -81,52 +79,66 @@ namespace TranslationHelperPlugin.Studio
         }
 
 
-        private static bool TryApplyAlternateTranslation(NameScope scope, CharaFileInfo charaFileInfo, string origName)
+        private static bool TryApplyAlternateTranslation(NameScope scope, CharaFileInfo charaFileInfo, string origName,
+            bool fast)
         {
             return Configuration.AlternateStudioCharaLoaderTranslators.Any(tryTranslate =>
-                tryTranslate(scope, charaFileInfo, origName));
+                charaFileInfo.SafeProc(cfi => tryTranslate(scope, cfi, origName, fast)));
         }
 
         private static IEnumerator TranslateDisplayListEntry(CharaFileInfo entry, NameScope scope,
             Action<string> callback = null)
         {
+            if (entry == null) yield break;
+
             var origName = entry.name;
 
             var wrappedCallback =
                 CharaFileInfoTranslationManager.MakeCachingCallbackWrapper(origName, entry, scope, callback);
 
-            
 
             void UpdateName(CharaFileInfo charaFileInfo, string translatedName)
             {
-                charaFileInfo.name = charaFileInfo.node.text = translatedName;
+                try
+                {
+                    charaFileInfo.SafeProc(cfi =>
+                    {
+                        cfi.name = translatedName;
+                        cfi.node.SafeProc(n => n.text = translatedName);
+                    });
+                }
+                catch (NullReferenceException) { } // sometimes node goes away while setting text
             }
 
             void HandleResult(CharaFileInfo charaFileInfo, ITranslationResult result)
             {
-                if (!result.Succeeded) return;
-                charaFileInfo.name = charaFileInfo.node.text = result.TranslatedText;
+                if (!result.Succeeded || charaFileInfo == null) return;
+                UpdateName(charaFileInfo, result.TranslatedText);
             }
 
-            if (TryApplyAlternateTranslation(scope, entry, origName))
+            if (TryApplyAlternateTranslation(scope, entry, origName, true))
             {
-                wrappedCallback(entry.name);
+                entry.SafeProc(cfi => wrappedCallback(cfi.name));
                 yield break;
             }
 
             if (TranslationHelper.TryFastTranslateFullName(scope, origName, entry.file, out var fastName))
             {
                 UpdateName(entry, fastName);
-                wrappedCallback(entry.name);
+                entry.SafeProc(cfi => wrappedCallback(cfi.name));
                 yield break;
             }
 
             yield return null;
+
             void Handler(ITranslationResult result)
             {
-                HandleResult(entry, result);
-                TryApplyAlternateTranslation(scope, entry, origName);
-                wrappedCallback(entry.name);
+                entry.SafeProc(cfi =>
+                {
+                    HandleResult(cfi, result);
+                    TryApplyAlternateTranslation(scope, cfi, origName, false);
+                    wrappedCallback(cfi.name);
+                });
             }
 
             TranslationHelper.Instance.StartCoroutine(
@@ -149,7 +161,6 @@ namespace TranslationHelperPlugin.Studio
             var start = Time.realtimeSinceStartup;
             try
             {
-
                 if (charaList == null || TranslationHelper.Instance == null ||
                     !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled)
                 {
@@ -180,7 +191,8 @@ namespace TranslationHelperPlugin.Studio
                 foreach (var entry in cfiList)
                 {
                     jobs++;
-                    TranslationHelper.Instance.StartCoroutine(TranslateDisplayListEntryCoroutine(entry, scope, Finished));
+                    TranslationHelper.Instance.StartCoroutine(
+                        TranslateDisplayListEntryCoroutine(entry, scope, Finished));
                 }
 
                 if (jobs > 0)
@@ -188,13 +200,11 @@ namespace TranslationHelperPlugin.Studio
                     Logger.DebugLogDebug(
                         $"TranslateDisplayList: All jobs started: {Time.realtimeSinceStartup - start:000.0000000000} seconds");
                 }
-
             }
             finally
             {
                 Logger.DebugLogDebug($"TranslateDisplayList: {Time.realtimeSinceStartup - start:000.0000000000}");
             }
-
         }
     }
 }

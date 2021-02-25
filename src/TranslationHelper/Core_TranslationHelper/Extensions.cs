@@ -16,10 +16,13 @@ namespace TranslationHelperPlugin
                 {
                     handler(result);
                 }
+#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception err)
                 {
-                    Logger.LogError($"Error executing {handler.Method}: {err} {err.Message}");
+                    Logger.LogError($"Error executing {handler.Method}: {err.Message}");
+                    Logger.LogDebug(err);
                 }
+#pragma warning restore CA1031 // Do not catch general exception types
             }
         }
     }

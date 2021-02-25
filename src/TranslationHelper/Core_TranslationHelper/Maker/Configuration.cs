@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx.Logging;
 using GeBoCommon;
-using GeBoCommon.AutoTranslation;
+using GeBoCommon.Utilities;
 using KKAPI.Chara;
 using KKAPI.Maker;
 using KKAPI.Maker.UI.Sidebar;
@@ -47,7 +47,7 @@ namespace TranslationHelperPlugin.Maker
 
                 MakerAPI.MakerExiting += (s, e2) => sidebarToggle = null;
             };
-            
+
             GameSpecificSetup(harmony);
         }
 
@@ -91,6 +91,8 @@ namespace TranslationHelperPlugin.Maker
         {
             CharacterApi.CharacterReloaded -= MakerCharacterReloaded;
             TranslationHelper.NotifyBehaviorChanged(e);
+            // Maker makes heavy use of some pools, clean them up.
+            ObjectPool.GlobalClearIdle(10);
         }
 
         private static void MakerStartedLoading(object sender, RegisterCustomControlsEvent e)
@@ -109,7 +111,8 @@ namespace TranslationHelperPlugin.Maker
             if (controller == null) yield break;
 
             controller.TranslateCardNames();
-            yield return TranslationHelper.Instance.StartCoroutine(TranslationHelper.WaitOnCard(controller.ChaFileControl));
+            yield return TranslationHelper.Instance.StartCoroutine(
+                TranslationHelper.WaitOnCard(controller.ChaFileControl));
             yield return TranslationHelper.Instance.StartCoroutine(GameSpecificUpdateUICoroutine(controller));
         }
 

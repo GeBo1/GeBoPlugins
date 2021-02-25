@@ -207,10 +207,13 @@ namespace TranslationHelperPlugin
                 if (!translationResult.IsNullOrEmpty() &&
                     !TranslationHelper.NameStringComparer.Equals(translationResult, origName))
                 {
-                    if (!string.IsNullOrEmpty(charaFileInfo.file))
+                    charaFileInfo.SafeProc(cfi =>
                     {
-                        CacheRecentTranslation(scope, charaFileInfo.file, translationResult);
-                    }
+                        if (!string.IsNullOrEmpty(cfi.file))
+                        {
+                            CacheRecentTranslation(scope, cfi.file, translationResult);
+                        }
+                    });
                 }
 
                 callback?.Invoke(translationResult);

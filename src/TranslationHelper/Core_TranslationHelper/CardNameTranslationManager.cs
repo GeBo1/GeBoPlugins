@@ -16,7 +16,6 @@ using UnityEngine;
 using Handlers = TranslationHelperPlugin.Chara.Handlers;
 #if AI || HS2
 using AIChara;
-
 #endif
 
 namespace TranslationHelperPlugin
@@ -494,6 +493,11 @@ namespace TranslationHelperPlugin
                 SplitNames = splitNames;
             }
 
+            ~NameJob()
+            {
+                if (NameParts != null) ListPool<string>.Release(NameParts);
+            }
+
             internal NameScope NameScope { get; }
             internal string OriginalName { get; }
             internal string TranslatedName { get; private set; }
@@ -517,33 +521,44 @@ namespace TranslationHelperPlugin
 
             protected override IEnumerator StartJobs()
             {
-                NameParts = new List<string>(new[] {OriginalName});
-
+                NameParts = ListPool<string>.Get();
                 if (SplitNames)
                 {
-                    NameParts = new List<string>(OriginalName.Split(TranslationHelper.SpaceSplitter,
+                    NameParts.AddRange(OriginalName.Split(TranslationHelper.SpaceSplitter,
                         StringSplitOptions.RemoveEmptyEntries));
                 }
-
-                var jobs = new List<Coroutine>();
-                foreach (var namePart in NameParts.Enumerate().ToArray())
+                else
                 {
-                    var i = namePart.Key;
-                    JobStarted();
-                    var job = StartCoroutine(Instance.TranslateName(namePart.Value, NameScope,
-                        result =>
-                        {
-                            if (result.Succeeded) NameParts[i] = result.TranslatedText;
-                            JobComplete();
-                        }));
-                    jobs.Add(job);
+                    NameParts.Add(OriginalName);
                 }
 
-                foreach (var job in jobs)
+                var jobs = ListPool<Coroutine>.Get();
+                try
                 {
-                    //Logger.LogDebug($"NameJob.StartJobs: yield {job}");
-                    if (job != null) yield return job;
+                    foreach (var namePart in NameParts.Enumerate().ToArray())
+                    {
+                        var i = namePart.Key;
+                        JobStarted();
+                        var job = StartCoroutine(Instance.TranslateName(namePart.Value, NameScope,
+                            result =>
+                            {
+                                if (result.Succeeded) NameParts[i] = result.TranslatedText;
+                                JobComplete();
+                            }));
+                        jobs.Add(job);
+                    }
+
+                    foreach (var job in jobs)
+                    {
+                        //Logger.LogDebug($"NameJob.StartJobs: yield {job}");
+                        if (job != null) yield return job;
+                    }
                 }
+                finally
+                {
+                    ListPool<Coroutine>.Release(jobs);
+                }
+
             }
 
             protected override void OnComplete()
@@ -551,11 +566,13 @@ namespace TranslationHelperPlugin
                 TranslatedName = string.Join(TranslationHelper.SpaceJoiner, NameParts.ToArray()).Trim();
                 CacheRecentTranslation(NameScope, OriginalName, TranslatedName);
                 base.OnComplete();
+                ListPool<string>.Release(NameParts);
+                NameParts = null;
             }
 
             public override string ToString()
             {
-                return $"{GetType().Name}({OriginalName}, {NameScope}, {SplitNames})";
+                return $"{this.GetPrettyTypeName()}({OriginalName}, {NameScope}, {SplitNames})";
             }
         }
 
@@ -618,11 +635,11 @@ namespace TranslationHelperPlugin
 
             protected override IEnumerator StartJobs()
             {
-                var jobs = new List<Coroutine>();
+                var jobs = ListPool<Coroutine>.Get();
 
                 var fullName = _chaFile.GetFullName();
 
-                var handled = new HashSet<int>();
+                var handled = HashSetPool<int>.Get();
                 if (TranslationHelper.Instance.NamePresetManager.TryTranslateCardNames(_chaFile, out var result))
                 {
                     foreach (var entry in result)
@@ -635,6 +652,7 @@ namespace TranslationHelperPlugin
                     }
                 }
 
+                var sex = _chaFile.GetSex();
                 foreach (var name in _chaFile.EnumerateNames())
                 {
                     if (handled.Contains(name.Key)) continue;
@@ -644,7 +662,7 @@ namespace TranslationHelperPlugin
                     var i = name.Key;
                     var chaFile = _chaFile;
 
-                    var nameScope = new NameScope(_chaFile.GetSex(), _chaFile.GetNameType(i));
+                    var nameScope = new NameScope(sex, _chaFile.GetNameType(i));
 
                     if (TryGetRecentTranslation(nameScope, name.Value, out var cachedName))
                     {
@@ -668,17 +686,19 @@ namespace TranslationHelperPlugin
 
                     var job = StartCoroutine(Instance.TranslateCardName(name.Value,
                         nameScope,
-                        Handlers.UpdateCardName(_chaFile, i),
+                        Handlers.UpdateCardName(chaFile, i),
                         Handlers.AddNameToAutoTranslationCache(name.Value, true),
                         JobCompleteHandler));
 
                     jobs.Add(job);
                 }
+                HashSetPool<int>.Release(handled);
 
                 foreach (var job in jobs)
                 {
                     yield return job;
                 }
+                ListPool<Coroutine>.Release(jobs);
             }
         }
     }

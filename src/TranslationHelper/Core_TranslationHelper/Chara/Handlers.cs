@@ -16,7 +16,7 @@ namespace TranslationHelperPlugin.Chara
         {
             void UpdateCardNameHandler(ITranslationResult result)
             {
-                if (!result.Succeeded || string.IsNullOrEmpty(result.TranslatedText) ||
+                if (chaFile == null || !result.Succeeded || string.IsNullOrEmpty(result.TranslatedText) ||
                     chaFile.GetName(nameIndex) == result.TranslatedText) return;
                 chaFile.SetTranslatedName(nameIndex, result.TranslatedText);
             }

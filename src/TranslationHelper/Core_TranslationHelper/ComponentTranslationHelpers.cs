@@ -5,8 +5,7 @@ using ADV;
 using BepInEx.Logging;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
-using GeBoCommon.Utilities;
-using KKAPI.Utilities;
+using JetBrains.Annotations;
 using TranslationHelperPlugin.Chara;
 using UnityEngine.UI;
 #if AI||HS2
@@ -21,6 +20,7 @@ namespace TranslationHelperPlugin
     {
         internal static ManualLogSource Logger => TranslationHelper.Logger;
 
+        [PublicAPI]
         public static ChaControl GetCurrentCharacter(ADVScene advScene)
         {
             ChaControl result = null;

@@ -8,7 +8,7 @@ namespace TranslationHelperPlugin
     {
         internal const int BaseScope = 8192;
 
-        public static NameScope DefaultNameScope = new NameScope();
+        public static readonly NameScope DefaultNameScope = new NameScope();
 
         public NameScope(CharacterSex sex, NameType nameType)
         {

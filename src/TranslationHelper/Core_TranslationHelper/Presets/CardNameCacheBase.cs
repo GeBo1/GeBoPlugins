@@ -43,7 +43,7 @@ namespace TranslationHelperPlugin.Presets
 
         public override string ToString()
         {
-            return $"{GetType().Name}({Identity})";
+            return $"{this.GetPrettyTypeName()}({Identity})";
         }
     }
 }

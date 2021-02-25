@@ -80,10 +80,13 @@ namespace TranslationHelperPlugin.Chara
 
         protected override void OnDestroy()
         {
-            //TranslationHelper.Logger?.LogDebug($"Controller.OnDestroy: {RegistrationID}");
-            UnregisterReplacements();
-            RestoreCardNames();
             StopMonitoredCoroutines();
+            if (!TranslationHelper.IsShuttingDown)
+            {
+                UnregisterReplacements();
+                RestoreCardNames();
+            }
+
             base.OnDestroy();
         }
 
@@ -163,7 +166,7 @@ namespace TranslationHelperPlugin.Chara
 #pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception err)
                 {
-                    Logger.LogWarning($"{GetType().FullName}: error stopping {routine}: {err}");
+                    Logger.LogWarning($"{this.GetPrettyTypeFullName()}: error stopping {routine}: {err}");
                 }
 #pragma warning restore CA1031 // Do not catch general exception types
             }
@@ -174,7 +177,7 @@ namespace TranslationHelperPlugin.Chara
         private void RestoreCardNames()
         {
             TranslationHelper.Logger?.DebugLogDebug($"Controller.RestoreCardNames: {RegistrationID}");
-            if (!IsTranslated || TranslationHelper.IsShuttingDown) return;
+            if (!IsTranslated || TranslationHelper.IsShuttingDown || GeBoAPI.Instance == null) return;
             IsTranslated = false;
             for (var i = 0; i < GeBoAPI.Instance.ChaFileNames.Count; i++)
             {
@@ -236,7 +239,8 @@ namespace TranslationHelperPlugin.Chara
         public void UnregisterReplacements()
         {
             //TranslationHelper.Logger?.DebugLogDebug($"Controller.UnregisterReplacements: {RegistrationID}");
-            TranslationHelper.Instance.UnregisterReplacements(ChaFileControl).RunImmediately();
+            if (TranslationHelper.IsShuttingDown) return;
+            TranslationHelper.Instance.SafeProc(i => i.UnregisterReplacements(ChaFileControl).RunImmediately());
         }
 
         public void OnTranslationComplete(bool cardFullyLoaded = false)

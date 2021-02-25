@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using BepInEx;
 using BepInEx.Configuration;
@@ -18,6 +17,7 @@ using TranslationHelperPlugin.Presets.Data;
 using TranslationHelperPlugin.Translation;
 using TranslationHelperPlugin.Utils;
 using UnityEngine.SceneManagement;
+using Configuration = TranslationHelperPlugin.Translation.Configuration;
 using PluginData = XUnity.AutoTranslator.Plugin.Core.Constants.PluginData;
 #if AI || HS2
 using AIChara;
@@ -29,7 +29,7 @@ namespace TranslationHelperPlugin
     [BepInDependency(GeBoAPI.GUID, GeBoAPI.Version)]
     [BepInDependency(KoikatuAPI.GUID, KoikatuAPI.VersionConst)]
     [BepInDependency(ExtendedSave.GUID)]
-    [BepInDependency(PluginData.Identifier)]
+    [BepInDependency(PluginData.Identifier, "4.13.0")] // need new APIs
     public partial class TranslationHelper
     {
         public const string GUID = "com.gebo.bepinex.translationhelper";
@@ -37,18 +37,31 @@ namespace TranslationHelperPlugin
         public const string Version = "1.0.1";
 
         internal static new ManualLogSource Logger;
-        public static TranslationHelper Instance;
+        private static TranslationHelper _instance;
+
+        public static TranslationHelper Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = FindObjectOfType<TranslationHelper>();
+                }
+
+                return _instance;
+            }
+        }
 
         /// <summary>
         ///     There are times the ExtendedSave events don't fire for performance reasons (avoiding loading extended data).
         ///     Set this to true for times when we need the TranslationHelper events to fire (extended data will still not be
         ///     loaded) even in those situations.
         /// </summary>
-        public static bool AlternateLoadEventsEnabled = false;
+        public static bool AlternateLoadEventsEnabled { get; set; } = false;
 
         public static bool IsShuttingDown { get; private set; }
 
-        private static bool _treatUnknownAsGameMode = false;
+        private static bool _treatUnknownAsGameMode;
 
         internal bool TreatUnknownAsGameMode
         {
@@ -191,7 +204,7 @@ namespace TranslationHelperPlugin
             else
             {
                 var mode = KoikatuAPI.GetCurrentGameMode();
-                CurrentGameMode = (mode == GameMode.Unknown && TreatUnknownAsGameMode) ? GameMode.MainGame : mode;
+                CurrentGameMode = mode == GameMode.Unknown && TreatUnknownAsGameMode ? GameMode.MainGame : mode;
 
                 if (CurrentGameMode == GameMode.MainGame)
                 {
@@ -219,7 +232,6 @@ namespace TranslationHelperPlugin
 
         internal void Main()
         {
-            Instance = this;
             Logger = Logger ?? base.Logger;
 
             SplitNamesBeforeTranslate = false;
@@ -270,10 +282,10 @@ namespace TranslationHelperPlugin
 
         internal void Awake()
         {
-            Instance = this;
+            _instance = this;
             Logger = Logger ?? base.Logger;
 
-            Translation.Configuration.Setup();
+            Configuration.Setup();
             Chara.Configuration.Setup();
             if (StudioAPI.InsideStudio)
             {
@@ -288,26 +300,16 @@ namespace TranslationHelperPlugin
             GameSpecificAwake();
         }
 
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types",
-            Justification = "Avoid cleanup errors when exiting program")]
         internal void OnDestroy()
         {
             IsShuttingDown = true;
             CurrentCardLoadTranslationMode = CardLoadTranslationMode.Disabled;
-            try
-            {
-                if (!IsShuttingDown) OnBehaviorChanged(EventArgs.Empty);
-            }
-            catch (Exception err)
-            {
-                Logger.LogDebug($"Error during {GetType().Name}.{nameof(OnBehaviorChanged)}(): {err}");
-            }
-
             RegistrationManager.Deactivate();
         }
 
         internal void Start()
         {
+            _instance = this;
             IsShuttingDown = false;
             GameSpecificStart();
         }
@@ -439,6 +441,7 @@ namespace TranslationHelperPlugin
                    Instance.NameTranslator.TryTranslateName(originalName, scope, out translatedName);
         }
 
+        [PublicAPI]
         public static bool TryTranslateName(NameScope scope, string originalName, string path,
             out string translatedName)
         {

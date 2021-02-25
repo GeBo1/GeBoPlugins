@@ -236,6 +236,7 @@ namespace TranslationHelperPlugin.Presets
             return cacheBase.FullName ?? BuildFullName(cacheBase.FamilyName, cacheBase.GivenName);
         }
 
+        [UsedImplicitly]
         protected IEnumerable<string> BuildFullNames(IEnumerable<string> familyNames, IEnumerable<string> givenNames)
         {
             return (from family in familyNames

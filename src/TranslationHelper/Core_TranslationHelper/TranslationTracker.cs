@@ -210,43 +210,52 @@ namespace TranslationHelperPlugin
 
             internal void CallHandlers(string trackedKey, ITranslationResult result)
             {
-                var tmpHandlers = new List<TranslationResultHandler>();
+                //var tmpHandlers = new List<TranslationResultHandler>();
+                var tmpHandlers = ListPool<TranslationResultHandler>.Get();
                 var emptyCount = 0;
                 var handlerCount = 0;
                 var hitCount = 0;
-                while (true)
+                try
                 {
-                    lock (_lock)
+                    while (true)
                     {
-                        if (TryGetHandlers(trackedKey, out var handlers))
+
+                        lock (_lock)
                         {
-                            tmpHandlers.AddRange(handlers);
-                            handlers.Clear();
+                            if (TryGetHandlers(trackedKey, out var handlers))
+                            {
+                                tmpHandlers.AddRange(handlers);
+                                handlers.Clear();
+                            }
+
+                            if (emptyCount > 1 && tmpHandlers.Count == 0)
+                            {
+                                _tracker.Remove(trackedKey);
+                                Logger.DebugLogDebug(
+                                    $"{_trackerName}.{nameof(CallHandlers)}: {handlerCount} handlers called for {trackedKey} ({hitCount})");
+                                return;
+                            }
                         }
 
-                        if (emptyCount > 1 && tmpHandlers.Count == 0)
+                        if (tmpHandlers.Count == 0)
                         {
-                            _tracker.Remove(trackedKey);
-                            Logger.DebugLogDebug(
-                                $"{_trackerName}.{nameof(CallHandlers)}: {handlerCount} handlers called for {trackedKey} ({hitCount})");
-                            return;
+                            emptyCount++;
+                            continue;
                         }
+
+                        // got handlers, reset empty count
+                        emptyCount = 0;
+                        hitCount++;
+
+                        handlerCount += tmpHandlers.Count;
+                        tmpHandlers.CallHandlers(result);
+
+                        tmpHandlers.Clear();
                     }
-
-                    if (tmpHandlers.Count == 0)
-                    {
-                        emptyCount++;
-                        continue;
-                    }
-
-                    // got handlers, reset empty count
-                    emptyCount = 0;
-                    hitCount++;
-
-                    handlerCount += tmpHandlers.Count;
-                    tmpHandlers.CallHandlers(result);
-
-                    tmpHandlers.Clear();
+                }
+                finally
+                {
+                    ListPool<TranslationResultHandler>.Release(tmpHandlers);
                 }
             }
 

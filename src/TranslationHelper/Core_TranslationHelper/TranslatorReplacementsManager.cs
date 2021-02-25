@@ -8,11 +8,13 @@ using GeBoCommon;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
+using JetBrains.Annotations;
 using KKAPI;
 using KKAPI.Utilities;
 using TranslationHelperPlugin.Chara;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
 #if AI || HS2
 using AIChara;
 
@@ -22,7 +24,7 @@ namespace TranslationHelperPlugin
 {
     internal class TranslatorReplacementsManager
     {
-        internal const int MinLengthJP = 2;
+        internal const int MinLengthJP = 4;
         internal const int MinLength = 4;
 
         private const float CleanupIdleTime = 2f;
@@ -162,90 +164,139 @@ namespace TranslationHelperPlugin
         public bool HaveNamesChanged(ChaFile chaFile)
         {
             //return trackedRegistrationIDs.Contains(chaFile.GetRegistrationID());
-            var current = new HashSet<string>(GetNamesToRegister(chaFile).Select(n => n.Key));
-            lock (_lock)
+            var current = HashSetPool<string>.Get();
+            try
             {
-                if (!_regIDtoNamesMap.TryGetValue(chaFile.GetRegistrationID(), out var registered))
-                {
-                    registered = new HashSet<string>();
-                }
+                foreach (var name in GetNamesToRegister(chaFile)) current.Add(name.Key);
 
-                return !registered.SetEquals(current);
+                lock (_lock)
+                {
+                    if (!_regIDtoNamesMap.TryGetValue(chaFile.GetRegistrationID(), out var registered))
+                    {
+                        registered = new HashSet<string>();
+                    }
+
+                    return !registered.SetEquals(current);
+                }
+            }
+            finally
+            {
+                HashSetPool<string>.Release(current);
             }
         }
 
         private bool NameQualifiesForRegistration(string name)
         {
-            return !name.IsNullOrEmpty() &&
-                   name.Length >= (StringUtils.ContainsJapaneseChar(name) ? MinLengthJP : MinLength);
+            if (name.IsNullOrWhiteSpace()) return false;
+            if (StringUtils.ContainsJapaneseChar(name))
+            {
+                // short japanese names can pollute cache
+                return name.Contains(' ') && name.Length > MinLengthJP;
+            }
+
+            return name.Length > MinLength;
         }
 
         private IEnumerable<KeyValuePair<string, string>> GetNamesToRegister(ChaFile chaFile)
         {
-            var handled = new HashSet<string>();
+            var handled = HashSetPool<string>.Get();
             var controller = chaFile.GetTranslationHelperController();
-            foreach (var nameEntry in chaFile.EnumerateNames())
+            try
             {
-                var name = nameEntry.Value;
-                if (handled.Contains(name)) continue;
-                handled.Add(name);
-                yield return new KeyValuePair<string, string>(name, name);
-                if (controller == null) continue;
-                var origName = controller.OriginalNames[nameEntry.Key];
-                if (origName.IsNullOrEmpty() || origName == name || handled.Contains(origName)) continue;
-                handled.Add(origName);
-                yield return new KeyValuePair<string, string>(origName, origName);
-            }
+                foreach (var nameEntry in chaFile.EnumerateNames())
+                {
+                    var name = nameEntry.Value;
+                    if (handled.Contains(name)) continue;
+                    handled.Add(name);
+                    yield return new KeyValuePair<string, string>(name, name);
+                    if (controller == null) continue;
+                    var origName = controller.OriginalNames[nameEntry.Key];
+                    if (origName.IsNullOrEmpty() || origName == name || handled.Contains(origName)) continue;
+                    handled.Add(origName);
+                    yield return new KeyValuePair<string, string>(origName, origName);
+                }
 
-            var fullname = chaFile.GetFullName();
-            foreach (var name in new[] {fullname, chaFile.GetOriginalFullName(), chaFile.GetFormattedOriginalName()})
+                var fullname = chaFile.GetFullName();
+                foreach (var name in new[]
+                {
+                    fullname, chaFile.GetOriginalFullName(), chaFile.GetFormattedOriginalName()
+                })
+                {
+                    if (handled.Contains(name)) continue;
+                    handled.Add(name);
+                    yield return new KeyValuePair<string, string>(name, name);
+                }
+            }
+            finally
             {
-                if (handled.Contains(name)) continue;
-                handled.Add(name);
-                yield return new KeyValuePair<string, string>(name, name);
+                HashSetPool<string>.Release(handled);
             }
         }
 
+        [PublicAPI]
         public void RegisterReplacementsForNames(params string[] origNames)
         {
-            var fastReplacements = new Dictionary<string, string>();
-            var needsTranslation = new List<string>(origNames.Length);
-            foreach (var origString in origNames)
+            var needsTranslation = ListPool<string>.Get();
+            try
             {
-                if (TranslationHelper.TryTranslateName(NameScope.DefaultNameScope, origString,
-                    out var translatedString))
+                needsTranslation.Capacity = origNames.Length;
+
+                var fastReplacements = DictionaryPool<string, string>.Get();
+                try
                 {
-                    //fastReplacements[origString] = origString;
-                    fastReplacements[translatedString] = translatedString;
+                    foreach (var origString in origNames)
+                    {
+                        if (TranslationHelper.TryTranslateName(NameScope.DefaultNameScope, origString,
+                            out var translatedString))
+                        {
+                            //fastReplacements[origString] = origString;
+                            fastReplacements[translatedString] = translatedString;
+                        }
+                        else
+                        {
+                            needsTranslation.Add(origString);
+                        }
+                    }
+
+                    if (fastReplacements.Count > 0) RegisterReplacementStrings(fastReplacements);
                 }
-                else
+                finally
                 {
-                    needsTranslation.Add(origString);
+                    DictionaryPool<string, string>.Release(fastReplacements);
+                }
+
+                foreach (var toTranslate in needsTranslation)
+                {
+                    void ResultHandler(ITranslationResult result)
+                    {
+                        var replacements = DictionaryPool<string, string>.Get();
+                        try
+                        {
+                            if (!TranslationHelper.NameNeedsTranslation(toTranslate, NameScope.DefaultNameScope))
+                            {
+                                replacements[toTranslate] = toTranslate;
+                            }
+
+                            if (result.Succeeded)
+                            {
+                                replacements[result.TranslatedText] = result.TranslatedText;
+                            }
+
+                            RegisterReplacementStrings(replacements);
+                        }
+                        finally
+                        {
+                            DictionaryPool<string, string>.Release(replacements);
+                        }
+                    }
+
+                    GeBoAPI.Instance.AutoTranslationHelper.TranslateAsync(toTranslate,
+                        NameScope.DefaultNameScope.TranslationScope, ResultHandler);
                 }
             }
-
-            if (fastReplacements.Count > 0) RegisterReplacementStrings(fastReplacements);
-            foreach (var toTranslate in needsTranslation)
+            finally
             {
-                void ResultHandler(ITranslationResult result)
-                {
-                    var replacements = new Dictionary<string, string>();
-                    if (!TranslationHelper.NameNeedsTranslation(toTranslate, NameScope.DefaultNameScope))
-                    {
-                        replacements[toTranslate] = toTranslate;
-                    }
-
-                    if (result.Succeeded)
-                    {
-                        replacements[result.TranslatedText] = result.TranslatedText;
-                    }
-
-                    RegisterReplacementStrings(replacements);
-                }
-
-
-                GeBoAPI.Instance.AutoTranslationHelper.TranslateAsync(toTranslate,
-                    NameScope.DefaultNameScope.TranslationScope, ResultHandler);
+                ListPool<string>.Release(needsTranslation);
             }
         }
 
@@ -256,7 +307,7 @@ namespace TranslationHelperPlugin
             foreach (var replacementString in replacementStrings)
             {
                 if (replacements.ContainsKey(replacementString.Key)) continue;
-                Logger.LogDebug(
+                Logger.DebugLogDebug(
                     $"Registering as translation replacement: {replacementString.Key} => {replacementString.Value}");
                 replacements.Add(replacementString.Key, replacementString.Value);
             }
@@ -281,11 +332,10 @@ namespace TranslationHelperPlugin
                 foreach (var nameEntry in GetNamesToRegister(chaFile))
                 {
                     var name = nameEntry.Key;
-                    Logger.LogDebug($"Possible Name: {name} => {nameEntry.Value}");
                     if (name.IsNullOrEmpty() || !NameQualifiesForRegistration(name)) continue;
                     if (!replacements.ContainsKey(name))
                     {
-                        Logger.LogDebug($"Registering as translation replacement: {name} => {nameEntry.Value}");
+                        Logger.DebugLogDebug($"Registering as translation replacement: {name} => {nameEntry.Value}");
                         replacements.Add(name, nameEntry.Value);
                         _currentlyRegisteredReplacements.Add(name);
                     }
@@ -301,27 +351,41 @@ namespace TranslationHelperPlugin
 
             var regID = chaFile.GetRegistrationID();
             //Logger.LogDebug($"Attempting to unregister translation replacements: {regID} {chaFile.GetFullName()}");
-            var toClean = new HashSet<string>();
-            lock (_lock)
+            var toClean = HashSetPool<string>.Get();
+            try
             {
-                // make a copy of current entries in _regIDtoNamesMap
-                var namesToCheck = new List<string>();
-                if (_regIDtoNamesMap.TryGetValue(regID, out var tmp)) namesToCheck.AddRange(tmp);
-                foreach (var name in namesToCheck)
+                lock (_lock)
                 {
-                    if (string.IsNullOrEmpty(name)) continue;
-                    CounterRemove(name, regID);
+                    // make a copy of current entries in _regIDtoNamesMap
+                    var namesToCheck = ListPool<string>.Get();
+                    try
+                    {
+                        if (_regIDtoNamesMap.TryGetValue(regID, out var tmp)) namesToCheck.AddRange(tmp);
+                        foreach (var name in namesToCheck)
+                        {
+                            if (string.IsNullOrEmpty(name)) continue;
+                            CounterRemove(name, regID);
 
-                    if (CounterCount(name) != 0 || !_currentlyRegisteredReplacements.Contains(name)) continue;
-                    toClean.Add(name);
+                            if (CounterCount(name) != 0 || !_currentlyRegisteredReplacements.Contains(name)) continue;
+                            toClean.Add(name);
+                        }
+                    }
+                    finally
+                    {
+                        ListPool<string>.Release(namesToCheck);
+                    }
+
+                    _regIDtoCardMap.Remove(regID);
                 }
 
-                _regIDtoCardMap.Remove(regID);
+                foreach (var name in toClean)
+                {
+                    CheckNamesForCleanup(name);
+                }
             }
-
-            foreach (var name in toClean)
+            finally
             {
-                CheckNamesForCleanup(name);
+                HashSetPool<string>.Release(toClean);
             }
         }
 
@@ -360,49 +424,55 @@ namespace TranslationHelperPlugin
 
         private IEnumerator DoCleanupCheck()
         {
-            var workNames = new HashSet<string>();
-
-            int UpdateWorkNames()
+            var workNames = HashSetPool<string>.Get();
+            try
             {
-                if (workNames.Count > 0) return workNames.Count;
-                lock (_lock)
+                int UpdateWorkNames()
                 {
-                    if (_namesPendingCleanupCheck.Count == 0) return 0;
-                    foreach (var name in _namesPendingCleanupCheck.ToList())
+                    if (workNames.Count > 0) return workNames.Count;
+                    lock (_lock)
                     {
-                        _namesPendingCleanupCheck.Remove(name);
-                        workNames.Add(name);
+                        if (_namesPendingCleanupCheck.Count == 0) return 0;
+                        foreach (var name in _namesPendingCleanupCheck.ToList())
+                        {
+                            _namesPendingCleanupCheck.Remove(name);
+                            workNames.Add(name);
+                        }
                     }
+
+                    return workNames.Count;
                 }
 
-                return workNames.Count;
+                var replacements = GetReplacements();
+                while (UpdateWorkNames() > 0)
+                {
+                    var idleTimeEnd = _lastBusyTime + CleanupIdleTime;
+                    while (Time.unscaledTime <= idleTimeEnd)
+                    {
+                        yield return _cleanupIdleDelay;
+                    }
+
+                    var name = workNames.FirstOrDefault();
+                    workNames.Remove(name);
+                    if (string.IsNullOrEmpty(name)) continue;
+
+                    yield return null;
+
+                    lock (_lock)
+                    {
+                        if (!_currentlyRegisteredReplacements.Contains(name) || CounterCount(name) != 0) continue;
+                        if (replacements?.Remove(name) ?? false)
+                        {
+                            Logger.DebugLogDebug($"Unregistering as translation replacement: {name}");
+                        }
+
+                        _currentlyRegisteredReplacements.Remove(name);
+                    }
+                }
             }
-
-            var replacements = GetReplacements();
-            while (UpdateWorkNames() > 0)
+            finally
             {
-                var idleTimeEnd = _lastBusyTime + CleanupIdleTime;
-                while (Time.unscaledTime <= idleTimeEnd)
-                {
-                    yield return _cleanupIdleDelay;
-                }
-
-                var name = workNames.FirstOrDefault();
-                workNames.Remove(name);
-                if (string.IsNullOrEmpty(name)) continue;
-
-                yield return null;
-
-                lock (_lock)
-                {
-                    if (!_currentlyRegisteredReplacements.Contains(name) || CounterCount(name) != 0) continue;
-                    if (replacements?.Remove(name) ?? false)
-                    {
-                        Logger.LogDebug($"Unregistering as translation replacement: {name}");
-                    }
-
-                    _currentlyRegisteredReplacements.Remove(name);
-                }
+                HashSetPool<string>.Release(workNames);
             }
         }
 
@@ -413,46 +483,53 @@ namespace TranslationHelperPlugin
             var orig = _nameToIDMap.Count;
             int current;
 
-            var namesToRemove = new HashSet<string>();
-            lock (_lock)
+            var namesToRemove = HashSetPool<string>.Get();
+            try
             {
-                if (deepClean)
+                lock (_lock)
                 {
-                    var deadEntries = _regIDtoCardMap
-                        .Where(e => !e.Value.IsAlive || (e.Value.Target as ChaFile).GetRegistrationID() != e.Key)
-                        .Select(e => e.Key).ToList();
-
-                    foreach (var deadEntry in deadEntries)
+                    if (deepClean)
                     {
-                        Logger.DebugLogDebug($"Cleanup: dead entry: {deadEntry}");
-                        _regIDtoCardMap.Remove(deadEntry);
-                    }
+                        var deadEntries = _regIDtoCardMap
+                            .Where(e => !e.Value.IsAlive || (e.Value.Target as ChaFile).GetRegistrationID() != e.Key)
+                            .Select(e => e.Key).ToList();
 
-                    foreach (var entry in _nameToIDMap)
-                    {
-                        var removed = entry.Value.RemoveWhere(e => deadEntries.Contains(e));
-                        if (removed > 0)
+                        foreach (var deadEntry in deadEntries)
                         {
-                            Logger.DebugLogDebug($"Cleanup: removed {removed} entries for {entry.Key}");
+                            Logger.DebugLogDebug($"Cleanup: dead entry: {deadEntry}");
+                            _regIDtoCardMap.Remove(deadEntry);
+                        }
+
+                        foreach (var entry in _nameToIDMap)
+                        {
+                            var removed = entry.Value.RemoveWhere(e => deadEntries.Contains(e));
+                            if (removed > 0)
+                            {
+                                Logger.DebugLogDebug($"Cleanup: removed {removed} entries for {entry.Key}");
+                            }
                         }
                     }
+
+                    foreach (var name in _nameToIDMap.Keys.AsEnumerable().Where(key => _nameToIDMap[key].Count == 0)
+                        .ToList())
+                    {
+                        namesToRemove.Add(name);
+                        _nameToIDMap.Remove(name);
+                    }
+
+                    current = _nameToIDMap.Count;
+                    _inUse = current > 0;
                 }
 
-                foreach (var name in _nameToIDMap.Keys.AsEnumerable().Where(key => _nameToIDMap[key].Count == 0)
-                    .ToList())
-                {
-                    namesToRemove.Add(name);
-                    _nameToIDMap.Remove(name);
-                }
-
-                current = _nameToIDMap.Count;
-                _inUse = current > 0;
+                CheckNamesForCleanup(namesToRemove.ToArray());
+            }
+            finally
+            {
+                HashSetPool<string>.Release(namesToRemove);
             }
 
-            CheckNamesForCleanup(namesToRemove.ToArray());
-
             if (orig <= current) return;
-            Logger.LogDebug(
+            Logger.DebugLogDebug(
                 $"{nameof(TranslatorReplacementsManager)}.{nameof(Cleanup)}: removed {orig - current} entries ({current} remain)");
         }
 

@@ -2,7 +2,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using BepInEx.Logging;
-using GeBoCommon.Utilities;
 using HarmonyLib;
 using JetBrains.Annotations;
 using KKAPI;
@@ -70,12 +69,15 @@ namespace TranslationHelperPlugin.Chara
         private static void ChaFileLoadFilePostfix(ChaFile __instance, string path, bool __result)
         {
             if (!__result ||
-                !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
+                !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled)
+            {
+                return;
+            }
 
             if (!MakerAPI.CharaListIsLoading && !Configuration.TrackCharaFileControlPaths) return;
 
-            __instance.GetTranslationHelperController().SafeProc(c => c.FullPath = path);
-            Configuration.TrackCharaFileControlPath(__instance, path);
+            Configuration.TrackCharaFileControlPath(__instance, path,
+                fullPath => __instance.GetTranslationHelperController().SafeProc(c => c.FullPath = fullPath));
         }
 
 
@@ -87,26 +89,15 @@ namespace TranslationHelperPlugin.Chara
         {
             if (!__result || __instance == null || string.IsNullOrEmpty(filename) ||
                 !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled ||
-                (!MakerAPI.CharaListIsLoading && !Configuration.TrackCharaFileControlPaths)) return;
+                (!MakerAPI.CharaListIsLoading && !Configuration.TrackCharaFileControlPaths))
+            {
+                return;
+            }
 #if HS2||AI
             if (!filename.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) return;
 #endif
-
-            try
-            {
-                filename = PathUtils.NormalizePath(filename);
-            }
-#pragma warning disable CA1031 // Do not catch general exception types
-            catch (Exception err)
-            {
-                Logger.LogDebug($"Unable to normalize filename '{filename}', will not track card path: {err}");
-                return;
-            }
-#pragma warning restore CA1031 // Do not catch general exception types
-
-            __instance.GetTranslationHelperController().SafeProc(c => c.FullPath = filename);
-
-            Configuration.TrackCharaFileControlPath(__instance, filename);
+            Configuration.TrackCharaFileControlPath(__instance, filename,
+                fullPath => __instance.GetTranslationHelperController().SafeProc(c => c.FullPath = fullPath));
         }
 
 
@@ -118,10 +109,8 @@ namespace TranslationHelperPlugin.Chara
 #endif
         private static void ChaFile_SaveFile_Postfix(ChaFile __instance)
         {
-            // ReSharper disable once UseNullPropagation -- Unity
-            if (__instance == null) return;
-            __instance.GetTranslationHelperController()
-                .SafeProcObject(c => c.OnCardSaveComplete(KoikatuAPI.GetCurrentGameMode()));
+            __instance.SafeProc(i => i.GetTranslationHelperController()
+                .SafeProc(c => c.OnCardSaveComplete(KoikatuAPI.GetCurrentGameMode())));
         }
     }
 }

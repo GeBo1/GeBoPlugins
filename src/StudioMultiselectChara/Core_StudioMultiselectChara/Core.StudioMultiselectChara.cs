@@ -13,6 +13,7 @@ using UnityEngine;
 
 namespace StudioMultiSelectCharaPlugin
 {
+    [BepInDependency(GeBoAPI.GUID, GeBoAPI.Version)]
     [BepInPlugin(GUID, PluginName, Version)]
     [BepInProcess(Constants.StudioProcessName)]
     public partial class StudioMultiSelectChara : BaseUnityPlugin
@@ -55,7 +56,7 @@ namespace StudioMultiSelectCharaPlugin
 
         private IEnumerable<TreeNodeObject> EnumerateTreeNodeObjects(TreeNodeObject root = null)
         {
-            var roots = new List<TreeNodeObject>();
+            var roots = ListPool<TreeNodeObject>.Get();
             if (root != null)
             {
                 roots.Add(root);
@@ -78,7 +79,7 @@ namespace StudioMultiSelectCharaPlugin
                 }
             }
 
-            roots.Clear();
+            ListPool<TreeNodeObject>.Release(roots);
         }
 
         private IEnumerable<ObjectCtrlInfo> EnumerateObjects(ObjectCtrlInfo root = null)

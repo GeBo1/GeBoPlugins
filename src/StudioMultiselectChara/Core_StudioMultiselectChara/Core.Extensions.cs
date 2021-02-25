@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GeBoCommon.Utilities;
 using HarmonyLib;
 using JetBrains.Annotations;
+using KKAPI.Chara;
 using Studio;
 
 #if AI||HS2
@@ -115,7 +116,15 @@ namespace StudioMultiSelectCharaPlugin
 
         private static readonly SimpleLazy<HookedSimpleCache<ChaFile, CharaId, ChaControl>> LazyCharaIdCache =
             new SimpleLazy<HookedSimpleCache<ChaFile, CharaId, ChaControl>>(() =>
-                new HookedSimpleCache<ChaFile, CharaId, ChaControl>(IdLoader, CacheConverter, true, true));
+            {
+                var cache = new HookedSimpleCache<ChaFile, CharaId, ChaControl>(IdLoader, CacheConverter, true, true);
+                CharacterApi.CharacterReloaded += (sender, e) =>
+                {
+                    e.ReloadedCharacter.SafeProc(rc => cache.Remove(rc.chaFile));
+                };
+                return cache;
+            });
+
 
         internal static HookedSimpleCache<ChaFile, CharaId, ChaControl> CharaIdCache => LazyCharaIdCache.Value;
 

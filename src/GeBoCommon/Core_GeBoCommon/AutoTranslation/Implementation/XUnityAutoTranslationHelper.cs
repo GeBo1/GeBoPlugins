@@ -12,12 +12,6 @@ namespace GeBoCommon.AutoTranslation.Implementation
 {
     internal class XUnityAutoTranslationHelper : AutoTranslationHelperBase, IAutoTranslationHelper
     {
-        private static readonly
-            Dictionary<Action<IComponentTranslationContext>,
-                Action<XUnity.AutoTranslator.Plugin.Core.ComponentTranslationContext>> _contextWrappers =
-                new Dictionary<Action<IComponentTranslationContext>,
-                    Action<XUnity.AutoTranslator.Plugin.Core.ComponentTranslationContext>>();
-
         private readonly SimpleLazy<AddTranslationToCacheDelegate> _addTranslationToCache;
         private readonly SimpleLazy<object> _defaultCache;
         private readonly Func<string> _getAutoTranslationsFilePath;
@@ -124,15 +118,12 @@ namespace GeBoCommon.AutoTranslation.Implementation
 
         public void RegisterOnTranslatingCallback(Action<IComponentTranslationContext> context)
         {
-            var a = ComponentTranslationContext.GetContextWrapper(context);
-            var b = ComponentTranslationContext.GetContextWrapper(context);
-            Logger.LogFatal($"comparing ContextWrappers for {context}: {a} == {b}? {a == b}");
-            DefaultTranslator.RegisterOnTranslatingCallback(ComponentTranslationContext.GetContextWrapper(context));
+            DefaultTranslator.RegisterOnTranslatingCallback(context.AsXUnityContextAction());
         }
 
         public void UnregisterOnTranslatingCallback(Action<IComponentTranslationContext> context)
         {
-            DefaultTranslator.UnregisterOnTranslatingCallback(ComponentTranslationContext.GetContextWrapper(context));
+            DefaultTranslator.UnregisterOnTranslatingCallback(context.AsXUnityContextAction());
         }
 
         private AddTranslationToCacheDelegate AddTranslationToCacheLoader()
@@ -222,14 +213,21 @@ namespace GeBoCommon.AutoTranslation.Implementation
             {
                 Source?.IgnoreComponent();
             }
+        }
+    }
 
-            public static Action<XUnity.AutoTranslator.Plugin.Core.ComponentTranslationContext> GetContextWrapper(
-                Action<IComponentTranslationContext> context)
-            {
-                if (_contextWrappers.TryGetValue(context, out var wrappedContext)) return wrappedContext;
-                return _contextWrappers[context] =
-                    innerContext => context(new ComponentTranslationContext(innerContext));
-            }
+    public static class XUnityAutoTranslationHelperExtensions
+    {
+        private static readonly Dictionary<Action<IComponentTranslationContext>, Action<ComponentTranslationContext>>
+            ContextWrappers =
+                new Dictionary<Action<IComponentTranslationContext>, Action<ComponentTranslationContext>>();
+
+        public static Action<ComponentTranslationContext> AsXUnityContextAction(
+            this Action<IComponentTranslationContext> context)
+        {
+            if (ContextWrappers.TryGetValue(context, out var wrappedContext)) return wrappedContext;
+            return ContextWrappers[context] =
+                innerContext => context(new XUnityAutoTranslationHelper.ComponentTranslationContext(innerContext));
         }
     }
 }

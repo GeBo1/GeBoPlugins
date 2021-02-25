@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using BepInEx.Logging;
 using JetBrains.Annotations;
-using XUnity.AutoTranslator.Plugin.Core;
 
 namespace GeBoCommon.AutoTranslation
 {
@@ -19,11 +18,11 @@ namespace GeBoCommon.AutoTranslation
 
         void TranslateAsync(string untranslatedText, int scope, Action<ITranslationResult> onCompleted);
 
-        void IgnoreTextComponent( object textComponent );
+        void IgnoreTextComponent(object textComponent);
 
-        void UnignoreTextComponent( object textComponent );
+        void UnignoreTextComponent(object textComponent);
 
-        void RegisterOnTranslatingCallback( Action<IComponentTranslationContext> context );
+        void RegisterOnTranslatingCallback(Action<IComponentTranslationContext> context);
 
         void UnregisterOnTranslatingCallback(Action<IComponentTranslationContext> context);
 

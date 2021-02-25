@@ -95,8 +95,8 @@ namespace GeBoCommon.Utilities
 
         private void SceneManager_activeSceneChanged(Scene arg0, Scene arg1)
         {
-            if (!EmptyCacheOnSceneChange) return;
-            Logger?.LogDebug($"{GetType().Name}: Clearing {Count} entries from {this} on activeSceneChanged");
+            if (!EmptyCacheOnSceneChange || Count == 0) return;
+            Logger?.DebugLogDebug($"{this.GetPrettyTypeName()}: Clearing {Count} entries on activeSceneChanged");
             Clear();
         }
 

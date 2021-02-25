@@ -32,6 +32,11 @@ namespace GeBoCommon.Utilities
             return LazyReflectionGetter<T>(typeLoader, () => null, fieldName);
         }
 
+        public static Func<TField> LazyReflectionGetter<TObj, TField>(string fieldName)
+        {
+            return LazyReflectionGetter<TField>(() => typeof(TObj), () => null, fieldName);
+        }
+
         public static Func<T> LazyReflectionGetter<T>(Func<Type> typeLoader, Func<object> objLoader, string fieldName)
         {
             Logger?.DebugLogDebug(
@@ -46,7 +51,7 @@ namespace GeBoCommon.Utilities
                 innerGetter.Value(instance.Value);
             return getter.Compile();
         }
-
+        
         private static Func<object, T> LazyReflectionInstanceGetter<T>(Type type, string fieldName)
         {
             var fieldInfo = new SimpleLazy<FieldInfo>(() => AccessTools.Field(type, fieldName));
@@ -92,6 +97,11 @@ namespace GeBoCommon.Utilities
         public static Action<T> LazyReflectionSetter<T>(Func<Type> typeLoader, string fieldName)
         {
             return LazyReflectionSetter<T>(typeLoader, () => null, fieldName);
+        }
+
+        public static Action<TField> LazyReflectionSetter<TObj, TField>(string fieldName)
+        {
+            return LazyReflectionSetter<TField>(() => typeof(TObj), () => null, fieldName);
         }
 
         public static Action<T> LazyReflectionSetter<T>(Func<Type> typeLoader, Func<object> objLoader, string fieldName)

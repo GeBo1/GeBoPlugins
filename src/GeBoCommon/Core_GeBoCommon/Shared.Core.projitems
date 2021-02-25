@@ -10,7 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\AutoTranslationHelperBase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\ComponentTranslationContextBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\Delegates.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\IAutoTranslationHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\IComponentTranslationContext.cs" />
@@ -24,6 +23,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)GeBoAPIBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IGeBoAPI.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\SimpleTranslationResult.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\DictionaryPool.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\PoolQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\CoroutineUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\Delegates.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\EnumerableUtils.cs" />
@@ -31,7 +32,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\HookedSimpleCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\IHookedCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\CoroutineLimiter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\HashSetPool.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\ListPool.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\NormalizedPathComparer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\ObjectPool.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\PathUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleLazy.cs" />

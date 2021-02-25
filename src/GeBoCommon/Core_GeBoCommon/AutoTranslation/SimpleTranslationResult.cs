@@ -1,4 +1,5 @@
 ﻿using System;
+using GeBoCommon.Utilities;
 
 namespace GeBoCommon.AutoTranslation
 {
@@ -23,7 +24,7 @@ namespace GeBoCommon.AutoTranslation
 
         public override string ToString()
         {
-            return $"{GetType()}({Succeeded}, {TranslatedText}, {ErrorMessage})";
+            return $"{this.GetPrettyTypeName()}({Succeeded}, {TranslatedText}, {ErrorMessage})";
         }
     }
 }

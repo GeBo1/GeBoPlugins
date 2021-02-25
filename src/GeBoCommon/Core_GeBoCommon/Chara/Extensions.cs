@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 #if AI || HS2
 using AIChara;
@@ -7,7 +8,8 @@ using AIChara;
 
 namespace GeBoCommon.Chara
 {
-    public static class Extensions
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
+    public static partial class Extensions
     {
         /// <summary>
         /// Enumerates the names.

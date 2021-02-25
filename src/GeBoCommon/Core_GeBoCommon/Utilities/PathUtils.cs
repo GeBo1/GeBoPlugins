@@ -22,7 +22,7 @@ namespace GeBoCommon.Utilities
         };
 
 
-        public static StringComparer NormalizedPathComparer = new NormalizedPathComparer();
+        public static readonly StringComparer NormalizedPathComparer = new NormalizedPathComparer();
 
 
         private static IEnumerable<char> DirectorySeparatorsToReplace
@@ -31,23 +31,30 @@ namespace GeBoCommon.Utilities
             {
                 if (_directorySeparatorsToReplace != null) return _directorySeparatorsToReplace;
 
-                var dirSeparators = new HashSet<char>();
-                if (Path.DirectorySeparatorChar != Path.AltDirectorySeparatorChar)
+                var dirSeparators = HashSetPool<char>.Get();
+                 try
                 {
-                    dirSeparators.Add(Path.AltDirectorySeparatorChar);
-                }
+                    if (Path.DirectorySeparatorChar != Path.AltDirectorySeparatorChar)
+                    {
+                        dirSeparators.Add(Path.AltDirectorySeparatorChar);
+                    }
 
-                switch (Path.DirectorySeparatorChar)
+                    switch (Path.DirectorySeparatorChar)
+                    {
+                        case '\\':
+                            dirSeparators.Add('/');
+                            break;
+                        case '/':
+                            dirSeparators.Add('\\');
+                            break;
+                    }
+
+                    return _directorySeparatorsToReplace = dirSeparators.ToArray();
+                }
+                finally
                 {
-                    case '\\':
-                        dirSeparators.Add('/');
-                        break;
-                    case '/':
-                        dirSeparators.Add('\\');
-                        break;
+                    HashSetPool<char>.Release(dirSeparators);
                 }
-
-                return _directorySeparatorsToReplace = dirSeparators.ToArray();
             }
         }
 
@@ -71,7 +78,7 @@ namespace GeBoCommon.Utilities
         /// <returns>normalized path</returns>
         public static string NormalizePath(string path)
         {
-            return NormalizedPathCache[path];
+            return NormalizedPathCache.Get(path);
         }
 
         private static string CalculateNormalizedPath(string path)

@@ -35,7 +35,7 @@ namespace GeBoCommon.Utilities
 
         protected virtual void Dispose(bool disposing)
         {
-            Logger?.DebugLogDebug($"Dispose({disposing}): {this}");
+            Logger?.DebugLogDebug($"Dispose({disposing}): {this.GetPrettyTypeFullName()}");
             if (Disposed) return;
             Disposed = true;
             if (!disposing) return;
@@ -53,7 +53,7 @@ namespace GeBoCommon.Utilities
             }
             catch (Exception err)
             {
-                Logger.LogError($"Unexpected error, bypassing {GetType().Name} caching: {err.Message}");
+                Logger.LogError($"Unexpected error, bypassing {this.GetPrettyTypeName()} caching: {err.Message}");
                 Logger.LogDebug(err);
             }
 

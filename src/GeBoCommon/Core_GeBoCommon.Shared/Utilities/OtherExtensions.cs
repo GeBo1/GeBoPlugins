@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using BepInEx.Logging;
@@ -43,7 +44,37 @@ namespace GeBoCommon.Utilities
 
         public static ulong Sum(this IEnumerable<ulong> source)
         {
-            return source.Aggregate((a,c) => a + c);
+            return source.Aggregate((a, c) => a + c);
+        }
+
+        public static string PrettyTypeName(this Type type)
+        {
+            var typeName = type.Name;
+            if (type.GetGenericArguments().Length == 0) return typeName;
+            var args = type.GetGenericArguments();
+            typeName = typeName.Substring(0, typeName.IndexOf("`", StringComparison.InvariantCulture));
+            return StringUtils.JoinStrings("", typeName, "<",
+                StringUtils.JoinStrings(",", args.Select(PrettyTypeName).ToArray()), ">");
+        }
+
+        public static string PrettyTypeFullName(this Type type)
+        {
+            var typeName = type.FullName ?? type.Name;
+            if (type.GetGenericArguments().Length == 0) return typeName;
+            var args = type.GetGenericArguments();
+            typeName = typeName.Substring(0, typeName.IndexOf("`", StringComparison.InvariantCulture));
+            return StringUtils.JoinStrings("", type.Namespace, ".", typeName, "<",
+                StringUtils.JoinStrings(",", args.Select(PrettyTypeFullName).ToArray()), ">");
+        }
+
+        public static string GetPrettyTypeName(this object obj)
+        {
+            return obj.GetType().PrettyTypeName();
+        }
+
+        public static string GetPrettyTypeFullName(this object obj)
+        {
+            return obj.GetType().PrettyTypeFullName();
         }
     }
 }

@@ -34,7 +34,7 @@ namespace TranslationHelperPlugin.MainGame
 
             void Handler(ITranslationResult result)
             {
-                if (!result.Succeeded || string.IsNullOrEmpty(result.TranslatedText)) return;
+                if (!result.Succeeded || string.IsNullOrEmpty(result.TranslatedText) || __instance == null) return;
                 var txtCharaName = Traverse.Create(__instance)?.Field<Text>("txtCharaName")?.Value;
                 if (txtCharaName == null) return;
                 txtCharaName.text = result.TranslatedText;
@@ -57,7 +57,7 @@ namespace TranslationHelperPlugin.MainGame
             if (label == null || !TranslationHelper.CardNameManager.CardNeedsTranslation(__instance)) return;
             __instance.TranslateFullName(r =>
             {
-                if (string.IsNullOrEmpty(r)) return;
+                if (string.IsNullOrEmpty(r) || label == null) return;
                 TranslationHelper.Instance.StartCoroutine(UpdateText(label, r));
             });
         }
@@ -111,7 +111,7 @@ namespace TranslationHelperPlugin.MainGame
         {
             // wait for CursorEnter to finish or it may overwrite
             yield return WaitWhileInMapSelecCursorEnter;
-            if (label.text != "???") label.text = value;
+            if (label != null && label.text != "???") label.text = value;
             GeBoAPI.Instance.AutoTranslationHelper.UnignoreTextComponent(label);
         }
 

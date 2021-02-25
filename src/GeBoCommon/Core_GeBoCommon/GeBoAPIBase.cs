@@ -75,9 +75,22 @@ namespace GeBoCommon
         /// <inheritdoc />
         public IList<string> ChaFileNames => _chaFileNames.Value;
 
+        private static ConfigEntry<bool> EnableObjectPoolsConfig { get; set; }
+
+        public static bool EnableObjectPools { get; private set; }
+
         private void Awake()
         {
             _instance = this;
+            EnableObjectPoolsConfig = Config.Bind("Developer Settings", "Enable ObjectPools", true,
+                new ConfigDescription("Leave enabled unless requested otherwise", null, "Advanced"));
+            EnableObjectPoolsConfig.SettingChanged += EnableObjectPoolsConfig_SettingChanged;
+            EnableObjectPools = EnableObjectPoolsConfig.Value;
+        }
+        
+        private void EnableObjectPoolsConfig_SettingChanged(object sender, EventArgs e)
+        {
+            EnableObjectPools = EnableObjectPoolsConfig.Value;
         }
 
         private static IAutoTranslationHelper AutoTranslationHelperLoader()

@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.props" Condition="Exists('..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -43,7 +44,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="AI_ExtensibleSaveFormat, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\ExtensibleSaveFormat.AIGirl.16.2.0.2\lib\net46\AI_ExtensibleSaveFormat.dll</HintPath>
+      <HintPath>..\..\..\packages\ExtensibleSaveFormat.AIGirl.16.2.1\lib\net46\AI_ExtensibleSaveFormat.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -74,6 +75,10 @@
       <HintPath>..\..\..\packages\IllusionLibs.AIGirl.UnityEngine.CoreModule.2018.2.21.3\lib\net46\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\IllusionLibs.AIGirl.UnityEngine.UI.2018.2.21.3\lib\net46\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AI.StudioSceneNavigation.cs" />
@@ -91,11 +96,14 @@
   <ItemGroup>
     <Analyzer Include="..\..\..\packages\BepInEx.Analyzers.1.0.4\analyzers\dotnet\cs\BepInEx.Analyzers.CodeFixes.dll" />
     <Analyzer Include="..\..\..\packages\BepInEx.Analyzers.1.0.4\analyzers\dotnet\cs\BepInEx.Analyzers.dll" />
-    <Analyzer Include="..\..\..\packages\Microsoft.Unity.Analyzers.1.9.1\analyzers\dotnet\cs\Microsoft.Unity.Analyzers.dll" />
+    <Analyzer Include="..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll" />
+    <Analyzer Include="..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\analyzers\dotnet\cs\Microsoft.CodeAnalysis.NetAnalyzers.dll" />
+    <Analyzer Include="..\..\..\packages\Microsoft.Unity.Analyzers.1.10.0\analyzers\dotnet\cs\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <Import Project="..\..\StudioSceneNavigation\Core_StudioSceneNavigation\Core_StudioSceneNavigation.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
+    <GenerateMSBuildEditorConfigFile>false</GenerateMSBuildEditorConfigFile>
     <PathMap>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)=.</PathMap>
     <PostBuildEvent>IF EXIST $(SolutionDir)PostBuild.bat CALL "$(SolutionDir)PostBuild.bat" $(TargetPath) AI</PostBuildEvent>
   </PropertyGroup>
@@ -107,7 +115,12 @@
     <Error Condition="!Exists('..\..\..\packages\IllusionLibs.AIGirl.Assembly-CSharp.2020.5.29.2\build\IllusionLibs.AIGirl.Assembly-CSharp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\packages\IllusionLibs.AIGirl.Assembly-CSharp.2020.5.29.2\build\IllusionLibs.AIGirl.Assembly-CSharp.targets'))" />
     <Error Condition="!Exists('..\..\..\packages\IllusionLibs.AIGirl.UnityEngine.CoreModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.CoreModule.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\packages\IllusionLibs.AIGirl.UnityEngine.CoreModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.CoreModule.targets'))" />
     <Error Condition="!Exists('..\..\..\packages\IllusionLibs.BepInEx.Harmony.2.2.0.1\build\IllusionLibs.BepInEx.Harmony.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\packages\IllusionLibs.BepInEx.Harmony.2.2.0.1\build\IllusionLibs.BepInEx.Harmony.targets'))" />
+    <Error Condition="!Exists('..\..\..\packages\IllusionLibs.AIGirl.UnityEngine.UI.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.UI.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\packages\IllusionLibs.AIGirl.UnityEngine.UI.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.UI.targets'))" />
+    <Error Condition="!Exists('..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.props'))" />
+    <Error Condition="!Exists('..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.targets'))" />
   </Target>
   <Import Project="..\..\..\packages\IllusionLibs.AIGirl.UnityEngine.CoreModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.CoreModule.targets" Condition="Exists('..\..\..\packages\IllusionLibs.AIGirl.UnityEngine.CoreModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.CoreModule.targets')" />
   <Import Project="..\..\..\packages\IllusionLibs.BepInEx.Harmony.2.2.0.1\build\IllusionLibs.BepInEx.Harmony.targets" Condition="Exists('..\..\..\packages\IllusionLibs.BepInEx.Harmony.2.2.0.1\build\IllusionLibs.BepInEx.Harmony.targets')" />
+  <Import Project="..\..\..\packages\IllusionLibs.AIGirl.UnityEngine.UI.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.UI.targets" Condition="Exists('..\..\..\packages\IllusionLibs.AIGirl.UnityEngine.UI.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.UI.targets')" />
+  <Import Project="..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.targets" Condition="Exists('..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.targets')" />
 </Project>

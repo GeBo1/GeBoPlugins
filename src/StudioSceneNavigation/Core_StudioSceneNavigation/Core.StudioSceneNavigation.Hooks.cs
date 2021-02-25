@@ -17,10 +17,8 @@ namespace StudioSceneNavigationPlugin
                 _currentSceneFolder = string.Empty;
                 ScenePaths = SceneUtils.GetSceneLoaderPaths(__instance);
                 _normalizedScenePaths = null;
-                if (ScenePaths?.Count > 0)
-                {
-                    _currentSceneFolder = PathUtils.NormalizePath(Path.GetDirectoryName(ScenePaths[0]));
-                }
+                ScenePaths.SafeProc(0, p => _currentSceneFolder = PathUtils.NormalizePath(Path.GetDirectoryName(p)));
+                Instance.SafeProc(i => i.ScrollToLastLoadedScene(__instance));
             }
         }
     }

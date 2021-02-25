@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using CharaCustom;
-using GeBoCommon;
 using HarmonyLib;
 using JetBrains.Annotations;
 using KKAPI.Maker;
@@ -31,7 +30,6 @@ namespace TranslationHelperPlugin.Maker
             Assert.IsNotNull(harmony);
             MakerAPI.MakerExiting += CleanupHandler;
             TranslationHelper.BehaviorChanged += CleanupHandler;
-
         }
 
         private static void CleanupHandler(object sender, EventArgs e)

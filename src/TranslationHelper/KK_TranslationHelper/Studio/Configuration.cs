@@ -1,13 +1,7 @@
 ﻿using System;
-using GeBoCommon;
-using GeBoCommon.AutoTranslation;
-using GeBoCommon.Chara;
 using HarmonyLib;
-using KKAPI.Studio;
 using Studio;
-using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.UI;
 
 namespace TranslationHelperPlugin.Studio
 {
@@ -18,7 +12,6 @@ namespace TranslationHelperPlugin.Studio
             Assert.IsNotNull(harmony);
             AlternateStudioCharaLoaderTranslators.Add(TryApplyLoadCharaFileTranslatedMap);
             TranslationHelper.BehaviorChanged += CleanupHandler;
-
         }
 
         private static void CleanupHandler(object sender, EventArgs e)
@@ -26,10 +19,9 @@ namespace TranslationHelperPlugin.Studio
             Hooks.ResetTranslatingCallbacks();
         }
 
-       
 
         private static bool TryApplyLoadCharaFileTranslatedMap(NameScope sexOnlyScope, CharaFileInfo charaFileInfo,
-            string origName)
+            string origName, bool fastOnly)
         {
             if (!Translation.Configuration.LoadCharaFileTranslatedMap[sexOnlyScope]
                     .TryGetValue(origName, out var translatedName) ||

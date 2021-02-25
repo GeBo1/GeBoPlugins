@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using KKAPI.Maker;
 using UnityEngine.Assertions;
 
 namespace TranslationHelperPlugin.MainGame

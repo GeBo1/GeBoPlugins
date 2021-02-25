@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using BepInEx;
 using GeBoCommon;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
@@ -60,7 +59,6 @@ namespace TranslationHelperPlugin.Studio
         private static void EnableCharaListHandler()
         {
             if (_charaListHandlerRegistered) return;
-            Logger.LogFatal("Registering CharaListHandler");
             GeBoAPI.Instance.AutoTranslationHelper.RegisterOnTranslatingCallback(CharaListHandler);
             _charaListHandlerRegistered = true;
         }
@@ -68,7 +66,6 @@ namespace TranslationHelperPlugin.Studio
         private static void DisableCharaListHandler()
         {
             CharaListsInProgress.Clear();
-            Logger.LogFatal("Unregistering CharaListHandler");
             GeBoAPI.Instance.AutoTranslationHelper.UnregisterOnTranslatingCallback(CharaListHandler);
             _charaListHandlerRegistered = false;
         }
@@ -82,7 +79,7 @@ namespace TranslationHelperPlugin.Studio
 
         private static void CharaListHandler(IComponentTranslationContext obj)
         {
-            // FIXME: migrate to a version of this call
+            // TODO: migrate to a version of this call
             /*
             if (ComponentTranslationHelpers.TryTranslateFullName(obj,
                 ShouldHandleCharaListText,
@@ -94,44 +91,45 @@ namespace TranslationHelperPlugin.Studio
                 obj.IgnoreComponent();
             }
             */
-            if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled || CharaListsInProgress.Count == 0) return;
-            var start = Time.realtimeSinceStartup;
-            var ignore = false;
-            var newText = string.Empty;
-            try
+            if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled ||
+                CharaListsInProgress.Count == 0)
             {
-                var textComponent = obj.Component as Text;
-                if (textComponent == null) return;
-                newText += $"name={textComponent.name}, text={textComponent.text}";
-                var charaList = textComponent.GetComponentInParent<CharaList>();
-                if (charaList == null || !CharaListsInProgress.Contains(charaList)) return;
-
-                var sex = CharacterSex.Unspecified;
-                if (charaList.name.EndsWith("_Male", StringComparison.OrdinalIgnoreCase))
-                {
-                    sex = CharacterSex.Male;
-                }
-                else if (charaList.name.EndsWith("_Female", StringComparison.OrdinalIgnoreCase))
-                {
-                    sex = CharacterSex.Female;
-                }
-
-                if (sex == CharacterSex.Unspecified) return;
-
-                var scope = new NameScope(sex);
-
-                if (TranslationHelper.TryFastTranslateFullName(scope, textComponent.text, out var translatedName))
-                {
-                    newText += $", newText={translatedName}";
-                    obj.OverrideTranslatedText(translatedName);
-                    obj.IgnoreComponent();
-                    ignore = true;
-                }
+                return;
             }
-            finally
+
+            var textComponent = obj.Component as Text;
+            if (textComponent == null) return;
+            var charaList = textComponent.GetComponentInParent<CharaList>();
+            if (charaList == null || !CharaListsInProgress.Contains(charaList)) return;
+
+            CharacterSex sex;
+            if (charaList.name.EndsWith("_Male", StringComparison.OrdinalIgnoreCase))
             {
-                Logger.LogDebug(
-                    $"{typeof(Configuration).FullName}.{nameof(CharaListHandler)}: {obj.Component} {newText}, Ignore={ignore} {Time.realtimeSinceStartup - start:0.000000000} ({_charaListHandlerRegistered})");
+                sex = CharacterSex.Male;
+            }
+            else if (charaList.name.EndsWith("_Female", StringComparison.OrdinalIgnoreCase))
+            {
+                sex = CharacterSex.Female;
+            }
+            else
+            {
+                return;
+            }
+
+            /*
+             var scope = new NameScope(sex);
+            if (TranslationHelper.TryFastTranslateFullName(scope, textComponent.text, out var translatedName))
+            {
+                obj.OverrideTranslatedText(translatedName);
+                obj.IgnoreComponent();
+            }
+            */
+            if (ComponentTranslationHelpers.TryTranslateFullName(obj,
+                ShouldHandleCharaListText,
+                () => null,
+                sex))
+            {
+                obj.IgnoreComponent();
             }
         }
     }

@@ -107,6 +107,8 @@ namespace TranslationHelperPlugin.Translation
 
                 void Handler(ITranslationResult result)
                 {
+                    if (__instance == null) return;
+
                     var newName = ProcessTranslationResult(scope, origName, info.FullPath, result);
 
                     if (TranslationHelper.NameStringComparer.Equals(origName, newName)) return;

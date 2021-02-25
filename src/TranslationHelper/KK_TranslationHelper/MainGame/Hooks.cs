@@ -84,7 +84,7 @@ namespace TranslationHelperPlugin.MainGame
                 foreach (var textName in FindChildComponents<Text>(__instance, "textName",
                     "resize/text/name", "resize/image/chara"))
                 {
-                    textName.text = name;
+                    textName.SafeProc(tn => tn.text = name);
                 }
             }
 
@@ -106,7 +106,7 @@ namespace TranslationHelperPlugin.MainGame
             {
                 void Callback(string value)
                 {
-                    if (string.IsNullOrEmpty(value)) return;
+                    if (string.IsNullOrEmpty(value) || freeHScene == null) return;
                     var field = Traverse.Create(freeHScene).Field<TextMeshProUGUI>(fieldName)?.Value;
                     if (field == null) return;
                     field.text = value;
@@ -131,67 +131,73 @@ namespace TranslationHelperPlugin.MainGame
                 return Callback;
             }
 
-            var callbackMap = new Dictionary<SaveData.Heroine, List<Action<string>>>();
-
-            if (member.resultHeroine.HasValue && member.resultHeroine.Value != null)
+            var callbackMap = DictionaryPool<SaveData.Heroine, List<Action<string>>>.Get();
+            try
             {
-                if (!callbackMap.TryGetValue(member.resultHeroine.Value, out var callbacks))
+
+                if (member.resultHeroine.HasValue && member.resultHeroine.Value != null)
                 {
-                    callbackMap[member.resultHeroine.Value] = callbacks = new List<Action<string>>();
+                    if (!callbackMap.TryGetValue(member.resultHeroine.Value, out var callbacks))
+                    {
+                        callbackMap[member.resultHeroine.Value] = callbacks = ListPool<Action<string>>.Get();
+                    }
+
+                    callbacks.Add(GetUpdateUIField("textFemaleName1"));
                 }
 
-                callbacks.Add(GetUpdateUIField("textFemaleName1"));
-            }
-
-            if (member.resultPartner.HasValue && member.resultPartner.Value != null)
-            {
-                if (!callbackMap.TryGetValue(member.resultPartner.Value, out var callbacks))
+                if (member.resultPartner.HasValue && member.resultPartner.Value != null)
                 {
-                    callbackMap[member.resultPartner.Value] = callbacks = new List<Action<string>>();
+                    if (!callbackMap.TryGetValue(member.resultPartner.Value, out var callbacks))
+                    {
+                        callbackMap[member.resultPartner.Value] = callbacks = ListPool<Action<string>>.Get();
+                    }
+
+                    callbacks.Add(GetUpdateUIField("textFemaleName2"));
                 }
 
-                callbacks.Add(GetUpdateUIField("textFemaleName2"));
-            }
-
-            var resultDarkHeroine = Traverse.Create(member)
-                .Field<ReactiveProperty<SaveData.Heroine>>("resultDarkHeroine")?.Value;
-            if (resultDarkHeroine != null && resultDarkHeroine.HasValue && resultDarkHeroine.Value != null)
-            {
-                if (!callbackMap.TryGetValue(resultDarkHeroine.Value, out var callbacks))
+                var resultDarkHeroine = Traverse.Create(member)
+                    .Field<ReactiveProperty<SaveData.Heroine>>("resultDarkHeroine")?.Value;
+                if (resultDarkHeroine != null && resultDarkHeroine.HasValue && resultDarkHeroine.Value != null)
                 {
-                    callbackMap[resultDarkHeroine.Value] = callbacks = new List<Action<string>>();
+                    if (!callbackMap.TryGetValue(resultDarkHeroine.Value, out var callbacks))
+                    {
+                        callbackMap[resultDarkHeroine.Value] = callbacks = ListPool<Action<string>>.Get();
+                    }
+
+                    callbacks.Add(
+                        // ReSharper disable once StringLiteralTypo
+                        GetUpdateTextCallback("/FreeHScene/Canvas/Panel/Dark/FemaleInfomation/Name/TextMeshPro Text"));
                 }
 
-                callbacks.Add(
-                    // ReSharper disable once StringLiteralTypo
-                    GetUpdateTextCallback("/FreeHScene/Canvas/Panel/Dark/FemaleInfomation/Name/TextMeshPro Text"));
-            }
-
-            foreach (var entry in callbackMap)
-            {
-                foreach (var heroineChaFile in entry.Key.GetRelatedChaFiles())
+                foreach (var entry in callbackMap)
                 {
-                    heroineChaFile.TranslateFullName(
-                        translated =>
-                        {
-                            foreach (var callback in entry.Value)
+                    foreach (var heroineChaFile in entry.Key.GetRelatedChaFiles())
+                    {
+                        heroineChaFile.TranslateFullName(
+                            translated =>
                             {
-                                try
+                                foreach (var callback in entry.Value)
                                 {
-                                    callback(translated);
-                                }
+                                    try
+                                    {
+                                        callback(translated);
+                                    }
 #pragma warning disable CA1031 // Do not catch general exception types
-                                catch (Exception err)
-                                {
-                                    Logger.LogWarning($"FreeHUpdateUI: {err.Message}");
-                                }
+                                    catch (Exception err)
+                                    {
+                                        Logger.LogWarning($"FreeHUpdateUI: {err.Message}");
+                                    }
 #pragma warning restore CA1031 // Do not catch general exception types
-                            }
-                        });
+                                }
+                            });
+                    }
                 }
             }
-
-            callbackMap.Clear();
+            finally
+            {
+                foreach (var entry in callbackMap) ListPool<Action<string>>.Release(entry.Value);
+                DictionaryPool<SaveData.Heroine, List<Action<string>>>.Release(callbackMap);
+            }
         }
     }
 }

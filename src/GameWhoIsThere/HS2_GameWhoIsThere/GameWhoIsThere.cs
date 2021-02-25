@@ -17,7 +17,21 @@ namespace GameWhoIsTherePlugin
         public const string PluginName = "Who Is There?";
         public const string Version = "1.0.1";
 
-        public static GameWhoIsThere Instance;
+        private static GameWhoIsThere _instance;
+
+        public static GameWhoIsThere Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = FindObjectOfType<GameWhoIsThere>();
+                }
+
+                return _instance;
+            }
+        }
+        
         internal static new ManualLogSource Logger;
         private readonly ChaFileControl[] _chaFileControls = {null, null};
 
@@ -33,7 +47,7 @@ namespace GameWhoIsTherePlugin
 
         internal void Main()
         {
-            Instance = this;
+            _instance = this;
             Logger = Logger ?? base.Logger;
 
             Enabled = Config.Bind("Settings", "Enabled", true, "Whether the plugin is enabled");
@@ -46,7 +60,6 @@ namespace GameWhoIsTherePlugin
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
             SceneManager.sceneUnloaded += SceneManager_sceneUnloaded;
         }
-
 
         private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
         {
@@ -64,7 +77,7 @@ namespace GameWhoIsTherePlugin
 
         internal void Update()
         {
-            if (!Active || _busy || _labels[0] == null) return;
+            if (!Active || _busy) return;
 
             var isPressed = ShowWhoIsThereShortcut.Value.IsPressed();
             if (_keyIdle)

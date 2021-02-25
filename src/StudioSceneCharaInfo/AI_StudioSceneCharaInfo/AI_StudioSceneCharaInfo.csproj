@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.props" Condition="Exists('..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -88,11 +89,14 @@
   <ItemGroup>
     <Analyzer Include="..\..\..\packages\BepInEx.Analyzers.1.0.4\analyzers\dotnet\cs\BepInEx.Analyzers.CodeFixes.dll" />
     <Analyzer Include="..\..\..\packages\BepInEx.Analyzers.1.0.4\analyzers\dotnet\cs\BepInEx.Analyzers.dll" />
-    <Analyzer Include="..\..\..\packages\Microsoft.Unity.Analyzers.1.9.1\analyzers\dotnet\cs\Microsoft.Unity.Analyzers.dll" />
+    <Analyzer Include="..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll" />
+    <Analyzer Include="..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\analyzers\dotnet\cs\Microsoft.CodeAnalysis.NetAnalyzers.dll" />
+    <Analyzer Include="..\..\..\packages\Microsoft.Unity.Analyzers.1.10.0\analyzers\dotnet\cs\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <Import Project="..\..\StudioSceneCharaInfo\Core_StudioSceneCharaInfo\Core_StudioSceneCharaInfo.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
+    <GenerateMSBuildEditorConfigFile>false</GenerateMSBuildEditorConfigFile>
     <PathMap>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)=.</PathMap>
     <PostBuildEvent>IF EXIST $(SolutionDir)PostBuild.bat CALL "$(SolutionDir)PostBuild.bat" $(TargetPath) AI</PostBuildEvent>
   </PropertyGroup>
@@ -104,7 +108,10 @@
     <Error Condition="!Exists('..\..\..\packages\IllusionLibs.AIGirl.Assembly-CSharp.2020.5.29.2\build\IllusionLibs.AIGirl.Assembly-CSharp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\packages\IllusionLibs.AIGirl.Assembly-CSharp.2020.5.29.2\build\IllusionLibs.AIGirl.Assembly-CSharp.targets'))" />
     <Error Condition="!Exists('..\..\..\packages\IllusionLibs.AIGirl.UnityEngine.CoreModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.CoreModule.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\packages\IllusionLibs.AIGirl.UnityEngine.CoreModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.CoreModule.targets'))" />
     <Error Condition="!Exists('..\..\..\packages\IllusionLibs.BepInEx.Harmony.2.2.0.1\build\IllusionLibs.BepInEx.Harmony.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\packages\IllusionLibs.BepInEx.Harmony.2.2.0.1\build\IllusionLibs.BepInEx.Harmony.targets'))" />
+    <Error Condition="!Exists('..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.props'))" />
+    <Error Condition="!Exists('..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.targets'))" />
   </Target>
   <Import Project="..\..\..\packages\IllusionLibs.AIGirl.UnityEngine.CoreModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.CoreModule.targets" Condition="Exists('..\..\..\packages\IllusionLibs.AIGirl.UnityEngine.CoreModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.CoreModule.targets')" />
   <Import Project="..\..\..\packages\IllusionLibs.BepInEx.Harmony.2.2.0.1\build\IllusionLibs.BepInEx.Harmony.targets" Condition="Exists('..\..\..\packages\IllusionLibs.BepInEx.Harmony.2.2.0.1\build\IllusionLibs.BepInEx.Harmony.targets')" />
+  <Import Project="..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.targets" Condition="Exists('..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\build\Microsoft.CodeAnalysis.NetAnalyzers.targets')" />
 </Project>

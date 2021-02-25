@@ -67,11 +67,10 @@ namespace StudioSceneCharaInfoPlugin
 
         internal void Update()
         {
-            if (StudioInitObject == null || _dumping || !SceneCharaInfoDumpHotkey.Value.IsDown()) return;
+            if (_dumping || !SceneCharaInfoDumpHotkey.Value.IsDown()) return;
             _dumping = true;
             try
             {
-                Logger.LogInfo("Start dump.");
                 ExecuteDump();
             }
             finally
@@ -96,7 +95,7 @@ namespace StudioSceneCharaInfoPlugin
         [UsedImplicitly]
         private void CollectCharInfos(ObjectInfo oICharInfo, ref List<ObjectInfo> charInfos)
         {
-            var children = new List<ObjectInfo>();
+            var children = ListPool<ObjectInfo>.Get();
             switch (oICharInfo)
             {
                 case OICharInfo charInfo:
@@ -125,11 +124,13 @@ namespace StudioSceneCharaInfoPlugin
                 CollectCharInfos(child, ref charInfos);
                 child.DeleteKey();
             }
+
+            ListPool<ObjectInfo>.Release(children);
         }
 
         private void CollectNames(ObjectInfo oICharInfo, ref List<string> names)
         {
-            var children = new List<ObjectInfo>();
+            var children = ListPool<ObjectInfo>.Get();
             if (oICharInfo is OICharInfo charInfo)
             {
                 var info = charInfo.charFile.parameter;
@@ -159,6 +160,8 @@ namespace StudioSceneCharaInfoPlugin
                 CollectNames(child, ref names);
                 child.DeleteKey();
             }
+
+            ListPool<ObjectInfo>.Release(children);
         }
 
         public static string PrepPath(string path)
@@ -215,6 +218,7 @@ namespace StudioSceneCharaInfoPlugin
 
             var dirName = Path.GetDirectoryName(scenes[0]);
             if (string.IsNullOrEmpty(dirName)) return;
+            Logger.LogInfo("Start dump.");
 
             var outputFile = Path.GetFullPath(Path.Combine(dirName, "SceneCharaInfo.csv"));
 
@@ -317,7 +321,7 @@ namespace StudioSceneCharaInfoPlugin
                     PngFile.SkipPng(reader);
                     var version = new Version(reader.ReadString());
                     var num = reader.ReadInt32();
-                    var infos = new List<ObjectInfo>();
+                    var infos = ListPool<ObjectInfo>.Get();
 
                     for (var i = 0; i < num; i++)
                     {
@@ -373,6 +377,8 @@ namespace StudioSceneCharaInfoPlugin
                         infos.RemoveAt(0);
                         info.DeleteKey();
                     }
+
+                    ListPool<ObjectInfo>.Release(infos);
                 }
             }
 

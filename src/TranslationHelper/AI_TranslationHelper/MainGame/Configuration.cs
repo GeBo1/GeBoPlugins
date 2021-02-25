@@ -16,7 +16,7 @@ namespace TranslationHelperPlugin.MainGame
     internal static partial class Configuration
     {
         private static Coroutine _merchantRegistrationCoroutine;
-        internal static string MerchantCharaName = null;
+        internal static string MerchantCharaName;
 
         private static bool MerchantReady()
         {

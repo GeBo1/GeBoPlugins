@@ -1,5 +1,4 @@
 ﻿using BepInEx;
-using KKAPI;
 using UnityEngine.SceneManagement;
 
 namespace TranslationHelperPlugin

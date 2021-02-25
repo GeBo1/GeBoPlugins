@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ADV;
+﻿using ADV;
 using KKAPI.MainGame;
 
 namespace GameDressForSuccessPlugin
@@ -11,7 +7,7 @@ namespace GameDressForSuccessPlugin
     {
         public static bool IsNullOrNpc(this SaveData.Heroine heroine)
         {
-            return (heroine == null || heroine.FixCharaIDOrPersonality < 0);
+            return heroine == null || heroine.FixCharaIDOrPersonality < 0;
         }
 
         public static bool IsNullOrNpc(this CharaData charaData)
@@ -19,7 +15,7 @@ namespace GameDressForSuccessPlugin
             if (charaData == null || charaData.chaCtrl == null) return true;
             return charaData.chaCtrl.GetHeroine().IsNullOrNpc();
         }
-        
+
         public static int GetCoordinateType(this SaveData.Heroine heroine)
         {
             var result = -1;

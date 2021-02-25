@@ -72,14 +72,12 @@ namespace GameDressForSuccessPlugin
 
             player.chaCtrl.SafeProc(cc =>
             {
-                if (cc.ChangeCoordinateTypeAndReload(newCoordinateType))
+                if (!cc.ChangeCoordinateTypeAndReload(newCoordinateType)) return;
+                Logger.LogDebug($"Changed player clothes to {newCoordinateType}");
+                if (!playerClothesIsAuto)
                 {
-                    Logger.LogDebug($"Changed player clothes to {newCoordinateType}");
-                    if (!playerClothesIsAuto)
-                    {
-                        // update selected clothes to match so you can change back
-                        player.changeClothesType = (int)newCoordinateType;
-                    }
+                    // update selected clothes to match so you can change back
+                    player.changeClothesType = (int)newCoordinateType;
                 }
             });
 

@@ -18,21 +18,21 @@ namespace GameDressForSuccessPlugin
 
         protected override void OnPeriodChange(Cycle.Type period)
         {
-            Logger?.DebugLogDebug($"{GetType().FullName}.{nameof(OnPeriodChange)}({period})");
+            Logger?.DebugLogDebug($"{this.GetPrettyTypeFullName()}.{nameof(OnPeriodChange)}({period})");
             HandleResetToAutomatic(ResetToAutomaticMode.PeriodChange);
             base.OnPeriodChange(period);
         }
         
         protected override void OnGameSave(GameSaveLoadEventArgs args)
         {
-            Logger?.DebugLogDebug($"{GetType().FullName}.{nameof(OnGameSave)}()");
+            Logger?.DebugLogDebug($"{this.GetPrettyTypeFullName()}.{nameof(OnGameSave)}()");
             HandleResetToAutomatic(ResetToAutomaticMode.DayChange);
             base.OnGameSave(args);
         }
 
         protected override void OnDayChange(Cycle.Week day)
         {
-            Logger?.DebugLogDebug($"{GetType().FullName}.{nameof(OnDayChange)}({day})");
+            Logger?.DebugLogDebug($"{this.GetPrettyTypeFullName()}.{nameof(OnDayChange)}({day})");
             HandleResetToAutomatic(ResetToAutomaticMode.DayChange);
             base.OnDayChange(day);
         }

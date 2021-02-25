@@ -24,7 +24,7 @@ namespace GameDialogHelperPlugin
                     result[qi.Id] = qi;
                 }
 
-                Logger.LogDebug($"Loaded questions XML: {result.Count}");
+                Logger?.LogDebug($"{nameof(QuestionInfo)}: Loaded questions XML: {result.Count}");
                 return result;
             });
 

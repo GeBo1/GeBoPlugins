@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using BepInEx.Logging;
 using ExtensibleSaveFormat;
 using GameDialogHelperPlugin.AdvancedLogicMemory;
+using GameDialogHelperPlugin.Utilities;
+using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
 using JetBrains.Annotations;
 using KKAPI;
@@ -13,23 +14,19 @@ using KKAPI.Chara;
 using KKAPI.MainGame;
 using Manager;
 using MessagePack;
-using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace GameDialogHelperPlugin
 {
     public class GameDialogHelperCharaController : CharaCustomFunctionController
     {
-        private static ManualLogSource Logger => GameDialogHelper.Logger;
-
         internal static readonly Dictionary<Guid, CharaDialogMemory>
             PersistentMemoryByGuid = new Dictionary<Guid, CharaDialogMemory>();
 
         internal static readonly Dictionary<SaveData.Heroine, CharaDialogMemory>
             PersistentMemoryByHeroine = new Dictionary<SaveData.Heroine, CharaDialogMemory>();
 
-        
-
-        internal static readonly Dictionary<Guid, Guid> HeroineGuidMap = new Dictionary<Guid, Guid>();
+        internal static readonly Dictionary<Guid, Guid> CharaGuidMap = new Dictionary<Guid, Guid>();
 
         private readonly HashSet<Guid> _previousGuids = new HashSet<Guid>();
 
@@ -39,6 +36,7 @@ namespace GameDialogHelperPlugin
         private int _heroineIndex = -1;
 
         private long _lastPersistedToCard = -1;
+        private static ManualLogSource Logger => GameDialogHelper.Logger;
 
         public long LastPersistedToCard
         {
@@ -74,10 +72,11 @@ namespace GameDialogHelperPlugin
                     {
                         SaveGuid = GameDialogHelper.Instance.CurrentSaveGuid,
                         SessionGuid = GameDialogHelper.Instance.CurrentSessionGuid,
-                        HeroineGuidVersion = GameDialogHelper.CurrentHeroineGuidVersion
+                        CharaGuidVersion = PluginDataInfo.CurrentCharaGuidVersion,
+                        PlayerGuid = GameDialogHelper.Instance.CurrentPlayerGuid
                     };
                     ChaFileControl.SafeProc(
-                        cfc => cfc.GetHeroine().SafeProc(h => result.HeroineGuid = h.GetHeroineGuid()));
+                        cfc => cfc.GetHeroine().SafeProc(h => result.CharaGuid = h.GetCharaGuid()));
                 }
 
                 if (result == _dialogMemory) return _dialogMemory;
@@ -107,14 +106,19 @@ namespace GameDialogHelperPlugin
             _dialogMemoryInitialized = false;
         }
 
-        private delegate CharaDialogMemory MemoryLoader();
-
         private CharaDialogMemory SelectLatestMemory(params MemoryLoader[] memoryLoaders)
         {
             CharaDialogMemory latest = null;
+            SaveData.CharaData charaData = null;
+            var currentGuid = Guid.Empty;
+            ChaFileControl.SafeProc(cfc => cfc.GetCharaData().SafeProc(cd =>
+            {
+                charaData = cd;
+                currentGuid = cd.GetCharaGuid();
+            }));
             foreach (var loader in memoryLoaders)
             {
-                var memory = loader();
+                var memory = loader(charaData, currentGuid, latest?.LastUpdated ?? 0);
                 if (memory == null) continue;
                 if (latest == memory) continue;
                 memory = MemoryLoaderValidation(loader.Method.Name, memory);
@@ -128,24 +132,6 @@ namespace GameDialogHelperPlugin
             return latest;
         }
 
-        /*
-        private IEnumerator PersistDialogMemoryCoroutine(ChaFileControl chaFileControl, Dictionary<int, Dictionary<int, ulong>> value)
-        {
-            SaveData.Heroine heroine = chaFileControl.GetHeroine();
-            while (heroine == null)
-            {
-                Logger.LogDebug("PersistDialogMemoryCoroutine: no heroine");
-                yield return null;
-                heroine = chaFileControl.GetHeroine();
-            }
-
-            Logger.LogDebug("PersistDialogMemoryCoroutine: heroine available");
-            PersistentMemoryByHeroine[heroine] = value;
-            GameDialogHelper.LoadedFromCard.Add(heroine);
-            PersistToCard();
-        }
-        */
-
         protected override void OnCardBeingSaved(GameMode currentGameMode)
         {
             PersistToCard();
@@ -155,7 +141,7 @@ namespace GameDialogHelperPlugin
         private CharaDialogMemory CopyDialogMemory()
         {
             // ReSharper disable once MergeConditionalExpression - Unity
-            var clone = new CharaDialogMemory(ChaFileControl == null ? null : ChaFileControl.GetHeroine());
+            var clone = new CharaDialogMemory(ChaFileControl == null ? null : ChaFileControl.GetCharaData());
             if (_dialogMemory == null) return clone;
 
             foreach (var questionEntry in _dialogMemory)
@@ -175,19 +161,19 @@ namespace GameDialogHelperPlugin
             var prefix = $"{callerName,30} {GetLogId(),30}";
             if (memory == null)
             {
-                Logger.LogDebug($"{prefix}: no data");
+                Logger?.DebugLogDebug($"{prefix}: no data");
                 return null;
             }
 
             if (preCheck != null && !preCheck.Invoke(memory))
             {
-                Logger.LogDebug($"{prefix}: pre-check failed, discarding");
+                Logger?.DebugLogDebug($"{prefix}: pre-check failed, discarding");
                 return null;
             }
 
             if (!memory.IsValidForCurrentSession(prefix))
             {
-                Logger.LogDebug($"{prefix}: invalid data, discarding");
+                Logger?.DebugLogDebug($"{prefix}: invalid data, discarding");
                 return null;
             }
 
@@ -203,69 +189,70 @@ namespace GameDialogHelperPlugin
             return memory;
         }
 
-        private CharaDialogMemory GetCurrentMemory()
+        private CharaDialogMemory GetCurrentMemory(SaveData.CharaData _1, Guid _2, long _3)
         {
             ValidateOrClearDialogMemory();
             return _dialogMemory;
         }
 
-        protected internal CharaDialogMemory LoadMemoryFromCard()
+        protected internal CharaDialogMemory LoadMemoryFromCard(SaveData.CharaData charaData, Guid currentGuid,
+            long lastUpdated = 0)
         {
-            SaveData.Heroine heroine = null;
-            ChaFileControl.SafeProc(c => c.GetHeroine().SafeProc(h => heroine = h));
-            if (heroine == null) return null;
-            var cardMem = LoadMemoryFromCardInternal();
+            if (charaData == null) return null;
+            var cardMem = LoadMemoryFromCardInternal(lastUpdated);
             if (cardMem == null) return null;
 
-            var checkGuid = heroine.GetHeroineGuid(cardMem.HeroineGuidVersion);
-            Logger.DebugLogDebug($"{nameof(LoadMemoryFromCard)}: heroine<{cardMem.HeroineGuidVersion}, {checkGuid}> <=> cardMem<{cardMem.HeroineGuidVersion}, {cardMem.HeroineGuid}>");
+            var checkGuid = cardMem.CharaGuidVersion == PluginDataInfo.CurrentCharaGuidVersion
+                ? currentGuid
+                : charaData.GetCharaGuid(cardMem.CharaGuidVersion);
+            Logger.DebugLogDebug(
+                $"{nameof(LoadMemoryFromCard)}: heroine<{cardMem.CharaGuidVersion}, {checkGuid}> <=> cardMem<{cardMem.CharaGuidVersion}, {cardMem.CharaGuid}>");
 
-            
+
             // verify memory belongs to this character
-            if (checkGuid != cardMem.HeroineGuid)
+            // ReSharper disable once InvertIf - in case translation/upgrade code add here
+            if (checkGuid != cardMem.CharaGuid)
             {
-                Logger.LogDebug(
-                    $"{nameof(LoadMemoryFromCard)}: {heroine.Name}: data on card does not seem to belong to this character, ignoring");
+                Logger?.LogDebug(
+                    $"{nameof(LoadMemoryFromCard)}: {charaData.Name}: data on card does not seem to belong to this character, ignoring");
                 return null;
             }
 
-            /*
-            // if guid was missing or outdated, upgrade to current version
-            if (cardMem.HeroineGuid.Equals(Guid.Empty))
+            if (cardMem.CharaGuidVersion != PluginDataInfo.CurrentSaveGuidVersion)
             {
-                cardMem.HeroineGuid = heroine.GetHeroineGuid();
-                cardMem.HeroineGuidVersion = GameDialogHelper.CurrentHeroineGuidVersion;
-                Logger.DebugLogDebug(
-                    $"{nameof(LoadMemoryFromCard)}: updated Guid: cardMem<{cardMem.HeroineGuidVersion}, {cardMem.HeroineGuid}>");
+                HandleGuidMigration();
             }
-            else if (cardMem.HeroineGuid != heroine.GetHeroineGuid())
-            {
-                Logger.LogDebug(
-                    $"{nameof(LoadMemoryFromCard)}: {heroine.Name}: data on card does not seem to belong to this character, ignoring");
-                return null;
-            }
-            */
+
             return cardMem;
         }
 
-        protected internal CharaDialogMemory LoadMemoryFromCardInternal()
+        protected internal CharaDialogMemory LoadMemoryFromCardInternal(long lastUpdated = 0)
         {
             CharaDialogMemory cardMem = null;
             var pluginData = GetExtendedData(true);
             // ReSharper disable once ExpressionIsAlwaysNull - in case order changes
             if (pluginData == null) return cardMem;
-            if (pluginData.version < PluginDataInfo.MinimumSupportedDataVersion)
+            if (pluginData.version < PluginDataInfo.MinimumSupportedCardDataVersion)
             {
-                Logger.LogWarning(
-                    $"Discarding unsupported card data (version {pluginData.version})");
+                Logger?.LogWarning(
+                    $"{nameof(LoadMemoryFromCardInternal)}: Discarding unsupported card data (version {pluginData.version})");
             }
             else
             {
+                // old saves may not have LastUpdated, use as shortcut if available
+                if (lastUpdated > 0 &&
+                    pluginData.data.TryGetValue(PluginDataInfo.Keys.LastUpdated, out var tmpLastUpdated) &&
+                    tmpLastUpdated is long cardLastUpdated &&
+                    cardLastUpdated <= lastUpdated)
+                {
+                    return null;
+                }
+
                 // ReSharper disable once ExpressionIsAlwaysNull - in case order changes
                 if (!pluginData.data.TryGetValue(PluginDataInfo.Keys.DialogMemory, out var val)) return cardMem;
                 var heroineGuid = Guid.Empty;
-                int heroineGuidVersion = -1;
-                Logger.LogDebug("data found on card");
+                var heroineGuidVersion = -1;
+                Logger?.DebugLogDebug($"{nameof(LoadMemoryFromCardInternal)}: data found on card");
                 if (GameDialogHelper.Instance.CurrentSaveGuid != Guid.Empty)
                 {
                     if (pluginData.data.TryGetValue(PluginDataInfo.Keys.SaveGuid, out var saveGuidVal))
@@ -284,17 +271,17 @@ namespace GameDialogHelperPlugin
 
                         if (saveGuid != Guid.Empty && saveGuid != GameDialogHelper.Instance.CurrentSaveGuid)
                         {
-                            Logger.LogDebug(
+                            Logger?.DebugLogDebug(
                                 "data on card does not seem to belong to this save game, ignoring");
                             return null;
                         }
                     }
 
-                    if (!pluginData.data.TryGetValue(PluginDataInfo.Keys.HeroineGuidVersion, out var tmpHeroineGuidVersion))
+                    if (pluginData.data.TryGetValue(PluginDataInfo.Keys.CharaGuidVersion, out var tmpCharaGuidVersion))
                     {
                         try
                         {
-                            heroineGuidVersion = (int)tmpHeroineGuidVersion;
+                            heroineGuidVersion = (int)tmpCharaGuidVersion;
                         }
 #pragma warning disable CA1031
                         catch
@@ -302,10 +289,9 @@ namespace GameDialogHelperPlugin
                             heroineGuidVersion = -1;
                         }
 #pragma warning restore CA1031
-
                     }
 
-                    if (pluginData.data.TryGetValue(PluginDataInfo.Keys.HeroineGuid, out var heroineGuidVal))
+                    if (pluginData.data.TryGetValue(PluginDataInfo.Keys.CharaGuid, out var heroineGuidVal))
                     {
                         try
                         {
@@ -323,50 +309,60 @@ namespace GameDialogHelperPlugin
                 cardMem = MessagePackSerializer.Deserialize<CharaDialogMemory>((byte[])val);
 
                 if (cardMem == null) return null;
-                
-                if (!cardMem.HeroineGuid.Equals(Guid.Empty) && cardMem.HeroineGuidVersion == -1)
+
+                if (!cardMem.CharaGuid.Equals(Guid.Empty) && cardMem.CharaGuidVersion == -1)
                 {
                     ChaFileControl.SafeProc(c => c.GetHeroine().SafeProc(h =>
                     {
-                        for (var i = 1; i <= GameDialogHelper.MaxHeroineGuidVersion; i++)
+                        for (var i = 1; i <= PluginDataInfo.MaxCharaGuidVersion; i++)
                         {
-                            var tmpGuid = h.GetHeroineGuid(i);
-                            if (tmpGuid != cardMem.HeroineGuid) continue;
-                            Logger.LogDebug($"{nameof(LoadMemoryFromCardInternal)}: Setting Guid version to {i}");
-                            cardMem.HeroineGuidVersion = i;
+                            Guid tmpGuid;
+                            try
+                            {
+                                tmpGuid = h.GetCharaGuid(i);
+                            }
+#pragma warning disable CA1031 // Do not catch general exception types
+                            catch (ArgumentOutOfRangeException)
+                            {
+                                continue;
+                            }
+#pragma warning restore CA1031 // Do not catch general exception types
+
+                            if (tmpGuid != cardMem.CharaGuid) continue;
+                            Logger?.DebugLogDebug($"{nameof(LoadMemoryFromCardInternal)}: Setting Guid version to {i}");
+                            cardMem.CharaGuidVersion = i;
                             if (heroineGuidVersion == -1) heroineGuidVersion = i;
                             break;
                         }
                     }));
                 }
 
-                if (heroineGuid.Equals(cardMem.HeroineGuid) || heroineGuid.Equals(Guid.Empty) ||
-                    cardMem.HeroineGuid.Equals(Guid.Empty))
+                if (heroineGuid == cardMem.CharaGuid || heroineGuid == Guid.Empty ||
+                    cardMem.CharaGuid == Guid.Empty)
                 {
                     return cardMem;
                 }
 
-                if (GuidRemapsTo(heroineGuid, cardMem.HeroineGuid) || GuidRemapsTo(cardMem.HeroineGuid, heroineGuid))
+                if (AreCharaGuidsEqual(heroineGuid, cardMem.CharaGuid))
                 {
-                    Logger.LogDebug($"{nameof(LoadMemoryFromCardInternal)}: GUID remap detected, keeping data");
+                    Logger?.DebugLogDebug($"{nameof(LoadMemoryFromCardInternal)}: GUID remap detected, keeping data");
                 }
                 else
                 {
-                    Logger.LogDebug(
+                    Logger?.LogDebug(
                         $"{nameof(LoadMemoryFromCardInternal)}: data on card does not seem to belong to this character, ignoring");
                     return null;
                 }
             }
-            
 
             return cardMem;
         }
 
-        internal bool GuidRemapsTo(Guid check, Guid target)
+        public static bool GuidRemapsTo(Guid check, Guid target)
         {
-            if (check.Equals(target) || _previousGuids.Contains(check)) return true;
+            if (check == target) return true;
             var currentCheck = check;
-            while (HeroineGuidMap.TryGetValue(currentCheck, out var result))
+            while (CharaGuidMap.TryGetValue(currentCheck, out var result))
             {
                 if (result.Equals(target)) return true;
                 currentCheck = result;
@@ -375,60 +371,107 @@ namespace GameDialogHelperPlugin
             return false;
         }
 
+        public static bool AreCharaGuidsEqual(Guid guid1, Guid guid2)
+        {
+            return guid1 == guid2 || GuidRemapsTo(guid1, guid2) || GuidRemapsTo(guid2, guid1);
+        }
+
+        /*
+        internal bool IsValidGuidForChara(Guid check)
+        {
+            return _previousGuids.Contains(check) || AreCharaGuidsEqual(check,
+                ChaControl.GetCharaData().GetCharaGuid());
+        }
+        */
+
         internal void ProcessGuidChange(Guid newGuid)
         {
-            var currentGuid = DialogMemory.HeroineGuid;
+            var currentGuid = DialogMemory.CharaGuid;
             if (newGuid.Equals(currentGuid)) return;
             Logger.DebugLogDebug(
                 $"{nameof(ProcessGuidChange)}: handling GUID change from {currentGuid} => {newGuid}");
             if (!currentGuid.Equals(Guid.Empty)) _previousGuids.Add(currentGuid);
-            DialogMemory.HeroineGuid = newGuid;
+            DialogMemory.CharaGuid = newGuid;
         }
 
-        private CharaDialogMemory LoadPersistentMemoryByGuid()
+        private CharaDialogMemory LoadPersistentMemoryByGuid(SaveData.CharaData charaData, Guid currentGuid, long _)
         {
-            SaveData.Heroine heroine = null;
-            ChaFileControl.SafeProc(cfc => heroine = cfc.GetHeroine());
-            if (heroine == null) return MemoryLoaderValidation(nameof(LoadPersistentMemoryByGuid), null);
-            var guid = heroine.GetHeroineGuid();
-            if (guid == Guid.Empty) return MemoryLoaderValidation(nameof(LoadPersistentMemoryByGuid), null);
-
-            PersistentMemoryByGuid.TryGetValue(guid, out var persistMem);
+            if (charaData == null) return MemoryLoaderValidation(nameof(LoadPersistentMemoryByGuid), null);
+            if (currentGuid == Guid.Empty) return MemoryLoaderValidation(nameof(LoadPersistentMemoryByGuid), null);
+            PersistentMemoryByGuid.TryGetValue(currentGuid, out var persistMem);
             return persistMem;
         }
 
-#if DEADCODE
-        private CharaDialogMemory LoadPersistentMemoryByHeroine()
+        /*
+        private CharaDialogMemory LoadPersistentMemoryByHeroine(SaveData.CharaData charaData, Guid _1, long _2)
         {
-            SaveData.Heroine heroine = null;
-            ChaFileControl.SafeProc(cfc => heroine = cfc.GetHeroine());
-            if (heroine == null) return null;
 
-            PersistentMemoryByHeroine.TryGetValue(heroine, out var persistMem);
-            return persistMem;
+            return charaData is SaveData.Heroine heroine &&
+                   PersistentMemoryByHeroine.TryGetValue(heroine, out var persistMem)
+                ? persistMem
+                : null;
         }
-#endif
+        */
 
         private void PersistToMemory()
         {
             if (_dialogMemory == null) return;
-
-            void Store(SaveData.Heroine heroine)
+            // If DialogMemory was initialized before current SaveGuid, update it
+            if (_dialogMemory.SaveGuid == Guid.Empty &&
+                _dialogMemory.SessionGuid == GameDialogHelper.Instance.CurrentSessionGuid)
             {
+                _dialogMemory.SaveGuid = GameDialogHelper.Instance.CurrentSaveGuid;
+                _dialogMemory.SaveGuidVersion = PluginDataInfo.CurrentSaveGuidVersion;
+            }
+
+            Assert.AreNotEqual(_dialogMemory.SaveGuid, Guid.Empty,
+                $"{nameof(PersistToMemory)}: {nameof(_dialogMemory.SaveGuid)} should not be empty");
+            Assert.AreNotEqual(_dialogMemory.PlayerGuid, Guid.Empty,
+                $"{nameof(PersistToMemory)}: {nameof(_dialogMemory.PlayerGuid)} should not be empty");
+            Assert.AreNotEqual(_dialogMemory.CharaGuid, Guid.Empty,
+                $"{nameof(PersistToMemory)}: {nameof(_dialogMemory.CharaGuid)} should not be empty");
+
+            void Store(SaveData.CharaData charaData)
+            {
+                if (!(charaData is SaveData.Heroine heroine)) return;
                 PersistentMemoryByHeroine[heroine] = _dialogMemory;
 
-                var guid = heroine.GetHeroineGuid();
+                var guid = heroine.GetCharaGuid();
                 if (guid != Guid.Empty) PersistentMemoryByGuid[guid] = _dialogMemory;
             }
 
-            ChaFileControl.SafeProc(c => c.GetHeroine().SafeProc(Store));
+            ChaFileControl.SafeProc(c => c.GetCharaData().SafeProc(Store));
+        }
+
+        private void HandleGuidMigration()
+        {
+            ChaFileControl.SafeProc(cfc => cfc.GetCharaData().SafeProc(cd =>
+            {
+                var previousGuid = Guid.Empty;
+
+                for (var ver = PluginDataInfo.MinimumSupportedCharaGuidVersion;
+                    ver <= PluginDataInfo.MaxCharaGuidVersion;
+                    ver++)
+                {
+                    var nextGuid = cd.GetCharaGuid(ver);
+                    if (previousGuid != Guid.Empty)
+                    {
+                        _previousGuids.Add(previousGuid);
+                        CharaGuidMap[previousGuid] = nextGuid;
+                    }
+
+                    previousGuid = nextGuid;
+                }
+            }));
         }
 
         protected override void OnReload(GameMode currentGameMode, bool maintainState)
         {
-            if (ChaControl.sex == 0)
+            if (ChaControl.sex == (byte)CharacterSex.Male)
             {
-                if (GameDialogHelper.Instance.CurrentSaveGuid == Guid.Empty) UpdateSaveGuidFromPlayer();
+                HandleGuidMigration();
+                Assert.AreEqual(GameDialogHelper.Instance.CurrentPlayerGuid, ChaControl.GetCharaData().GetCharaGuid(),
+                    $"{nameof(OnReload)}: {nameof(GameDialogHelper.CurrentPlayerGuid)}: should equal current player");
                 return;
             }
 
@@ -447,97 +490,22 @@ namespace GameDialogHelperPlugin
             _dialogMemoryInitialized = true;
 
             // Don't access via DialogMemory
-            if (_dialogMemory.HeroineGuidVersion < GameDialogHelper.CurrentHeroineGuidVersion &&
-                _dialogMemory.HeroineGuid.Equals(Guid.Empty))
+            var outdatedCharaGuidVersion = _dialogMemory.CharaGuidVersion < PluginDataInfo.CurrentCharaGuidVersion;
+            if (outdatedCharaGuidVersion &&
+                _dialogMemory.CharaGuid.Equals(Guid.Empty))
             {
                 ChaFileControl.SafeProc(c => c.GetHeroine().SafeProc(h =>
                 {
-                    var currentGuid = h.GetHeroineGuid();
-                    Logger.LogDebug(
-                        $"Upgrading GUID version {_dialogMemory.HeroineGuidVersion}:{_dialogMemory.HeroineGuid} => {GameDialogHelper.CurrentHeroineGuidVersion}:{currentGuid}");
+                    var currentGuid = h.GetCharaGuid();
+                    Logger?.DebugLogDebug(
+                        $"Upgrading GUID version {_dialogMemory.CharaGuidVersion}:{_dialogMemory.CharaGuid} => {PluginDataInfo.CurrentCharaGuidVersion}:{currentGuid}");
                     ProcessGuidChange(currentGuid);
-                    _dialogMemory.HeroineGuidVersion = GameDialogHelper.CurrentHeroineGuidVersion;
+                    _dialogMemory.CharaGuidVersion = PluginDataInfo.CurrentCharaGuidVersion;
                 }));
             }
 
             PersistToMemory();
         }
-
-        internal void UpdateSaveGuidFromPlayer()
-        {
-            //Logger.LogDebug($"{nameof(UpdateSaveGuidFromPlayer)}: called");
-            GameDialogHelperCharaController playerController = null;
-            Game.Instance.SafeProc(g =>
-                g.Player.SafeProc(p => p.chaCtrl.SafeProc(c => playerController = c.GetGameDialogHelperController())));
-
-            if (this != playerController) return;
-            //Logger.LogDebug($"{nameof(UpdateSaveGuidFromPlayer)}: current is player");
-
-            var pluginData = GetExtendedData();
-            if (pluginData == null) return;
-
-            //Logger.LogDebug($"{nameof(UpdateSaveGuidFromPlayer)}: plugin data found");
-            if (pluginData.version < PluginDataInfo.MinimumSupportedDataVersion) return;
-
-            //Logger.LogDebug($"{nameof(UpdateSaveGuidFromPlayer)}: plugin data supported");
-            if (!pluginData.data.TryGetValue(PluginDataInfo.Keys.SaveGuid, out var val)) return;
-
-            Logger.LogDebug(
-                $"{nameof(UpdateSaveGuidFromPlayer)}: save guid in plugin data");
-            var saveGuid = new Guid((byte[])val);
-            Logger.LogDebug($"{nameof(UpdateSaveGuidFromPlayer)}: {saveGuid}");
-            GameDialogHelper.Instance.CurrentSaveGuid = saveGuid;
-        }
-
-#if DEADCODE
-        private void SceneUnloaded(Scene arg0)
-        {
-            if (!_dialogMemoryInitialized) return;
-            Logger.LogDebug($"SceneUnloaded({arg0.name}): {GetLogId()}");
-            PersistToCard();
-            ChaFileControl.SafeProc(c =>
-                c.GetHeroine().SafeProc(h => StartCoroutine(ApplyDataAfterRefresh(h))));
-        }
-
-        private void SceneLoaded(Scene arg0, LoadSceneMode arg1)
-        {
-            if (!_dialogMemoryInitialized) return;
-            Logger.LogDebug($"SceneLoaded({arg0.name},{arg1}): {GetLogId()}");
-            PersistToCard();
-            /*
-            ChaFileControl.SafeProc(c =>
-                c.GetHeroine().SafeProc(h => StartCoroutine(ApplyDataAfterRefresh(h))));
-            */
-        }
-
-        internal void PersistDataAndApply()
-        {
-            PersistToCard();
-            ChaFileControl.SafeProc(c =>
-                c.GetHeroine().SafeProc(h => StartCoroutine(ApplyDataAfterRefresh(h))));
-        }
-
-        private IEnumerator ApplyDataAfterRefresh(SaveData.Heroine heroine)
-        {
-            if (heroine.chaCtrl == null || _dialogMemory == null || _dialogMemory.Count == 0)
-            {
-                yield break;
-            }
-
-            var previousControl = heroine.chaCtrl;
-            // backup memory 
-            var previousMemory = CopyDialogMemory();
-            // Wait until we switch from temporary character copy to the character used in the next scene
-            yield return new WaitUntil(() => heroine.chaCtrl != previousControl && heroine.chaCtrl != null);
-            yield return new WaitForEndOfFrame();
-            yield return new WaitForEndOfFrame();
-
-
-            // Apply the backup memory to new controller
-            heroine.GetGameDialogHelperController().SafeProcObject(ctrl => ctrl.DialogMemory = previousMemory);
-            Logger.LogDebug($"Applying PersistToCard {GetLogId()} done");
-        }
-#endif
 
         public void Remember(int question, int answer, bool isCorrect)
         {
@@ -551,40 +519,43 @@ namespace GameDialogHelperPlugin
             if (!_dialogMemoryInitialized) return;
             var questions = DialogMemory.Keys.ToList();
             questions.Sort();
-            var output = new StringBuilder();
-            foreach (var qid in questions)
+            var output = StringBuilderPool.Get();
+            try
             {
-                output.Append($"{qid:d3}: ");
-                var maxAnswer = DialogMemory[qid].Keys.ToList().Max();
-                for (var i = 0; i <= maxAnswer; i++)
+                foreach (var qid in questions)
                 {
-                    ulong timesAnswered = 0;
-                    var recall = 0f;
-                    if (DialogMemory[qid].TryGetValue(i, out var answerMemory))
+                    output.AppendFormat("{0:d3}", qid);
+                    var maxAnswer = DialogMemory[qid].Keys.ToList().Max();
+                    for (var i = 0; i <= maxAnswer; i++)
                     {
-                        timesAnswered = answerMemory.TimesAnswered;
-                        recall = answerMemory.Recall;
+                        ulong timesAnswered = 0;
+                        var recall = 0f;
+                        if (DialogMemory[qid].TryGetValue(i, out var answerMemory))
+                        {
+                            timesAnswered = answerMemory.TimesAnswered;
+                            recall = answerMemory.Recall;
+                        }
+
+                        output.Append($"{timesAnswered:d4}/{recall:000.00%} ");
+                        output.AppendFormat("{0:d4}", timesAnswered)
+                            .Append('/')
+                            .AppendFormat("{0:000.00%}", recall)
+                            .Append(' ');
                     }
 
-                    output.Append($"{timesAnswered:d4}/{recall:000.00%} ");
+                    output.Append('\n');
                 }
-                /*
-                var answers = DialogMemory[qid].Keys.ToList();
-                answers.Sort();
-                foreach (var answer in answers)
-                {
-                    output.Append($"{answer:d}({DialogMemory[qid][answer]:d4}) ");
-                }
-                */
 
-                output.Append("\n");
+                output.Append("Last Updated: ").Append(DialogMemory.LastUpdated).Append('\n');
+
+                var dump = output.ToString();
+
+                Logger?.LogDebug($"DialogMemory dump {GetLogId()}:\n{dump}");
             }
-
-            output.Append("Last Updated: ").Append(DialogMemory.LastUpdated).Append("\n");
-
-            var dump = output.ToString();
-
-            Logger.LogDebug($"DialogMemory dump {GetLogId()}:\n{dump}");
+            finally
+            {
+                StringBuilderPool.Release(output);
+            }
         }
 
         public ulong TimesAnswerSelected(int question, int answer)
@@ -624,15 +595,36 @@ namespace GameDialogHelperPlugin
         {
             if (ChaControl == null)
             {
-                Logger.LogWarning($"ChaControl is null, unable to persist data: {GetLogId()}");
+                Logger?.LogInfo($"ChaControl is null, unable to persist data: {GetLogId()}");
                 return;
             }
 
+            var charaData = ChaControl.GetCharaData();
+            if (charaData == null) return;
+
+            var charaGuid = charaData.GetCharaGuid();
+            Logger?.DebugLogDebug($"{nameof(PersistToCard)}: {GetLogId()}: {charaData}: {charaGuid}");
+
             var pluginData = new PluginData {version = PluginDataInfo.DataVersion};
             pluginData.data.Add(PluginDataInfo.Keys.SaveGuid, GameDialogHelper.Instance.CurrentSaveGuid.ToByteArray());
+            pluginData.data.Add(PluginDataInfo.Keys.SaveGuidVersion, PluginDataInfo.CurrentSaveGuidVersion);
 
-            // player
-            if (ChaControl.sex == 0)
+            if (DialogMemory.CharaGuid == Guid.Empty || DialogMemory.CharaGuid != charaGuid ||
+                DialogMemory.CharaGuidVersion != PluginDataInfo.CurrentCharaGuidVersion)
+            {
+                ProcessGuidChange(charaGuid);
+                DialogMemory.CharaGuid = charaGuid;
+                DialogMemory.CharaGuidVersion = PluginDataInfo.CurrentCharaGuidVersion;
+                DialogMemory.LastUpdated = DateTime.UtcNow.Ticks;
+            }
+
+            pluginData.data.Add(PluginDataInfo.Keys.CharaGuidVersion, PluginDataInfo.CurrentCharaGuidVersion);
+            pluginData.data.Add(PluginDataInfo.Keys.PlayerGuid,
+                GameDialogHelper.Instance.CurrentPlayerGuid.ToByteArray());
+            pluginData.data.Add(PluginDataInfo.Keys.CharaGuid, charaGuid.ToByteArray());
+            pluginData.data.Add(PluginDataInfo.Keys.LastUpdated, DialogMemory.LastUpdated);
+
+            if (charaData is SaveData.Player)
             {
                 SetExtendedData(pluginData);
                 LastPersistedToCard = DateTime.UtcNow.Ticks;
@@ -640,17 +632,15 @@ namespace GameDialogHelperPlugin
                 return;
             }
 
-            
+
             if (!_dialogMemoryInitialized) return;
-            
-            // heroines
-            var heroine = ChaControl.GetHeroine();
-            if (heroine == null)
+
+            if (!(charaData is SaveData.Heroine))
             {
-                Logger.LogWarning($"heroine is null, unable to persist data: {GetLogId()}");
+                Logger?.LogInfo($"heroine is null, unable to persist data: {GetLogId()}");
                 return;
-            } 
- 
+            }
+
             PersistToMemory();
 
             if (LastPersistedToCard > DialogMemory.LastUpdated &&
@@ -659,24 +649,16 @@ namespace GameDialogHelperPlugin
                 return;
             }
 
-            var currentGuid = heroine.GetHeroineGuid();
-
-            if (DialogMemory.HeroineGuid == Guid.Empty || DialogMemory.HeroineGuid != currentGuid || DialogMemory.HeroineGuidVersion != GameDialogHelper.CurrentHeroineGuidVersion)
-            {
-                ProcessGuidChange(currentGuid);
-                DialogMemory.HeroineGuid = currentGuid;
-                DialogMemory.HeroineGuidVersion = GameDialogHelper.CurrentHeroineGuidVersion;
-            }
-
             if (DialogMemory.Count > 0)
             {
+                DialogMemory.PlayerGuid = GameDialogHelper.Instance.CurrentPlayerGuid;
                 DialogMemory.SaveGuid = GameDialogHelper.Instance.CurrentSaveGuid;
+                DialogMemory.SaveGuidVersion = PluginDataInfo.CurrentSaveGuidVersion;
+
                 DialogMemory.LastUpdated = DateTime.UtcNow.Ticks;
                 pluginData.data.Add(PluginDataInfo.Keys.DialogMemory, MessagePackSerializer.Serialize(DialogMemory));
             }
 
-            pluginData.data.Add(PluginDataInfo.Keys.HeroineGuid, currentGuid.ToByteArray());
-            pluginData.data.Add(PluginDataInfo.Keys.HeroineGuidVersion, GameDialogHelper.CurrentHeroineGuidVersion);
             SetExtendedData(pluginData);
             LastPersistedToCard = DateTime.UtcNow.Ticks;
 
@@ -701,7 +683,7 @@ namespace GameDialogHelperPlugin
         {
             PersistentMemoryByHeroine.Clear();
             PersistentMemoryByGuid.Clear();
-            HeroineGuidMap.Clear();
+            CharaGuidMap.Clear();
             foreach (var behaviour in CharacterApi.GetBehaviours())
             {
                 if (!(behaviour is GameDialogHelperCharaController controller)) continue;
@@ -714,5 +696,8 @@ namespace GameDialogHelperPlugin
         {
             _previousGuids.Clear();
         }
+
+        private delegate CharaDialogMemory MemoryLoader(SaveData.CharaData charaData, Guid currentGuid,
+            long lastUpdated);
     }
 }

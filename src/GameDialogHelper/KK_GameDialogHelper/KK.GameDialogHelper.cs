@@ -13,9 +13,11 @@ using HarmonyLib;
 using KKAPI;
 using KKAPI.Chara;
 using KKAPI.MainGame;
+using Manager;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Scene = UnityEngine.SceneManagement.Scene;
 
 namespace GameDialogHelperPlugin
 {
@@ -33,13 +35,24 @@ namespace GameDialogHelperPlugin
         public const string PluginName = "Game Dialog Helper";
         public const string Version = "0.9.9";
 
-        public const int CurrentHeroineGuidVersion = 2;
-        public const int MaxHeroineGuidVersion = CurrentHeroineGuidVersion;
-
         private const float ColorDelta = 2f / 3f;
 
         internal static new ManualLogSource Logger;
-        internal static GameDialogHelper Instance;
+        private static GameDialogHelper _instance;
+
+        public static GameDialogHelper Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = FindObjectOfType<GameDialogHelper>();
+                }
+
+                return _instance;
+            }
+        }
+
 
         private static readonly SimpleLazy<InfoCheckSelectConditionsDelegate> InfoCheckSelectConditionsLoader =
             new SimpleLazy<InfoCheckSelectConditionsDelegate>(() =>
@@ -74,9 +87,22 @@ namespace GameDialogHelperPlugin
         public static ConfigEntry<HighlightMode> HighlightMode { get; private set; }
         public static bool CurrentlyEnabled { get; private set; }
         private static IAutoTranslationHelper AutoTranslator => GeBoAPI.Instance.AutoTranslationHelper;
-
+        private Guid _currentPlayerGuid = Guid.Empty;
         public Guid CurrentSessionGuid { get; internal set; } = Guid.Empty;
         public Guid CurrentSaveGuid { get; internal set; } = Guid.Empty;
+
+        public Guid CurrentPlayerGuid
+        {
+            get
+            {
+                if (_currentPlayerGuid == Guid.Empty && Game.IsInstance())
+                {
+                    Game.Instance.SafeProc(g => g.Player.SafeProc(p => _currentPlayerGuid = p.GetCharaGuid()));
+                }
+
+                return _currentPlayerGuid;
+            }
+        }
 
         public static SaveData.Heroine TargetHeroine
         {
@@ -110,7 +136,6 @@ namespace GameDialogHelperPlugin
 
         public void Main()
         {
-            Instance = this;
             Logger = base.Logger;
 
             CurrentPluginMode = Config.Bind("Config", "Plugin Mode", PluginMode.RelationshipBased,
@@ -159,7 +184,6 @@ namespace GameDialogHelperPlugin
 
         public void Awake()
         {
-            Instance = this;
             Logger = base.Logger;
 
             CharacterApi.RegisterExtraBehaviour<GameDialogHelperCharaController>(GUID);
@@ -171,7 +195,6 @@ namespace GameDialogHelperPlugin
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
             SceneManager.sceneUnloaded += SceneManager_sceneUnloaded;
         }
-
 
         private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
         {
@@ -207,13 +230,14 @@ namespace GameDialogHelperPlugin
             LoadedFromCard.Clear();
             CurrentSessionGuid = Guid.NewGuid();
             CurrentSaveGuid = Guid.Empty;
+            _currentPlayerGuid = Guid.Empty;
         }
 
 
         internal static bool EnabledForCurrentHeroine()
         {
             var result = CurrentlyEnabled && _logic.EnabledForHeroine(TargetHeroine);
-            Logger.LogDebug($"EnabledForCurrentHeroine => {result}");
+            Logger?.DebugLogDebug($"EnabledForCurrentHeroine => {result}");
             return result;
         }
 
@@ -221,7 +245,7 @@ namespace GameDialogHelperPlugin
         {
             var result = CurrentlyEnabled && CurrentDialog != null &&
                          _logic.EnabledForQuestion(TargetHeroine, CurrentDialog);
-            Logger.LogDebug($"EnabledForCurrentQuestion => {result}");
+            Logger?.DebugLogDebug($"EnabledForCurrentQuestion => {result}");
             return result;
         }
 
@@ -229,7 +253,7 @@ namespace GameDialogHelperPlugin
         {
             var result = CurrentlyEnabled && CurrentDialog != null &&
                          _logic.EnableForAnswer(TargetHeroine, CurrentDialog, answer);
-            Logger.LogDebug($"EnabledForCurrentQuestionAnswer({answer}) => {result}");
+            Logger?.DebugLogDebug($"EnabledForCurrentQuestionAnswer({answer}) => {result}");
             return result;
         }
 
@@ -266,7 +290,7 @@ namespace GameDialogHelperPlugin
                     ? HighlightType.Correct
                     : HighlightType.Incorrect;
 
-                Logger.LogDebug($"SaveHighlightSelections: {answerId} {value}");
+                Logger?.DebugLogDebug($"SaveHighlightSelections: {answerId} {value}");
                 CurrentDialogHighlights[answerId] = value;
             }
         }
@@ -284,7 +308,7 @@ namespace GameDialogHelperPlugin
 #if DEADCODE
         internal static void HighlightSelections(ref string[] args)
         {
-            Logger.LogDebug($"HighlightSelections for {CurrentDialog.QuestionInfo}");
+            Logger?.DebugLogDebug($"HighlightSelections for {CurrentDialog.QuestionInfo}");
             if (!EnabledForCurrentQuestion()) return;
             // skip first entry in array
             for (var i = 1; i < args.Length; i++)
@@ -299,7 +323,7 @@ namespace GameDialogHelperPlugin
 
                 var tmp = args[i].Split(Splitter, 2, StringSplitOptions.None);
                 if (tmp.Length != 2) continue;
-                Logger.LogDebug($"HighlightSelections: {i}: {args[i]}");
+                Logger?.DebugLogDebug($"HighlightSelections: {i}: {args[i]}");
 
                 if (AutoTranslator.TryTranslate(tmp[0], out var translatedText))
                 {

@@ -27,7 +27,7 @@ namespace GameDialogHelperPlugin
 
                     if (CurrentDialog.QuestionInfo.Id == -1)
                     {
-                        Logger.LogDebug($"Unknown question: {CurrentDialog.QuestionId}: {_info.introduction.text}");
+                        Logger?.LogDebug($"Unknown question: {CurrentDialog.QuestionId}: {_info.introduction.text}");
                     }
                 }
                 else

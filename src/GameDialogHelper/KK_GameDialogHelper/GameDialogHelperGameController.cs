@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using ActionGame;
 using BepInEx.Logging;
+using ExtensibleSaveFormat;
 using GeBoCommon.Utilities;
 using KKAPI.MainGame;
 using Manager;
@@ -22,20 +23,75 @@ namespace GameDialogHelperPlugin
 
         private static ManualLogSource Logger => GameDialogHelper.Logger;
 
+        public void PersistToGame()
+        {
+            var pluginData = new PluginData {version = PluginDataInfo.DataVersion};
+            pluginData.data.Add(PluginDataInfo.Keys.SaveGuid, GameDialogHelper.Instance.CurrentSaveGuid.ToByteArray());
+            pluginData.data.Add(PluginDataInfo.Keys.SaveGuidVersion, PluginDataInfo.CurrentSaveGuidVersion);
+            pluginData.data.Add(PluginDataInfo.Keys.CharaGuidVersion, PluginDataInfo.CurrentCharaGuidVersion);
+
+            Game.Instance.SafeProc(g => g.Player.SafeProc(p =>
+            {
+                pluginData.data.Add(PluginDataInfo.Keys.PlayerGuid, p.GetCharaGuid().ToByteArray());
+            }));
+
+            SetExtendedData(pluginData);
+            Logger.DebugLogDebug("PersistToGame done");
+        }
+
+        public void LoadFromGame()
+        {
+            GameDialogHelper.Instance.CurrentSaveGuid = Guid.Empty;
+            var pluginData = GetExtendedData();
+            if (pluginData.version < PluginDataInfo.MinimumSupportedGameDataVersion) return;
+            if (!pluginData.data.TryGetValue(PluginDataInfo.Keys.SaveGuid, out var val)) return;
+            if (pluginData.data.TryGetValue(PluginDataInfo.Keys.SaveGuidVersion, out var versionData) &&
+                versionData is int guidVersion &&
+                guidVersion > PluginDataInfo.MaxSaveGuidVersion)
+            {
+                return;
+            }
+
+            var saveGuid = new Guid((byte[])val);
+            Logger?.DebugLogDebug($"{nameof(LoadFromGame)}: save guid in plugin data: {saveGuid}");
+
+            if (Game.Instance != null && Game.Instance.Player != null &&
+                pluginData.data.TryGetValue(PluginDataInfo.Keys.PlayerGuid, out var playerGuidData))
+            {
+                if (pluginData.data.TryGetValue(PluginDataInfo.Keys.CharaGuidVersion, out var charaVersionData) &&
+                    charaVersionData is int charaGuidVersion &&
+                    charaGuidVersion >= PluginDataInfo.MinimumSupportedCharaGuidVersion &&
+                    charaGuidVersion <= PluginDataInfo.MaxCharaGuidVersion)
+                {
+                    var savePlayerGuid = new Guid((byte[])playerGuidData);
+                    var calculatedPlayerGuid = Game.Instance.Player.GetCharaGuid(charaGuidVersion);
+                    if (savePlayerGuid != calculatedPlayerGuid)
+                    {
+                        Logger?.LogWarning($"{nameof(LoadFromGame)}: player guid mismatch on save data, discarding");
+                        GameDialogHelper.Instance.CurrentSaveGuid = Guid.NewGuid();
+                        StartCoroutine(SetupNewGamePlayerCoroutine());
+                        return;
+                    }
+                }
+            }
+
+            GameDialogHelper.Instance.CurrentSaveGuid = saveGuid;
+        }
+
         protected override void OnNewGame()
         {
             GameDialogHelper.DoReset();
             GameDialogHelper.Instance.CurrentSaveGuid = Guid.NewGuid();
             _startingNewGame = true;
+            PersistToGame();
         }
-
 
         private IEnumerator SetupNewGamePlayerCoroutine()
         {
-            Logger.LogDebug($"{nameof(SetupNewGamePlayerCoroutine)}: start");
+            Logger?.LogDebug($"{nameof(SetupNewGamePlayerCoroutine)}: start");
             var newGameGuid = GameDialogHelper.Instance.CurrentSaveGuid;
             if (!Game.IsInstance()) yield return _waitOnGameInstance;
-            Logger.LogDebug($"{nameof(SetupNewGamePlayerCoroutine)}: game available");
+            Logger?.LogDebug($"{nameof(SetupNewGamePlayerCoroutine)}: game available");
             GameDialogHelperCharaController controller;
 
             while ((controller = Game.Instance.Player.GetGameDialogHelperController()) == null)
@@ -43,25 +99,25 @@ namespace GameDialogHelperPlugin
                 yield return null;
             }
 
-            Logger.LogDebug($"{nameof(SetupNewGamePlayerCoroutine)}: player controller available");
+            Logger?.LogDebug($"{nameof(SetupNewGamePlayerCoroutine)}: player controller available");
             controller.SetExtendedData(null);
             GameDialogHelper.Instance.CurrentSaveGuid = newGameGuid;
             controller.PersistToCard();
-            Logger.LogDebug($"{nameof(SetupNewGamePlayerCoroutine)}: done");
+            Logger?.LogDebug($"{nameof(SetupNewGamePlayerCoroutine)}: done");
         }
 
         private IEnumerator SetupNewGameHeroinesCoroutine()
         {
-            Logger.LogDebug($"{nameof(SetupNewGameHeroinesCoroutine)}: start");
+            Logger?.LogDebug($"{nameof(SetupNewGameHeroinesCoroutine)}: start");
             var newGameGuid = GameDialogHelper.Instance.CurrentSaveGuid;
             if (!Game.IsInstance()) yield return _waitOnGameInstance;
-            Logger.LogDebug($"{nameof(SetupNewGameHeroinesCoroutine)}: game available");
+            Logger?.LogDebug($"{nameof(SetupNewGameHeroinesCoroutine)}: game available");
             if (!Game.IsInstance() || Game.Instance.HeroineList == null)
             {
                 yield return new WaitUntil(() => Game.IsInstance() && Game.Instance.HeroineList != null);
             }
 
-            Logger.LogDebug(
+            Logger?.DebugLogDebug(
                 $"{nameof(SetupNewGameHeroinesCoroutine)}: heroine list available {Game.Instance.HeroineList.Count}");
 
             foreach (var heroine in Game.Instance.HeroineList)
@@ -69,12 +125,12 @@ namespace GameDialogHelperPlugin
                 GameDialogHelper.Instance.StartCoroutine(SetupNewGameHeroineCoroutine(newGameGuid, heroine));
             }
 
-            Logger.LogDebug($"{nameof(SetupNewGameHeroinesCoroutine)}: done");
+            Logger?.DebugLogDebug($"{nameof(SetupNewGameHeroinesCoroutine)}: done");
         }
 
         private IEnumerator SetupNewGameHeroineCoroutine(Guid newGameGuid, SaveData.Heroine heroine)
         {
-            Logger.LogDebug($"{nameof(SetupNewGameHeroineCoroutine)}: start");
+            Logger?.DebugLogDebug($"{nameof(SetupNewGameHeroineCoroutine)}: start");
             GameDialogHelperCharaController controller;
 
             while ((controller = heroine.GetGameDialogHelperController()) == null)
@@ -82,16 +138,17 @@ namespace GameDialogHelperPlugin
                 yield return null;
             }
 
-            Logger.LogDebug($"{nameof(SetupNewGameHeroineCoroutine)}: controller available");
+            Logger?.DebugLogDebug($"{nameof(SetupNewGameHeroineCoroutine)}: controller available");
             controller.SetExtendedData(null);
             GameDialogHelper.Instance.CurrentSaveGuid = newGameGuid;
             controller.PersistToCard();
-            Logger.LogDebug($"{nameof(SetupNewGamePlayerCoroutine)}: done");
+            Logger?.DebugLogDebug($"{nameof(SetupNewGamePlayerCoroutine)}: done");
         }
 
         protected override void OnGameLoad(GameSaveLoadEventArgs args)
         {
             GameDialogHelper.DoReset();
+            LoadFromGame();
         }
 
         protected override void OnEnterNightMenu()
@@ -133,21 +190,21 @@ namespace GameDialogHelperPlugin
                     : StringUtils.JoinStrings("/", heroine.Name, heroine.ChaName);
             }
 
-            Logger.LogDebug($"{nameof(CheckHeroineMapping)}: start: {_heroineMap.Count}");
+            Logger?.DebugLogDebug($"{nameof(CheckHeroineMapping)}: start: {_heroineMap.Count}");
             var previousMap = new Dictionary<string, Guid>();
             foreach (var entry in _heroineMap)
             {
                 previousMap[entry.Key] = new Guid(entry.Value.ToByteArray());
-                Logger.LogDebug($"{nameof(CheckHeroineMapping)}: saved: {previousMap[entry.Key]}");
+                Logger?.DebugLogDebug($"{nameof(CheckHeroineMapping)}: saved: {previousMap[entry.Key]}");
             }
 
-            Logger.LogDebug($"{nameof(CheckHeroineMapping)}: saved: {previousMap.Count}");
+            Logger?.DebugLogDebug($"{nameof(CheckHeroineMapping)}: saved: {previousMap.Count}");
             _heroineMap.Clear();
             for (var i = 0; i < Game.Instance.HeroineList.Count; i++)
             {
                 var heroine = Game.Instance.HeroineList[i];
                 var key = MappingKey(heroine);
-                var currentGuid = _heroineMap[key] = heroine.GetHeroineGuid();
+                var currentGuid = _heroineMap[key] = heroine.GetCharaGuid();
                 var previousFound = true;
                 if (!previousMap.TryGetValue(key, out var previousGuid))
                 {
@@ -159,23 +216,22 @@ namespace GameDialogHelperPlugin
                 var controller = heroine.GetGameDialogHelperController();
                 if (controller != null)
                 {
-                    var mem = controller.LoadMemoryFromCard();
-                    if (mem != null) memoryGuid = mem.HeroineGuid;
+                    var mem = controller.LoadMemoryFromCard(heroine, currentGuid);
+                    if (mem != null) memoryGuid = mem.CharaGuid;
                 }
 
-                Logger.LogDebug(
+                Logger?.DebugLogDebug(
                     $"{nameof(CheckHeroineMapping)}: {i:D5} {currentGuid} {previousGuid} {memoryGuid} {heroine.Name}");
 
-                if (controller != null && !currentGuid.Equals(memoryGuid))
+                if (controller != null && currentGuid != memoryGuid)
                 {
-                    if (memoryGuid.Equals(Guid.Empty) || memoryGuid.Equals(previousGuid))
+                    if (memoryGuid == Guid.Empty || memoryGuid == previousGuid)
                     {
                         controller.ProcessGuidChange(currentGuid);
-
                     }
                     else
                     {
-                        Logger.LogError(
+                        Logger?.LogError(
                             $"{nameof(CheckHeroineMapping)}: {i:D5} {heroine.Name}: dialog memory GUID mismatch");
                     }
                 }
@@ -187,7 +243,7 @@ namespace GameDialogHelperPlugin
 
                 if (!previousGuid.Equals(Guid.Empty))
                 {
-                    GameDialogHelperCharaController.HeroineGuidMap[previousGuid] = currentGuid;
+                    GameDialogHelperCharaController.CharaGuidMap[previousGuid] = currentGuid;
 
                     if (controller != null)
                     {
@@ -196,7 +252,7 @@ namespace GameDialogHelperPlugin
                     }
                 }
 
-                Logger.LogError(
+                Logger?.LogError(
                     $"{nameof(CheckHeroineMapping)}: {i:D5} {heroine.Name}: previous GUID mismatch");
             }
         }
@@ -218,6 +274,7 @@ namespace GameDialogHelperPlugin
 
         protected override void OnGameSave(GameSaveLoadEventArgs args)
         {
+            PersistToGame();
             PersistAllToCards(true);
         }
 
@@ -237,7 +294,7 @@ namespace GameDialogHelperPlugin
             if (isSaving && GameDialogHelper.Instance.CurrentSaveGuid == Guid.Empty)
             {
                 GameDialogHelper.Instance.CurrentSaveGuid = Guid.NewGuid();
-                Logger.LogDebug(
+                Logger?.LogDebug(
                     $"new save guid: {GameDialogHelper.Instance.CurrentSaveGuid}");
             }
 
@@ -251,7 +308,7 @@ namespace GameDialogHelperPlugin
                     typeof(GameDialogHelperGameController)) as GameDialogHelperGameController;
             if (controller == null)
             {
-                Logger.LogWarning(
+                Logger?.LogWarning(
                     $"Unable to find registered {nameof(GameDialogHelperGameController)}, reset aborted");
                 return;
             }

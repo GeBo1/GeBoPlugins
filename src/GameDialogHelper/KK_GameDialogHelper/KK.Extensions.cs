@@ -5,25 +5,23 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using ActionGame.Communication;
-using GeBoCommon.Chara;
+using BepInEx.Logging;
+using GameDialogHelperPlugin.Utilities;
 using GeBoCommon.Utilities;
 using JetBrains.Annotations;
+using MessagePack;
 
 namespace GameDialogHelperPlugin
 {
     [PublicAPI]
     public static class Extensions
     {
-        #region Player
+        private static ManualLogSource Logger => GameDialogHelper.Logger;
 
-        public static GameDialogHelperCharaController GetGameDialogHelperController(this SaveData.Player player)
+        private static byte[] GetKey(object[] items)
         {
-            GameDialogHelperCharaController controller = null;
-            player.SafeProc(h => h.chaCtrl.SafeProcObject(cc => controller = cc.GetGameDialogHelperController()));
-            return controller;
+            return items.Select(MessagePackSerializer.Serialize).SelectMany(x => x).ToArray();
         }
-
-        #endregion
 
         #region SelectInfo
 
@@ -51,6 +49,107 @@ namespace GameDialogHelperPlugin
         {
             return values.Count > 0 ? values.Sum() / values.Count : 0f;
         }
+
+        #region CharaData
+
+        public static GameDialogHelperCharaController GetGameDialogHelperController(this SaveData.CharaData charaData)
+        {
+            GameDialogHelperCharaController controller = null;
+            charaData.SafeProc(cd => cd.chaCtrl.SafeProcObject(cc => controller = cc.GetGameDialogHelperController()));
+            return controller;
+        }
+
+        public static void PersistData(this SaveData.CharaData charaData)
+        {
+            charaData.SafeProc(cd => cd.GetGameDialogHelperController().SafeProcObject(dhc => dhc.PersistToCard()));
+        }
+
+        public static Guid GetCharaGuid(this SaveData.CharaData charaData,
+            int guidVersion = PluginDataInfo.CurrentCharaGuidVersion)
+        {
+            if (guidVersion > PluginDataInfo.MaxCharaGuidVersion)
+            {
+                throw new ArgumentOutOfRangeException(nameof(guidVersion), $"Unknown guidVersion ({guidVersion})");
+            }
+
+            if (guidVersion < PluginDataInfo.MinimumSupportedCharaGuidVersion || charaData == null ||
+                !charaData.charFileInitialized) return Guid.Empty;
+
+            var guidKeyBuilder = StringBuilderPool.Get();
+            var intFmt = "{0:04}";
+            try
+            {
+                switch (guidVersion)
+                {
+                    case 5:
+                        guidKeyBuilder
+                            .AppendFormat(intFmt,
+                                charaData is SaveData.Heroine heroine5
+                                    ? heroine5.FixCharaIDOrPersonality
+                                    : charaData.personality)
+                            .Append('/')
+                            .AppendFormat(intFmt, charaData.schoolClass)
+                            .Append('/')
+                            .AppendFormat(intFmt, charaData.schoolClassIndex)
+                            .Append('/')
+                            .Append(charaData.Name);
+                        break;
+
+                    case 6:
+                        guidKeyBuilder
+                            .AppendFormat(intFmt,
+                                charaData is SaveData.Heroine heroine6
+                                    ? heroine6.FixCharaIDOrPersonality
+                                    : charaData.personality)
+                            .Append('/')
+                            .AppendFormat(intFmt, charaData.schoolClass)
+                            .Append('/')
+                            .AppendFormat(intFmt, charaData.schoolClassIndex)
+                            .Append('/')
+                            .Append(charaData.firstname)
+                            .Append('/')
+                            .Append(charaData.lastname)
+                            .Append('/')
+                            .Append(charaData.parameter.sex);
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(guidVersion),
+                            $"Unsupported guidVersion ({guidVersion})");
+                }
+
+                if (guidKeyBuilder.Length == 0) return Guid.Empty;
+                var guidKey = guidKeyBuilder.ToString();
+                var result = GuidCache.Get(guidKey);
+                Logger?.DebugLogDebug(
+                    $"{nameof(GetCharaGuid)} (version={guidVersion}): guidKey={guidKey}, result={result}");
+                return result;
+            }
+            finally
+            {
+                StringBuilderPool.Release(guidKeyBuilder);
+            }
+        }
+
+        #endregion
+
+        #region Player
+
+        public static GameDialogHelperCharaController GetGameDialogHelperController(this SaveData.Player player)
+        {
+            GameDialogHelperCharaController controller = null;
+            player.SafeProc(h => h.chaCtrl.SafeProcObject(cc => controller = cc.GetGameDialogHelperController()));
+            return controller;
+        }
+
+        [Obsolete("Use GetCharaGuid")]
+        public static Guid GetPlayerGuid(this SaveData.Player player,
+            int guidVersion = PluginDataInfo.CurrentSaveGuidVersion)
+        {
+            return player.GetCharaGuid(guidVersion);
+        }
+
+        #endregion
 
         #region ChaControl
 
@@ -113,25 +212,17 @@ namespace GameDialogHelperPlugin
 
         #region Heroine
 
-        private static readonly ExpiringSimpleCache<string, Guid> HeroineGuidCache =
+        private static readonly ExpiringSimpleCache<string, Guid> GuidCache =
             new ExpiringSimpleCache<string, Guid>(
-                GenerateHeroineGuid, 600);
+                GenerateGuid, 600);
 
-        private static Guid GenerateHeroineGuid(string key)
+        private static Guid GenerateGuid(string key)
         {
             using (var sha1 = new SHA1Managed())
             {
                 var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(key));
                 return new Guid(hash.Skip(Math.Max(0, hash.Length - 16)).ToArray());
             }
-        }
-
-
-        public static GameDialogHelperCharaController GetGameDialogHelperController(this SaveData.Heroine heroine)
-        {
-            GameDialogHelperCharaController controller = null;
-            heroine.SafeProc(h => h.chaCtrl.SafeProcObject(cc => controller = cc.GetGameDialogHelperController()));
-            return controller;
         }
 
         public static void Remember(this SaveData.Heroine heroine, int question, int answer, bool isCorrect)
@@ -179,51 +270,11 @@ namespace GameDialogHelperPlugin
             return result;
         }
 
-        public static void PersistData(this SaveData.Heroine heroine)
-        {
-            heroine.SafeProc(h => h.GetGameDialogHelperController().SafeProcObject(dhc => dhc.PersistToCard()));
-        }
-
+        [Obsolete("Use GetCharaGuid")]
         public static Guid GetHeroineGuid(this SaveData.Heroine heroine,
-            int guidVersion = GameDialogHelper.CurrentHeroineGuidVersion)
+            int guidVersion = PluginDataInfo.CurrentCharaGuidVersion)
         {
-            if (guidVersion > GameDialogHelper.MaxHeroineGuidVersion)
-                throw new ArgumentOutOfRangeException(nameof(guidVersion), $"Unknown guidVersion ({guidVersion})");
-
-            if (heroine == null || !heroine.charFileInitialized) return Guid.Empty;
-
-            // handle pre-versioned guids
-            if (guidVersion < 1) guidVersion = 1;
-            
-            string guidKey = string.Empty;
-            switch (guidVersion)
-            {
-                case 1:
-                    var guidKeyParts = new[]
-                        {
-                            heroine.FixCharaIDOrPersonality, heroine.schoolClass, heroine.schoolClassIndex
-                        }
-                        .Select(i => i.ToString("D10")).ToList();
-                    guidKeyParts.Add(heroine.Name);
-                    guidKey = StringUtils.JoinStrings("/", guidKeyParts.ToArray());
-                    break;
-
-                case 2:
-                    var guid2KeyParts = new[]
-                        {
-                            heroine.FixCharaIDOrPersonality, heroine.schoolClass, heroine.schoolClassIndex
-                        }
-                        .Select(i => i.ToString("D4")).ToList();
-                    guid2KeyParts.Add(heroine.Name);
-                    guidKey = StringUtils.JoinStrings("/", guid2KeyParts.ToArray());
-                    break;
-                
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(guidVersion),
-                        $"Unsupported guidVersion ({guidVersion})");
-            }
-
-            return guidKey.IsNullOrEmpty() ? Guid.Empty : HeroineGuidCache.Get(guidKey);
+            return heroine.GetCharaGuid(guidVersion);
         }
 
         #endregion Heroine

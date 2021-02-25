@@ -2,9 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using BepInEx.Logging;
+using GameDialogHelperPlugin.Utilities;
+using GeBoCommon.Utilities;
 using JetBrains.Annotations;
 using MessagePack;
-using MessagePack.Resolvers;
+using UnityEngine.Assertions;
 
 namespace GameDialogHelperPlugin.AdvancedLogicMemory
 {
@@ -26,29 +29,33 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
             LastUpdated = lastUpdated > 0 ? lastUpdated : DateTime.UtcNow.Ticks;
         }
 
-        internal CharaDialogMemory(Guid heroineGuid, int heroineGuidVersion=-1, long lastUpdated = -1) : this(lastUpdated)
+        internal CharaDialogMemory(Guid charaGuid, int charaGuidVersion = -1, long lastUpdated = -1) : this(lastUpdated)
         {
-            HeroineGuid = heroineGuid;
-            HeroineGuidVersion = heroineGuidVersion;
+            CharaGuid = charaGuid;
+            CharaGuidVersion = charaGuidVersion;
         }
 
         public CharaDialogMemory() : this(Guid.Empty) { }
 
-        public CharaDialogMemory(SaveData.Heroine heroine) :
-            this(heroine.GetHeroineGuid()) { }
+        public CharaDialogMemory(SaveData.CharaData charaData) :
+            this(charaData.GetCharaGuid()) { }
 
         [SerializationConstructor]
         [UsedImplicitly]
-        public CharaDialogMemory(Guid heroineGuid, long lastUpdated, List<QuestionMemory> questions,
-            Guid saveGuid, int heroineGuidVersion=-1) : this(
-            heroineGuid,
-            heroineGuidVersion,
+        public CharaDialogMemory(Guid charaGuid, long lastUpdated, List<QuestionMemory> questions,
+            Guid saveGuid, Guid playerGuid, int charaGuidVersion = -1) : this(
+            charaGuid,
+            charaGuidVersion,
             lastUpdated)
         {
             SaveGuid = saveGuid;
+            PlayerGuid = playerGuid;
             InternalQuestions.Clear();
             InternalQuestions.AddRange(questions);
         }
+
+        [IgnoreMember]
+        private static ManualLogSource Logger => GameDialogHelper.Logger;
 
         [IgnoreMember]
         public Guid SessionGuid { get; internal set; } = Guid.Empty;
@@ -56,8 +63,11 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
         [Key("saveGuid")]
         public Guid SaveGuid { get; internal set; } = Guid.Empty;
 
-        [Key("heroineGuid")]
-        public Guid HeroineGuid { get; internal set; } = Guid.Empty;
+        [Key("charaGuid")]
+        public Guid CharaGuid { get; internal set; } = Guid.Empty;
+
+        [Key("playerGuid")]
+        public Guid PlayerGuid { get; internal set; } = Guid.Empty;
 
         [Key("lastUpdated")]
         public long LastUpdated
@@ -66,8 +76,12 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
             internal set => _lastUpdated = Math.Max(value, _lastUpdated);
         }
 
-        [Key("heroineGuidVersion")]
-        public int HeroineGuidVersion { get; internal set; } = -1;
+        [Key("charaGuidVersion")]
+        public int CharaGuidVersion { get; internal set; } = -1;
+
+
+        [Key("saveGuidVersion")]
+        public int SaveGuidVersion { get; internal set; } = -1;
 
         [IgnoreMember]
         public int QuestionsAnswered => _questionMap.Count(q => q.Value.TimesAnswered > 0);
@@ -168,6 +182,10 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
 
         public void OnBeforeSerialize()
         {
+            Assert.AreNotEqual(SaveGuid, Guid.Empty,
+                $"{nameof(OnBeforeSerialize)}: {nameof(SaveGuid)} should not be empty");
+            Assert.AreNotEqual(PlayerGuid, Guid.Empty,
+                $"{nameof(OnBeforeSerialize)}: {nameof(PlayerGuid)} should not be empty");
             Sync();
             InternalQuestions.Clear();
             InternalQuestions.AddRange(_questionMap.Values.Where(q => q.TimesAnswered > 0));
@@ -202,7 +220,7 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
         {
             bool GuidMatch(string name, Guid currentGuid, Guid memoryGuid, out string errMsg)
             {
-                var fmt = "{0}: currently '{1}', got '{2}'";
+                var fmt = "{0}: expected '{1}', got '{2}'";
                 errMsg = null;
                 if (currentGuid == Guid.Empty) return true;
                 if (currentGuid == memoryGuid) return true;
@@ -210,36 +228,66 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
                 return false;
             }
 
-            var invalid = new List<string>();
-            if (!GuidMatch(nameof(SaveGuid), GameDialogHelper.Instance.CurrentSaveGuid, SaveGuid, out var msg1))
+            bool CharaGuidMatch(string name, Guid currentGuid, Guid memoryGuid, out string errMsg)
             {
-                // SaveGuid may be empty on older data, let it slide for now
-                if (SaveGuid != Guid.Empty) invalid.Add(msg1);
+                if (GuidMatch(name, currentGuid, memoryGuid, out errMsg)) return true;
+                if (!GameDialogHelperCharaController.AreCharaGuidsEqual(currentGuid, memoryGuid)) return false;
+                Logger?.DebugLogDebug(
+                    $"{nameof(IsValidForCurrentSession)}: Guid remap detected accepting {memoryGuid} for {currentGuid}");
+                return true;
             }
 
-            if (!GuidMatch(nameof(SessionGuid), GameDialogHelper.Instance.CurrentSessionGuid, SessionGuid,
-                out var msg2))
+            var invalid = ListPool<string>.Get();
+            try
             {
-                invalid.Add(msg2);
+                if (!GuidMatch(nameof(SaveGuid), GameDialogHelper.Instance.CurrentSaveGuid, SaveGuid, out var msg1))
+                {
+                    invalid.Add(msg1);
+                }
+
+
+                if (!GuidMatch(nameof(SessionGuid), GameDialogHelper.Instance.CurrentSessionGuid, SessionGuid,
+                    out var msg2))
+                {
+                    invalid.Add(msg2);
+                }
+
+                if (!CharaGuidMatch(nameof(PlayerGuid), GameDialogHelper.Instance.CurrentPlayerGuid, PlayerGuid,
+                    out var msg3))
+                {
+                    invalid.Add(msg3);
+                }
+
+                if (invalid.Count <= 0) return true;
+
+                var msgBuilder = StringBuilderPool.Get();
+                try
+                {
+                    msgBuilder.Append(nameof(IsValidForCurrentSession))
+                        .Append(": failed validation");
+                    if (!logTag.IsNullOrEmpty())
+                    {
+                        msgBuilder.Append(" (").Append(logTag).Append(')');
+                    }
+
+                    msgBuilder.Append(": ");
+                    foreach (var msg in invalid) msgBuilder.Append(msg).Append(", ");
+                    // remove final comma
+                    msgBuilder.Length -= 2;
+
+                    Logger?.LogWarning(msgBuilder.ToString());
+                }
+                finally
+                {
+                    StringBuilderPool.Release(msgBuilder);
+                }
+
+                return false;
             }
-
-            if (invalid.Count <= 0) return true;
-            
-            var msgParts = new List<string>
+            finally
             {
-                nameof(IsValidForCurrentSession),
-                ": failed validation",
-                ": ",
-                string.Join(", ", invalid.ToArray())
-            };
-            if (!logTag.IsNullOrWhiteSpace())
-            {
-                msgParts.Insert(2, $" ({logTag})");
+                ListPool<string>.Release(invalid);
             }
-
-            GameDialogHelper.Logger.LogWarning(string.Join(string.Empty, msgParts.ToArray()));
-            return false;
-
         }
     }
 }

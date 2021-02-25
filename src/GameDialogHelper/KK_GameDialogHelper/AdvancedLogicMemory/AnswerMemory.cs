@@ -1,4 +1,6 @@
 ﻿using System;
+using BepInEx.Logging;
+using GeBoCommon.Utilities;
 using JetBrains.Annotations;
 using Manager;
 using MessagePack;
@@ -13,6 +15,7 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
         private const float DefaultRecallScale = 0.01f;
         private const ulong DefaultTimesAnsweredForFullRecall = 10;
 
+        private static ManualLogSource Logger => GameDialogHelper.Logger;
 
         private static float _recallScale = DefaultRecallScale;
 
@@ -92,7 +95,7 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
 
             if (player == null)
             {
-                GameDialogHelper.Logger.LogError(
+                Logger?.LogError(
                     $"{nameof(Remember)}: unable to record result, player not accessible");
                 return;
             }
@@ -105,14 +108,14 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
             var recallBase = Mathf.Clamp((float)TimesAnswered / _timesAnsweredForFullRecall, 0.01f, 2f);
             var intellectScale = intellectPercent + Random.Range(-swing, swing);
 
-            GameDialogHelper.Logger.LogDebug(
+            Logger?.DebugLogDebug(
                 $"{nameof(Remember)}: calculating recall amount: recallBase={recallBase}, intellectScale={intellectScale}, RecallScale={_recallScale}");
 
             // positive reinforcement
             var newRecall = recallBase * intellectScale * (_recallScale * (isCorrect ? 1.1f : 1f));
 
             Recall += newRecall;
-            GameDialogHelper.Logger.LogDebug(
+            Logger?.DebugLogDebug(
                 $"{nameof(Remember)}: TimesAnswered={TimesAnswered}, Recall={Recall:P} (added {newRecall:000.000000%})");
 
             LastUpdated = DateTime.UtcNow.Ticks;

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using BepInEx.Logging;
+using GeBoCommon.Utilities;
 using JetBrains.Annotations;
 using Manager;
 using TMPro;
@@ -20,6 +22,7 @@ namespace GameDialogHelperPlugin.PluginModeLogic
 
         private readonly Dictionary<int, float> _lastGuessChance = new Dictionary<int, float>();
         private HeroineQuestionKey _lastGuessKey;
+        private static ManualLogSource Logger => GameDialogHelper.Logger;
 
 
         public string CorrectHighlight => GameDialogHelper.CorrectHighlight.Value;
@@ -43,7 +46,7 @@ namespace GameDialogHelperPlugin.PluginModeLogic
             var chance = CalculateChance(heroine, dialogInfo, answer);
             var guess = Random.Range(0f, 1f);
 
-            GameDialogHelper.Logger.LogDebug(
+            Logger?.DebugLogDebug(
                 $"{heroine} {dialogInfo} {answer}: {chance:P} chance of remembering (guess {guess:P})");
 
 
@@ -112,7 +115,7 @@ namespace GameDialogHelperPlugin.PluginModeLogic
             {
                 // let memory give you up to 150%
                 var memoryPercentage = Mathf.Clamp(heroine.CurrentRecallChance(question, answer), 0f, 1.5f);
-                GameDialogHelper.Logger.LogDebug($"{answer} memory: {memoryPercentage:P} {memoryWeight}");
+                Logger?.DebugLogDebug($"{answer} memory: {memoryPercentage:P} {memoryWeight}");
                 total += memoryWeight;
                 sum += memoryPercentage * memoryWeight;
             }
@@ -145,7 +148,7 @@ namespace GameDialogHelperPlugin.PluginModeLogic
                     relationshipPercentage = Mathf.Clamp(relationshipPercentage, 0f, 1f);
                 }
 
-                GameDialogHelper.Logger.LogDebug(
+                Logger?.DebugLogDebug(
                     $"{answer} relationship: {relationshipPercentage:P} {relationshipWeight} ({relationshipSum}/{relationshipMax})");
                 total += relationshipWeight;
                 sum += relationshipPercentage * relationshipWeight;
@@ -155,14 +158,14 @@ namespace GameDialogHelperPlugin.PluginModeLogic
             {
                 var intelligencePercentage =
                     Mathf.Clamp(Game.Instance.Player.intellect / 100f, 0f, 1f);
-                GameDialogHelper.Logger.LogDebug(
+                Logger?.DebugLogDebug(
                     $"{answer} intelligence: {intelligencePercentage:P} {intelligenceWeight}");
                 total += intelligenceWeight;
                 sum += intelligencePercentage * intelligenceWeight;
             }
 
             var result = Mathf.Clamp((sum / total) + bonus, 0f, MaxPercentChance);
-            GameDialogHelper.Logger.LogDebug($"CalculateChance => {result:P}");
+            Logger?.DebugLogDebug($"CalculateChance => {result:P}");
             return result;
         }
 

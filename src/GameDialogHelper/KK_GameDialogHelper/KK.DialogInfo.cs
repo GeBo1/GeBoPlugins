@@ -25,7 +25,7 @@ namespace GameDialogHelperPlugin
 
             QuestionInfo = QuestionInfo.GetById(questionId);
             if (!(QuestionInfo is null)) return;
-            Logger.LogWarning($"Unable to find QuestionInfo for Id={questionId}");
+            Logger?.LogWarning($"Unable to find QuestionInfo for Id={questionId}");
             QuestionInfo = QuestionInfo.Default;
         }
 

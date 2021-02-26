@@ -87,6 +87,7 @@
     <Analyzer Include="..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\analyzers\dotnet\cs\Microsoft.CodeAnalysis.NetAnalyzers.dll" />
     <Analyzer Include="..\..\..\packages\Microsoft.Unity.Analyzers.1.10.0\analyzers\dotnet\cs\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
+  <Import Project="..\..\GeBoCommon\Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <GenerateMSBuildEditorConfigFile>false</GenerateMSBuildEditorConfigFile>

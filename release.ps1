@@ -12,9 +12,12 @@ function Zip-Plugin {
     $dll_name = $plugin + ".dll"
     #$readme_src = $plugin_dir + "\..\README.md";
     #$readme_name = "README." + $plugin + ".md";
+
+
     
     $dlls = (Get-ChildItem -Path ($plugin_bin_dir) -Filter $dll_name -Recurse -Force)
     if (!$dlls) {
+        # echo "$plugin_dir : no dlls"
         return
     }
     $dll = $dlls[0];
@@ -22,6 +25,7 @@ function Zip-Plugin {
     $version = $dll.VersionInfo.FileVersion.ToString() 
 
     if (!$version) {
+        # echo "$plugin_dir : no version"
         return
     }
 
@@ -32,6 +36,7 @@ function Zip-Plugin {
     $zipfile = $topdir + "\dist\" + $plugin + " v" + $version + ".zip"
 
     if (Test-Path $zipfile) {
+        # echo "$plugin_dir : $zipfile exists"
         return
     }
 

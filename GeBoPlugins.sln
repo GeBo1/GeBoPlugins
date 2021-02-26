@@ -112,6 +112,7 @@ Global
 		src\StudioSceneNavigation\Core_StudioSceneNavigation\Core_StudioSceneNavigation.projitems*{19796e45-b2ff-4206-8901-a1821b797df8}*SharedItemsImports = 4
 		src\StudioSceneCharaInfo\Core_StudioSceneCharaInfo\Core_StudioSceneCharaInfo.projitems*{1bdc5051-b62d-44f9-b48f-12f78174d6cb}*SharedItemsImports = 4
 		src\StudioMultiselectChara\Core_StudioMultiselectChara\Core_StudioMultiselectChara.projitems*{347e78e9-4046-46c8-9569-d51d3a79fb69}*SharedItemsImports = 4
+		src\GeBoCommon\Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems*{37a04b58-c00f-4b59-9f42-d0fb8dd9e7c1}*SharedItemsImports = 4
 		src\StudioSceneCharaInfo\Core_StudioSceneCharaInfo\Core_StudioSceneCharaInfo.projitems*{4ad155c4-ca3e-4e34-8d6d-822cd860f27f}*SharedItemsImports = 4
 		src\TranslationCacheCleaner\Core_TranslationCacheCleaner\Core_TranslationCacheCleaner.projitems*{5e80c7ec-d14a-490b-8f3c-70c4956a911d}*SharedItemsImports = 4
 		src\GeBoCommon\Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems*{622df8ad-567c-4036-8e13-636a5bbebb43}*SharedItemsImports = 4

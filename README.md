@@ -21,9 +21,9 @@ Contains shared code used by other plugins in this repo. Unless otherwise noted 
 - HS2 v1.0.2 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r14/HS2_GeBoCommon.v1.0.2.zip)
 - KK v1.0.2 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r14/KK_GeBoCommon.v1.0.2.zip)
 
-### GameDialogHelper 
+### [GameDialogHelper](src/GameDialogHelper/README.md)
 
-Highlights correct dialog choice in KK main game. You can configure level of relationship required (defaults to `Friend`).
+Highlights correct dialog choice in KK main game. Can be configured to use advanced game logic or simply your relationship level with the character.
 
 - KK v0.9.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r2/KK_GameDialogHelper.v0.9.1.zip) 
 
@@ -33,6 +33,9 @@ Fixes it so when player invites (or is invited) to swim/exercise with a girl he 
 
 - KK v1.1.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r10/KK_GameDressForSuccess.v1.1.1.zip)
 
+### [GameWhoIsThere](src/GameWhoIsThere/README.md)
+
+Let's you see who will in "surprise" events before they start.
 
 ### [StudioMultiselectChara](src/StudioMultiselectChara/README.md)
 

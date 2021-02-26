@@ -69,6 +69,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KK_GeBoCommon", "src\GeBoCommon\KK_GeBoCommon\KK_GeBoCommon.csproj", "{ED839651-4764-420E-97FC-A40D7D98449B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GameDialogHelper", "GameDialogHelper", "{988B3DDE-F81A-490D-AA4B-4EF2395AB240}"
+	ProjectSection(SolutionItems) = preProject
+		src\GameDialogHelper\README.md = src\GameDialogHelper\README.md
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KK_GameDialogHelper", "src\GameDialogHelper\KK_GameDialogHelper\KK_GameDialogHelper.csproj", "{D9C58C8C-1D67-455F-8251-8C9D8A4734BE}"
 EndProject

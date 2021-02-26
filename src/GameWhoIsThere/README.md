@@ -1,5 +1,7 @@
 # GameWhoIsThere
 
+Let's you see who will in "surprise" events before they start.
+
 ## Supported Games
 
 |                         | Game  | Studio  | Download     |
@@ -10,7 +12,7 @@
 
 ### Dependencies
 
-- [BepInEx](https://github.com/BepInEx/BepInEx) v5.1+
+- [BepInEx](https://github.com/BepInEx/BepInEx) v5.4.4+
 
 [//]: # (## Latest Links)
 

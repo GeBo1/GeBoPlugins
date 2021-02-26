@@ -16,8 +16,8 @@ If you select a character in studio and press the hotkey, all other instances of
 ### Dependencies
 
 - [GeBoCommon](https://github.com/GeBo1/GeBoPlugins)
-- [Illusion Modding API](https://github.com/IllusionMods/IllusionModdingAPI) v1.12.3+
-- [BepInEx](https://github.com/BepInEx/BepInEx) v5.1+
+- [Illusion Modding API](https://github.com/IllusionMods/IllusionModdingAPI) v1.15.0+
+- [BepInEx](https://github.com/BepInEx/BepInEx) v5.4.4+
 
 
 ## Example

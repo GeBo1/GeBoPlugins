@@ -31,8 +31,8 @@ If not set to true entire plugin is disabled.
 
 ### Dependencies
 
-- [Illusion Modding API](https://github.com/IllusionMods/IllusionModdingAPI) v1.12.3+
-- [BepInEx](https://github.com/BepInEx/BepInEx) v5.1+
+- [Illusion Modding API](https://github.com/IllusionMods/IllusionModdingAPI) v1.15.0+
+- [BepInEx](https://github.com/BepInEx/BepInEx) v5.4.4+
 
 [//]: # (## Latest Links)
 

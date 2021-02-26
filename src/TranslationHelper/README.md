@@ -25,6 +25,7 @@ The specific features vary slightly from game to game, but generally does the fo
 
 - Handles translation of card names when there is in-game browsing.
 - Handles game specific UIs (Roster in KK, Girl/Room selection in HS2)
+- Special handling for merchant character (AI)
 
 ### Maker
 
@@ -130,10 +131,10 @@ TBD
 ### Dependencies
 
 - [GeBoCommon](https://github.com/GeBo1/GeBoPlugins)
-- [ExtensibleSaveFormat](https://github.com/IllusionMods/BepisPlugins) v15.1.2+
-- [Illusion Modding API](https://github.com/IllusionMods/IllusionModdingAPI) v1.12.3+
-- [XUnity.AutoTranslator](https://github.com/bbepis/XUnity.AutoTranslator) v4.11.3+
-- [BepInEx](https://github.com/BepInEx/BepInEx) v5.1+
+- [ExtensibleSaveFormat](https://github.com/IllusionMods/BepisPlugins) v16.2.1+
+- [Illusion Modding API](https://github.com/IllusionMods/IllusionModdingAPI) v1.15.0+
+- [XUnity.AutoTranslator](https://github.com/bbepis/XUnity.AutoTranslator) v4.13.0+
+- [BepInEx](https://github.com/BepInEx/BepInEx) v5.4.4+
 
 [//]: # (## Latest Links)
 

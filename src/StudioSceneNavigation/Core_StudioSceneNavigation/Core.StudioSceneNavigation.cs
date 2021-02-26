@@ -33,7 +33,7 @@ namespace StudioSceneNavigationPlugin
     {
         public const string GUID = "com.gebo.bepinex.studioscenenavigation";
         public const string PluginName = "Studio Scene Navigation";
-        public const string Version = "1.0";
+        public const string Version = "1.0.0";
 
         private const float SaveDelay = 5f;
 

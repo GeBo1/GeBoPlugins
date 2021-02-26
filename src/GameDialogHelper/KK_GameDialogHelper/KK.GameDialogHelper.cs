@@ -33,7 +33,7 @@ namespace GameDialogHelperPlugin
     {
         public const string GUID = "com.gebo.BepInEx.GameDialogHelper";
         public const string PluginName = "Game Dialog Helper";
-        public const string Version = "0.9.9";
+        public const string Version = "1.0.0";
 
         private const float ColorDelta = 2f / 3f;
 
@@ -138,7 +138,7 @@ namespace GameDialogHelperPlugin
         {
             Logger = base.Logger;
 
-            CurrentPluginMode = Config.Bind("Config", "Plugin Mode", PluginMode.RelationshipBased,
+            CurrentPluginMode = Config.Bind("Config", "Plugin Mode", PluginMode.Advanced,
                 "Controls how plugin operates");
 
             HighlightMode = Config.Bind("General", "Highlight Mode", GameDialogHelperPlugin.HighlightMode.ChangeColor,

@@ -14,6 +14,7 @@ using Studio;
 using TranslationHelperPlugin.Chara;
 using TranslationHelperPlugin.Utils;
 using UnityEngine;
+
 #if AI||HS2
 using AIChara;
 
@@ -136,7 +137,6 @@ namespace TranslationHelperPlugin
 
         public static void CacheRecentTranslation(ICharaFileInfo fileInfo, string translatedName)
         {
-            
             // ReSharper disable RedundantAssignment - used in DEBUG
             var added = false;
             var start = Time.realtimeSinceStartup;
@@ -152,6 +152,7 @@ namespace TranslationHelperPlugin
                 {
                     return;
                 }
+
                 if (TranslationHelper.NameStringComparer.Equals(fileInfo.Name, translatedName)) return;
                 RecentTranslationsByPath[new NameScope(fileInfo.Sex)][PathUtils.NormalizePath(fileInfo.FullPath)] =
                     translatedName;
@@ -179,7 +180,10 @@ namespace TranslationHelperPlugin
                 Logger.DebugLogDebug(
                     $"CharaFileInfoTranslationManager.CacheRecentTranslation({scope}, {path}, {translatedName})");
                 if (scope.Sex == CharacterSex.Unspecified || translatedName.IsNullOrEmpty() ||
-                    path.IsNullOrEmpty()) return;
+                    path.IsNullOrEmpty())
+                {
+                    return;
+                }
 
                 // this is less "safe" than the other version, so bail if we've already got cache data
                 if (RecentTranslationsByPath[scope].ContainsKey(path)) return;
@@ -194,9 +198,9 @@ namespace TranslationHelperPlugin
             finally
             {
                 CacheRecentTranslationsHelper.RecordCall(key);
-                Logger.DebugLogDebug($"CardFileInfoTranslationManager.CacheRecentTranslation(path): {Time.realtimeSinceStartup - start:000.0000000000}: added={added}");
+                Logger.DebugLogDebug(
+                    $"CardFileInfoTranslationManager.CacheRecentTranslation(path): {Time.realtimeSinceStartup - start:000.0000000000}: added={added}");
             }
-
         }
 
         public static Action<string> MakeCachingCallbackWrapper(string origName, CharaFileInfo charaFileInfo,
@@ -204,6 +208,8 @@ namespace TranslationHelperPlugin
         {
             void CallbackWrapper(string translationResult)
             {
+                Logger.DebugLogDebug(
+                    $"{nameof(CallbackWrapper)}: translationResult={translationResult}, origName={origName}, charafileInfo={charaFileInfo}, callback={callback}");
                 if (!translationResult.IsNullOrEmpty() &&
                     !TranslationHelper.NameStringComparer.Equals(translationResult, origName))
                 {

@@ -82,13 +82,16 @@ namespace TranslationHelperPlugin.Studio
         private static bool TryApplyAlternateTranslation(NameScope scope, CharaFileInfo charaFileInfo, string origName,
             bool fast)
         {
-            return Configuration.AlternateStudioCharaLoaderTranslators.Any(tryTranslate =>
-                charaFileInfo.SafeProc(cfi => tryTranslate(scope, cfi, origName, fast)));
+            return charaFileInfo != null &&
+                   Configuration.AlternateStudioCharaLoaderTranslators.Any(tryTranslate =>
+                       tryTranslate(scope, charaFileInfo, origName, fast));
         }
 
         private static IEnumerator TranslateDisplayListEntry(CharaFileInfo entry, NameScope scope,
             Action<string> callback = null)
         {
+            Logger.DebugLogDebug(
+                $"{nameof(TranslateDisplayListEntry)}: entry={entry}, scope={scope}, callback={callback}");
             if (entry == null) yield break;
 
             var origName = entry.name;
@@ -99,55 +102,65 @@ namespace TranslationHelperPlugin.Studio
 
             void UpdateName(CharaFileInfo charaFileInfo, string translatedName)
             {
-                try
-                {
-                    charaFileInfo.SafeProc(cfi =>
-                    {
-                        cfi.name = translatedName;
-                        cfi.node.SafeProc(n => n.text = translatedName);
-                    });
-                }
-                catch (NullReferenceException) { } // sometimes node goes away while setting text
+                Logger.DebugLogDebug(
+                    $"{nameof(TranslateDisplayListEntry)}:{nameof(UpdateName)}: charaFileInfo={charaFileInfo}, translatedName={translatedName}");
+                charaFileInfo.name = charaFileInfo.node.text = translatedName;
             }
 
             void HandleResult(CharaFileInfo charaFileInfo, ITranslationResult result)
             {
-                if (!result.Succeeded || charaFileInfo == null) return;
+                Logger.DebugLogDebug(
+                    $"{nameof(TranslateDisplayListEntry)}:{nameof(HandleResult)}: charaFileInfo={charaFileInfo}, result={result}");
+                if (!result.Succeeded) return;
                 UpdateName(charaFileInfo, result.TranslatedText);
             }
 
             if (TryApplyAlternateTranslation(scope, entry, origName, true))
             {
-                entry.SafeProc(cfi => wrappedCallback(cfi.name));
+                Logger.DebugLogDebug($"{nameof(TranslateDisplayListEntry)}: applied alternate translation");
+                wrappedCallback(entry.name);
                 yield break;
             }
 
             if (TranslationHelper.TryFastTranslateFullName(scope, origName, entry.file, out var fastName))
             {
+                Logger.DebugLogDebug($"{nameof(TranslateDisplayListEntry)}: fast translated!");
                 UpdateName(entry, fastName);
-                entry.SafeProc(cfi => wrappedCallback(cfi.name));
+                wrappedCallback(entry.name);
                 yield break;
             }
 
+            Logger.DebugLogDebug($"{nameof(TranslateDisplayListEntry)}: not fast translated!");
+
             yield return null;
 
-            void Handler(ITranslationResult result)
+            void AsyncHandler(ITranslationResult result)
             {
-                entry.SafeProc(cfi =>
+                Logger.DebugLogDebug(
+                    $"{nameof(TranslateDisplayListEntry)}:{nameof(AsyncHandler)}: result={result}, entry={entry}");
+                // async handler, things may have gone null
+                try
                 {
-                    HandleResult(cfi, result);
-                    TryApplyAlternateTranslation(scope, cfi, origName, false);
-                    wrappedCallback(cfi.name);
-                });
+                    HandleResult(entry, result);
+                    TryApplyAlternateTranslation(scope, entry, origName, false);
+                    wrappedCallback(entry.name);
+                }
+                catch (NullReferenceException err)
+                {
+                    Logger.LogDebug(
+                        $"{nameof(TranslateDisplayListEntry)}:{nameof(AsyncHandler)}: unable to apply translation: {err.Message} (entry may no longer exist)");
+                }
             }
 
             TranslationHelper.Instance.StartCoroutine(
-                TranslationHelper.CardNameManager.TranslateFullName(origName, scope, Handler));
+                TranslationHelper.CardNameManager.TranslateFullName(origName, scope, AsyncHandler));
         }
 
         private static IEnumerator TranslateDisplayListEntryCoroutine(CharaFileInfo entry, NameScope scope,
             Action callback = null)
         {
+            Logger.DebugLogDebug(
+                $"{nameof(TranslateDisplayListEntryCoroutine)}: entry={entry}, scope={scope}, callback={callback}");
             var limitCoroutine = TranslationHelper.Instance.StartCoroutine(TreeNodeLimiter.Start());
             if (limitCoroutine != null) yield return limitCoroutine;
             yield return TranslationHelper.Instance.StartCoroutine(TranslateDisplayListEntry(entry, scope));

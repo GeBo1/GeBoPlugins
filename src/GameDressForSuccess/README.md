@@ -36,4 +36,4 @@ If not set to true entire plugin is disabled.
 
 [//]: # (## Latest Links)
 
-[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r13/KK_GameDressForSuccess.v1.1.2.zip "v1.1.2"
+[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r18/KK_GameDressForSuccess.v1.2.0.zip "v1.2.0"

@@ -21,6 +21,6 @@ Removes all entries from your translation cache file that would be translated by
 
 [//]: # (## Latest Links)
 
-[AI Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r8/AI_TranslationCacheCleaner.v0.5.3.zip "v0.5.3"
-[HS2 Latest]:https://github.com/GeBo1/GeBoPlugins/releases/download/r8/HS2_TranslationCacheCleaner.v0.5.3.zip "v0.5.3"
-[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r8/KK_TranslationCacheCleaner.v0.5.3.zip "v0.5.3"
+[AI Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r19/AI_TranslationCacheCleaner.v0.6.0.zip "v0.6.0"
+[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r19/HS2_TranslationCacheCleaner.v0.6.0.zip "v0.6.0"
+[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r19/KK_TranslationCacheCleaner.v0.6.0.zip "v0.6.0"

@@ -52,6 +52,6 @@ Reload the currently loaded scene.
 
 [//]: # (## Latest Links)
 
-[AI Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r6/AI_StudioSceneNavigation.v0.8.6.zip "v0.8.6"
-[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r6/HS2_StudioSceneNavigation.v0.8.6.zip "v0.8.6"
-[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r6/KK_StudioSceneNavigation.v0.8.6.zip "v0.8.6"
+[AI Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r21/AI_StudioSceneNavigation.v1.0.0.zip "v1.0.0"
+[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r21/HS2_StudioSceneNavigation.v1.0.0.zip "v1.0.0"
+[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r21/KK_StudioSceneNavigation.v1.0.0.zip "v1.0.0"

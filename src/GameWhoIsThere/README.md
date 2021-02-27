@@ -8,6 +8,20 @@ Let's you see who will in "surprise" events before they start.
 | ----------------------: | :---: | :-----: | ------------ |
 | Honey Select 2          | ✔️     | ❌      | [HS2 Latest] |
 
+## Configuration
+
+### Settings
+
+#### Enabled
+
+If not set to true entire plugin is disabled.
+
+#### Keyboard Shortcuts
+
+##### Toggle showing who is in room
+
+Display name of character in surprise events
+
 ## Technical Info
 
 ### Dependencies
@@ -16,4 +30,4 @@ Let's you see who will in "surprise" events before they start.
 
 [//]: # (## Latest Links)
 
-[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r12/HS2_GameWhoIsThere.v1.0.0.0.zip "v1.0"
+[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r22/HS2_GameWhoIsThere.v1.0.1.zip "v1.0.1"

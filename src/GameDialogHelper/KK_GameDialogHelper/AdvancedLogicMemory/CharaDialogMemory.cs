@@ -240,7 +240,7 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
             var invalid = ListPool<string>.Get();
             try
             {
-                if (!GuidMatch(nameof(SaveGuid), GameDialogHelper.Instance.CurrentSaveGuid, SaveGuid, out var msg1))
+                if (SaveGuid != Guid.Empty && !GuidMatch(nameof(SaveGuid), GameDialogHelper.Instance.CurrentSaveGuid, SaveGuid, out var msg1))
                 {
                     invalid.Add(msg1);
                 }

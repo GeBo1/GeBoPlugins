@@ -43,7 +43,7 @@ namespace GameDialogHelperPlugin
         {
             GameDialogHelper.Instance.CurrentSaveGuid = Guid.Empty;
             var pluginData = GetExtendedData();
-            if (pluginData.version < PluginDataInfo.MinimumSupportedGameDataVersion) return;
+            if (pluginData == null || pluginData.version < PluginDataInfo.MinimumSupportedGameDataVersion) return;
             if (!pluginData.data.TryGetValue(PluginDataInfo.Keys.SaveGuid, out var val)) return;
             if (pluginData.data.TryGetValue(PluginDataInfo.Keys.SaveGuidVersion, out var versionData) &&
                 versionData is int guidVersion &&
@@ -296,9 +296,37 @@ namespace GameDialogHelperPlugin
                 GameDialogHelper.Instance.CurrentSaveGuid = Guid.NewGuid();
                 Logger?.LogDebug(
                     $"new save guid: {GameDialogHelper.Instance.CurrentSaveGuid}");
+
+                UpdateSaveGuidOnControllers();
             }
 
             Game.Instance.Player.chaCtrl.GetGameDialogHelperController().SafeProc(c => c.PersistToCard());
+        }
+
+        private static void UpdateSaveGuidOnControllers()
+        {
+            if (GameDialogHelper.Instance.CurrentSaveGuid == Guid.Empty) return;
+
+            void UpdateCharaData(SaveData.CharaData charaData)
+            {
+                charaData.SafeProc(cd => cd.GetGameDialogHelperController().SafeProc(ctrl => ctrl.DialogMemory.SafeProc(
+                    dm =>
+                    {
+                        if (dm.SaveGuid == GameDialogHelper.Instance.CurrentSaveGuid) return;
+                        if (dm.SaveGuid == Guid.Empty)
+                        {
+                            dm.SaveGuid = GameDialogHelper.Instance.CurrentSaveGuid;
+                            dm.SaveGuidVersion = PluginDataInfo.CurrentSaveGuidVersion;
+                            dm.LastUpdated = DateTime.UtcNow.Ticks;
+                            Logger?.DebugLogDebug(
+                                $"{nameof(UpdateSaveGuidOnControllers)}: {charaData.Name}: updating save guid");
+                            ctrl.PersistToCard();
+                        }
+                    })));
+            }
+
+            Game.Instance.HeroineList.ForEach(UpdateCharaData);
+            Game.Instance.Player.SafeProc(UpdateCharaData);
         }
 
         public static void DoReset()

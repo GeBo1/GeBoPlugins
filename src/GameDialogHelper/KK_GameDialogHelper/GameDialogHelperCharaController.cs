@@ -505,6 +505,7 @@ namespace GameDialogHelperPlugin
             }
 
             PersistToMemory();
+            Dump();
         }
 
         public void Remember(int question, int answer, bool isCorrect)
@@ -524,7 +525,7 @@ namespace GameDialogHelperPlugin
             {
                 foreach (var qid in questions)
                 {
-                    output.AppendFormat("{0:d3}", qid);
+                    output.AppendFormat("{0:d3}: ", qid);
                     var maxAnswer = DialogMemory[qid].Keys.ToList().Max();
                     for (var i = 0; i <= maxAnswer; i++)
                     {
@@ -536,7 +537,6 @@ namespace GameDialogHelperPlugin
                             recall = answerMemory.Recall;
                         }
 
-                        output.Append($"{timesAnswered:d4}/{recall:000.00%} ");
                         output.AppendFormat("{0:d4}", timesAnswered)
                             .Append('/')
                             .AppendFormat("{0:000.00%}", recall)

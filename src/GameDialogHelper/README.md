@@ -14,11 +14,11 @@ Highlights correct dialog choice in KK main game. Can be configured to use advan
 
 #### Plugin Mode
 
-Controls how plugin operates.
+Controls how plugin operates (may require restart). 
 
 - **Disabled** - Highlighting is disabled.
-- **Relationship Based** - Highlighting will be controlled by the relationship level with the character, controlled by [Minimum Relationship].
-- **Advanced Game Logic** - Every time a question is asked there's a chance it will be highlighted based on the players statistics, relationship level, and memory of past conversations.  Every time a question is answered there's an intelligence check to see how well the player will remember it for next time.  If used with [Highlight Mode] set to `Change Color` the level of highlighting is based on how certain the player is.
+- **Relationship Based** - Highlighting will be controlled by the relationship level with the character, controlled by **[Minimum Relationship](#minimum-relationship)**.
+- **Advanced Game Logic** - Every time a question is asked there's a chance it will be highlighted based on the players statistics, relationship level, and memory of past conversations.  Every time a question is answered there's an intelligence check to see how well the player will remember it for next time.  If used with **[Highlight Mode](#highlight-mode)** set to **Change Color** the level of highlighting is based on how certain the player is.
 
 
 #### Highlight Mode
@@ -38,7 +38,7 @@ String to append when highlighting incorrect answers (when using Append Text).
 
 #### Relationship Mode
 
-These settings are only used if [Plugin Mode] is `Relationship Based`.
+These settings are only used if **[Plugin Mode](#plugin-mode)** is **Relationship Based**.
 
 ##### Minimum Relationship
 
@@ -50,6 +50,21 @@ or higher.
 - **Friend** - Highlight the correct answers for friends (or higher).
 - **Lover** - Highlight the correct answers only if you're dating.
 - **Disabled** - Disable showing correct answers.
+
+### FAQs
+
+#### Troubleshooting
+
+##### I've installed the plugin, but why don't I see the answers highlighted?
+
+By default the plugin uses the **Advanced Game Logic** **[Plugin Mode](#plugin-mode)**.  In this mode the plugin acts more like it's part of the game. Unless you've previously answered the question your character won't know which answers are right or wrong, for the most part.  As you talk to other characters you'll start to remember the results of your conversations, and those memories may help provide hints in later conversations.  It may be a few (in-game) days before you notice anything.
+
+#### Configuration
+
+##### How can I just always see the answers?
+
+Set **[Plugin Mode](#plugin-mode)** to **Relationship Based** and **[Minimum Relationship](#minimum-relationship)** to **Anyone**, then restart the game.
+
 
 ### Dependencies
 

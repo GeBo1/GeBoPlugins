@@ -25,7 +25,7 @@ Contains shared code used by other plugins in this repo. Unless otherwise noted 
 
 Highlights correct dialog choice in KK main game. Can be configured to use advanced game logic or simply your relationship level with the character.
 
-- KK v1.0.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r17/KK_GameDialogHelper.v1.0.0.zip) 
+- KK v1.0.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r23/KK_GameDialogHelper.v1.0.1.zip)
 
 ### [GameDressForSuccess](src/GameDressForSuccess/README.md)
 

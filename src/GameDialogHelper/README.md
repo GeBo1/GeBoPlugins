@@ -60,4 +60,4 @@ or higher.
 
 [//]: # (## Latest Links)
 
-[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r17/KK_GameDialogHelper.v1.0.0.zip "v1.0.0"
+[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r23/KK_GameDialogHelper.v1.0.1.zip "v1.0.1"

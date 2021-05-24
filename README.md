@@ -75,7 +75,4 @@ Check plugin options to configure. Defaults to only using the translation cache,
 
 - AI v1.1.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r16/AI_TranslationHelper.v1.1.0.zip)
 - HS2 v1.1.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r16/HS2_TranslationHelper.v1.1.0.zip)
-- KK v1.1.0 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r16/KK_TranslationHelper.v1.1.0.zip)
-
-
-
+- KK v1.1.0.1 [Download](https://github.com/GeBo1/GeBoPlugins/releases/download/r24/KK_TranslationHelper.v1.1.0.1.zip)

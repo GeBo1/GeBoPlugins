@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using ExtensibleSaveFormat;
 using HarmonyLib;
@@ -15,11 +17,13 @@ namespace TranslationHelperPlugin.Translation
     {
         internal static Dictionary<string, string> ListInfoNameTranslatedMap =
             TranslationHelper.StringCacheInitializer();
-        internal static NameScopeDictionary<Dictionary<string,string>> LoadCharaFileTranslatedMap = new NameScopeDictionary<Dictionary<string, string>>(
-            ()=> new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
+
+        internal static NameScopeDictionary<Dictionary<string, string>> LoadCharaFileTranslatedMap =
+            new NameScopeDictionary<Dictionary<string, string>>(
+                () => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
 
         internal static bool LoadCharaFileMonitorEnabled { get; set; } = false;
-        
+
         internal static void GameSpecificSetup(Harmony harmony)
         {
             Assert.IsNotNull(harmony);
@@ -31,12 +35,12 @@ namespace TranslationHelperPlugin.Translation
             {
                 Party.Hooks.Setup();
             }
-            else
+            else if (!Process.GetCurrentProcess().ProcessName.Contains("VR"))
             {
                 Standard.Hooks.Setup();
             }
-
         }
+
         private static void TranslationHelperBehaviorChanged(object sender, EventArgs e)
         {
             ListInfoNameTranslatedMap.Clear();
@@ -50,6 +54,7 @@ namespace TranslationHelperPlugin.Translation
         {
             return (byte)(club == "帯刀" && string.IsNullOrEmpty(personality) ? 0 : 1);
         }
+
         private static void CleanTranslatedMaps(ChaFile file)
         {
             var maps = LoadCharaFileTranslatedMap.GetScopes().Select(
@@ -58,7 +63,7 @@ namespace TranslationHelperPlugin.Translation
             foreach (var map in maps)
             {
                 var toRemove =
-                    map.Keys.Where(k => System.IO.Path.GetFileName(k) == file.charaFileName).ToList();
+                    map.Keys.Where(k => Path.GetFileName(k) == file.charaFileName).ToList();
                 foreach (var path in toRemove) map.Remove(path);
             }
         }

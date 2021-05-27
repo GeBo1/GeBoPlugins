@@ -34,7 +34,7 @@ namespace GeBoCommon
     {
         public const string GUID = "com.gebo.BepInEx.GeBoAPI";
         public const string PluginName = "GeBo Modding API";
-        public const string Version = "1.1.0";
+        public const string Version = "1.1.1";
 
         private static readonly Dictionary<string, bool> NotificationSoundsEnabled = new Dictionary<string, bool>();
 
@@ -44,18 +44,7 @@ namespace GeBoCommon
         /// <value>
         ///     The instance.
         /// </value>
-        public static GeBoAPI Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = FindObjectOfType<GeBoAPI>();
-                }
-
-                return _instance;
-            }
-        }
+        public static GeBoAPI Instance => _instance != null ? _instance : _instance = FindObjectOfType<GeBoAPI>();
 
         internal new ManualLogSource Logger => base.Logger;
 
@@ -79,6 +68,14 @@ namespace GeBoCommon
 
         public static bool EnableObjectPools { get; private set; }
 
+        public static event EventHandler<EventArgs> TranslationsLoaded;
+
+        internal static void OnTranslationLoaded(EventArgs eventArgs)
+        {
+            TranslationsLoaded?.SafeInvoke(
+                Instance == null ? null : Instance.AutoTranslationHelper, eventArgs);
+        }
+
         private void Awake()
         {
             _instance = this;
@@ -86,8 +83,10 @@ namespace GeBoCommon
                 new ConfigDescription("Leave enabled unless requested otherwise", null, "Advanced"));
             EnableObjectPoolsConfig.SettingChanged += EnableObjectPoolsConfig_SettingChanged;
             EnableObjectPools = EnableObjectPoolsConfig.Value;
+            Common.SetCurrentLogger(Logger);
         }
-        
+
+
         private void EnableObjectPoolsConfig_SettingChanged(object sender, EventArgs e)
         {
             EnableObjectPools = EnableObjectPoolsConfig.Value;
@@ -157,6 +156,11 @@ namespace GeBoCommon
         {
             if (index < 0 || index > ChaFileNamesInternal.Count) return null;
             return ChaFileNamesInternal[index].Key;
+        }
+
+        private void OnDestroy()
+        {
+            Common.SetCurrentLogger(null);
         }
     }
 }

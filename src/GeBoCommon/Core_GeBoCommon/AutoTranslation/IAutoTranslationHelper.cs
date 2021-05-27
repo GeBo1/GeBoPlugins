@@ -37,5 +37,12 @@ namespace GeBoCommon.AutoTranslation
         Dictionary<string, string> GetTranslations();
         HashSet<string> GetRegisteredRegexes();
         HashSet<string> GetRegisteredSplitterRegexes();
+
+        int GetCurrentTranslationScope();
+
+        bool ContainsVariableSymbol(string text);
+        bool IsRedirected(string text);
+        string FixRedirected(string text);
+        string MakeRedirected(string text);
     }
 }

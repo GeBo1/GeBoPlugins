@@ -7,7 +7,7 @@ namespace GeBoCommon.AutoTranslation.Implementation
     internal class StubAutoTranslationHelper : AutoTranslationHelperBase, IAutoTranslationHelper
     {
         public object DefaultCache => null;
-        ManualLogSource IAutoTranslationHelper.Logger => Logger;
+        ManualLogSource IAutoTranslationHelper.Logger => Common.CurrentLogger;
 
         public Dictionary<string, string> GetReplacements()
         {
@@ -64,7 +64,7 @@ namespace GeBoCommon.AutoTranslation.Implementation
 
         public bool IsTranslatable(string text)
         {
-            return FallbackIsTranslatable(text);
+            return AlwaysFalseTestStringDelegate(text);
         }
 
         public void IgnoreTextComponent(object textComponent) { }
@@ -74,6 +74,31 @@ namespace GeBoCommon.AutoTranslation.Implementation
         public void RegisterOnTranslatingCallback(Action<IComponentTranslationContext> context) { }
 
         public void UnregisterOnTranslatingCallback(Action<IComponentTranslationContext> context) { }
+
+        public int GetCurrentTranslationScope()
+        {
+            return -1;
+        }
+
+        public bool IsRedirected(string text)
+        {
+            return AlwaysFalseTestStringDelegate(text);
+        }
+
+        public string FixRedirected(string text)
+        {
+            return NoOpTransformStringDelegate(text);
+        }
+
+        public string MakeRedirected(string text)
+        {
+            return NoOpTransformStringDelegate(text);
+        }
+
+        public bool ContainsVariableSymbol(string text)
+        {
+            return AlwaysFalseTestStringDelegate(text);
+        }
 
         public class TranslationResult : ITranslationResult
         {

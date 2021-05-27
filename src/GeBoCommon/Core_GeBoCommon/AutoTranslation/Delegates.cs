@@ -16,4 +16,9 @@ namespace GeBoCommon.AutoTranslation
 
     [PublicAPI]
     public delegate bool IsTranslatableDelegate(string text);
+
+
+    public delegate bool TestStringDelegate(string text);
+
+    public delegate string TransformStringDelegate(string text);
 }

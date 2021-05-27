@@ -37,10 +37,11 @@ namespace GeBoCommon.AutoTranslation.Implementation
             _getRegisteredRegexes = LazyReflectionGetter<HashSet<string>>(_defaultCache, "_registeredRegexes");
             _getRegisteredSplitterRegexes =
                 LazyReflectionGetter<HashSet<string>>(_defaultCache, "_registeredSplitterRegexes");
+            XUnityAutoTranslationHelperHooks.Setup();
         }
 
-        //private Type SettingsType => _settingsType.Value;
-        private ITranslator DefaultTranslator => AutoTranslator.Default;
+
+        private static ITranslator DefaultTranslator => AutoTranslator.Default;
         public object DefaultCache => _defaultCache.Value;
 
         public bool TryTranslate(string untranslatedText, out string translatedText)
@@ -79,7 +80,7 @@ namespace GeBoCommon.AutoTranslation.Implementation
             return LanguageHelper.IsTranslatable(text);
         }
 
-        ManualLogSource IAutoTranslationHelper.Logger => Logger;
+        ManualLogSource IAutoTranslationHelper.Logger => Common.CurrentLogger;
 
         public Dictionary<string, string> GetReplacements()
         {
@@ -106,6 +107,7 @@ namespace GeBoCommon.AutoTranslation.Implementation
             return _getRegisteredSplitterRegexes();
         }
 
+
         public void IgnoreTextComponent(object textComponent)
         {
             DefaultTranslator.IgnoreTextComponent(textComponent);
@@ -125,6 +127,32 @@ namespace GeBoCommon.AutoTranslation.Implementation
         {
             DefaultTranslator.UnregisterOnTranslatingCallback(context.AsXUnityContextAction());
         }
+
+        public int GetCurrentTranslationScope()
+        {
+            return FallbackGetCurrentTranslationScope();
+        }
+
+        public bool IsRedirected(string text)
+        {
+            return text.IsRedirected();
+        }
+
+        public string FixRedirected(string text)
+        {
+            return text.FixRedirected();
+        }
+
+        public string MakeRedirected(string text)
+        {
+            return text.MakeRedirected();
+        }
+
+        public bool ContainsVariableSymbol(string text)
+        {
+            return LanguageHelper.ContainsVariableSymbols(text);
+        }
+
 
         private AddTranslationToCacheDelegate AddTranslationToCacheLoader()
         {
@@ -228,6 +256,34 @@ namespace GeBoCommon.AutoTranslation.Implementation
             if (ContextWrappers.TryGetValue(context, out var wrappedContext)) return wrappedContext;
             return ContextWrappers[context] =
                 innerContext => context(new XUnityAutoTranslationHelper.ComponentTranslationContext(innerContext));
+        }
+    }
+
+    internal static class XUnityAutoTranslationHelperHooks
+    {
+        private static bool _hooked;
+
+        internal static void Setup()
+        {
+            if (_hooked) return;
+            Harmony.CreateAndPatchAll(typeof(XUnityAutoTranslationHelperHooks));
+            _hooked = true;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(AutoTranslationPlugin), "LoadTranslations")]
+        internal static void TranslationsLoadedPostfix()
+        {
+            try
+            {
+                GeBoAPI.OnTranslationLoaded(EventArgs.Empty);
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Common.CurrentLogger?.LogException(err, nameof(TranslationsLoadedPostfix));
+            }
+#pragma warning restore CA1031
         }
     }
 }

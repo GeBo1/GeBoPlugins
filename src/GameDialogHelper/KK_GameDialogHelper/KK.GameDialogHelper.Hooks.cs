@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using ActionGame.Communication;
 using ADV;
 using ADV.Commands.Base;
+using GeBoCommon.Utilities;
 using HarmonyLib;
 using TMPro;
 using Info = ActionGame.Communication.Info;
@@ -19,21 +21,31 @@ namespace GameDialogHelperPlugin
             [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]
             internal static void Info_CreateSelectADV_Prefix(Info __instance, Info.SelectInfo _info)
             {
-                if (EnabledForCurrentHeroine())
+                try
                 {
-                    var id = _info.GetQuestionId();
-                    SetCurrentDialog(id, InfoCheckSelectConditions(__instance, _info.conditions),
-                        _info.choice.Length);
-
-                    if (CurrentDialog.QuestionInfo.Id == -1)
+                    if (EnabledForCurrentHeroine())
                     {
-                        Logger?.LogDebug($"Unknown question: {CurrentDialog.QuestionId}: {_info.introduction.text}");
+                        var id = _info.GetQuestionId();
+                        SetCurrentDialog(id, InfoCheckSelectConditions(__instance, _info.conditions),
+                            _info.choice.Length);
+
+                        if (CurrentDialog.QuestionInfo.Id == -1)
+                        {
+                            Logger?.LogDebug(
+                                $"Unknown question: {CurrentDialog.QuestionId}: {_info.introduction.text}");
+                        }
+                    }
+                    else
+                    {
+                        ClearCurrentDialog();
                     }
                 }
-                else
+#pragma warning disable CA1031
+                catch (Exception err)
                 {
-                    ClearCurrentDialog();
+                    Logger.LogException(err, nameof(Info_CreateSelectADV_Prefix));
                 }
+#pragma warning restore CA1031
             }
 
             /*
@@ -51,39 +63,66 @@ namespace GameDialogHelperPlugin
             [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]
             internal static void Choice_Do_Postfix(List<Choice.ChoiceData> ___choices)
             {
-                if (CurrentDialogHighlights.Count == 0) return;
-                var answerId = -1;
-                foreach (var choice in ___choices)
+                try
                 {
-                    answerId++;
-                    var text = choice.transform.GetComponentInChildren<TextMeshProUGUI>();
-                    if (text == null) continue;
-                    ApplyHighlightSelections(answerId, text);
-                }
+                    if (CurrentDialogHighlights.Count == 0) return;
+                    var answerId = -1;
+                    foreach (var choice in ___choices)
+                    {
+                        answerId++;
+                        var text = choice.transform.GetComponentInChildren<TextMeshProUGUI>();
+                        if (text == null) continue;
+                        ApplyHighlightSelections(answerId, text);
+                    }
 
-                CurrentDialogHighlights.Clear();
+                    CurrentDialogHighlights.Clear();
+                }
+#pragma warning disable CA1031
+                catch (Exception err)
+                {
+                    Logger.LogException(err, nameof(Choice_Do_Postfix));
+                }
+#pragma warning restore CA1031
             }
 
             [HarmonyPrefix]
             [HarmonyPatch(typeof(Program.Transfer), nameof(Program.Transfer.Create))]
             internal static void Transfer_Create_Prefix(bool multi, Command command, string[] args)
             {
-                _ = multi;
-                if (args.IsNullOrEmpty()) return;
-                if (CurrentlyEnabled && command == Command.Choice)
+                try
                 {
-                    SaveHighlightSelections(args);
+                    _ = multi;
+                    if (args.IsNullOrEmpty()) return;
+                    if (CurrentlyEnabled && command == Command.Choice)
+                    {
+                        SaveHighlightSelections(args);
+                    }
                 }
+#pragma warning disable CA1031
+                catch (Exception err)
+                {
+                    Logger.LogException(err, nameof(Transfer_Create_Prefix));
+                }
+#pragma warning restore CA1031
             }
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(Choice), "ButtonProc")]
             internal static void Choice_ButtonProc_Postfix(int __result)
             {
-                if (CurrentDialog == null) return;
-                CurrentDialog.RecordAnswer(__result);
-                ProcessDialogAnswered(__result == CurrentDialog.CorrectAnswerId);
-                ClearCurrentDialog();
+                try
+                {
+                    if (CurrentDialog == null) return;
+                    CurrentDialog.RecordAnswer(__result);
+                    ProcessDialogAnswered(__result == CurrentDialog.CorrectAnswerId);
+                    ClearCurrentDialog();
+                }
+#pragma warning disable CA1031
+                catch (Exception err)
+                {
+                    Logger.LogException(err, nameof(Choice_ButtonProc_Postfix));
+                }
+#pragma warning restore CA1031
             }
         }
     }

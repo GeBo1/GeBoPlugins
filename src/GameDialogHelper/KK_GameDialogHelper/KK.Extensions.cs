@@ -73,7 +73,10 @@ namespace GameDialogHelperPlugin
             }
 
             if (guidVersion < PluginDataInfo.MinimumSupportedCharaGuidVersion || charaData == null ||
-                !charaData.charFileInitialized) return Guid.Empty;
+                !charaData.charFileInitialized)
+            {
+                return Guid.Empty;
+            }
 
             var guidKeyBuilder = StringBuilderPool.Get();
             var intFmt = "{0:04}";

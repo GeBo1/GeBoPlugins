@@ -313,15 +313,13 @@ namespace GameDialogHelperPlugin
                     dm =>
                     {
                         if (dm.SaveGuid == GameDialogHelper.Instance.CurrentSaveGuid) return;
-                        if (dm.SaveGuid == Guid.Empty)
-                        {
-                            dm.SaveGuid = GameDialogHelper.Instance.CurrentSaveGuid;
-                            dm.SaveGuidVersion = PluginDataInfo.CurrentSaveGuidVersion;
-                            dm.LastUpdated = DateTime.UtcNow.Ticks;
-                            Logger?.DebugLogDebug(
-                                $"{nameof(UpdateSaveGuidOnControllers)}: {charaData.Name}: updating save guid");
-                            ctrl.PersistToCard();
-                        }
+                        if (dm.SaveGuid != Guid.Empty) return;
+                        dm.SaveGuid = GameDialogHelper.Instance.CurrentSaveGuid;
+                        dm.SaveGuidVersion = PluginDataInfo.CurrentSaveGuidVersion;
+                        dm.LastUpdated = DateTime.UtcNow.Ticks;
+                        Logger?.DebugLogDebug(
+                            $"{nameof(UpdateSaveGuidOnControllers)}: {charaData.Name}: updating save guid");
+                        ctrl.PersistToCard();
                     })));
             }
 

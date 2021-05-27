@@ -39,8 +39,7 @@ namespace GameDressForSuccessPlugin
 #pragma warning disable CA1031
                 catch (Exception err)
                 {
-                    Logger.LogWarning($"Unexpected error: {err.Message}");
-                    Logger.LogDebug(err);
+                    Logger.LogException(err, nameof(StartTravelingHook));
                 }
 #pragma warning restore CA1031
             }
@@ -60,8 +59,7 @@ namespace GameDressForSuccessPlugin
 #pragma warning disable CA1031
                 catch (Exception err)
                 {
-                    Logger.LogWarning($"Unexpected error: {err.Message}");
-                    Logger.LogDebug(err);
+                    Logger.LogException(err, nameof(StopTravelingHook));
                 }
 #pragma warning restore CA1031
             }
@@ -87,8 +85,7 @@ namespace GameDressForSuccessPlugin
 #pragma warning disable CA1031
                 catch (Exception err)
                 {
-                    Logger.LogWarning($"Unexpected error: {err.Message}");
-                    Logger.LogDebug(err);
+                    Logger.LogException(err, nameof(CoordinateDoPostfix));
                 }
 #pragma warning restore CA1031
             }
@@ -131,8 +128,7 @@ namespace GameDressForSuccessPlugin
 #pragma warning disable CA1031
                 catch (Exception err)
                 {
-                    Logger.LogWarning($"Unexpected error: {err.Message}");
-                    Logger.LogDebug(err);
+                    Logger.LogException(err, nameof(ToggleOnPointerClickPrefix));
                 }
 #pragma warning restore CA1031
             }
@@ -151,8 +147,7 @@ namespace GameDressForSuccessPlugin
 #pragma warning disable CA1031
                 catch (Exception err)
                 {
-                    Logger.LogWarning($"Unexpected error: {err.Message}");
-                    Logger.LogDebug(err);
+                    Logger.LogException(err, nameof(ToggleOnPointerClickPostfix));
                 }
 #pragma warning restore CA1031
             }

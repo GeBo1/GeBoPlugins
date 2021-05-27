@@ -30,24 +30,33 @@ namespace TranslationHelperPlugin.Studio
         [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]
         internal static void RefreshVisibleLoopPatch(TreeNodeObject _source)
         {
-            if (TranslationHelper.Instance == null || !IllusionStudio.IsInstance() ||
-                !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled ||
-                !Singleton<IllusionStudio>.Instance.dicInfo.TryGetValue(_source, out var ctrlInfo) ||
-                !(ctrlInfo is OCIChar oChar))
+            try
             {
-                return;
+                if (TranslationHelper.Instance == null || !IllusionStudio.IsInstance() ||
+                    !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled ||
+                    !Singleton<IllusionStudio>.Instance.dicInfo.TryGetValue(_source, out var ctrlInfo) ||
+                    !(ctrlInfo is OCIChar oChar))
+                {
+                    return;
+                }
+
+
+                void Handler(string translatedName)
+                {
+                    if (string.IsNullOrEmpty(translatedName)) return;
+                    _source.SafeProc(s => s.textName = translatedName);
+                }
+
+                oChar.charInfo.SafeProcObject(ci =>
+                    ci.chaFile.SafeProc(cf =>
+                        cf.TranslateFullName(Handler)));
             }
-
-
-            void Handler(string translatedName)
+#pragma warning disable CA1031
+            catch (Exception err)
             {
-                if (string.IsNullOrEmpty(translatedName)) return;
-                _source.SafeProc(s => s.textName = translatedName);
+                Logger.LogException(err, _source, nameof(RefreshVisibleLoopPatch));
             }
-
-            oChar.charInfo.SafeProcObject(ci =>
-                ci.chaFile.SafeProc(cf =>
-                    cf.TranslateFullName(Handler)));
+#pragma warning restore CA1031
         }
 
         /*
@@ -69,8 +78,17 @@ namespace TranslationHelperPlugin.Studio
         [HarmonyPatch(typeof(CharaList), "InitCharaList")]
         internal static void CharaList_InitCharaList_Postfix(CharaList __instance, ref object __state)
         {
-            TranslateDisplayList(__instance);
-            var _ = __state;
+            try
+            {
+                TranslateDisplayList(__instance);
+                var _ = __state;
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, __instance, nameof(CharaList_InitCharaList_Postfix));
+            }
+#pragma warning restore CA1031
             /*
             Logger.LogDebug("Enable XUA");
             (__state as AutoTranslationPlugin)?.EnableAutoTranslator();

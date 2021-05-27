@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using BepInEx.Logging;
+using GeBoCommon.Utilities;
 using HarmonyLib;
 using JetBrains.Annotations;
 using KKAPI;
@@ -68,16 +69,25 @@ namespace TranslationHelperPlugin.Chara
 #endif
         private static void ChaFileLoadFilePostfix(ChaFile __instance, string path, bool __result)
         {
-            if (!__result ||
-                !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled)
+            try
             {
-                return;
+                if (!__result ||
+                    !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled)
+                {
+                    return;
+                }
+
+                if (!MakerAPI.CharaListIsLoading && !Configuration.TrackCharaFileControlPaths) return;
+
+                Configuration.TrackCharaFileControlPath(__instance, path,
+                    fullPath => __instance.GetTranslationHelperController().SafeProc(c => c.FullPath = fullPath));
             }
-
-            if (!MakerAPI.CharaListIsLoading && !Configuration.TrackCharaFileControlPaths) return;
-
-            Configuration.TrackCharaFileControlPath(__instance, path,
-                fullPath => __instance.GetTranslationHelperController().SafeProc(c => c.FullPath = fullPath));
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(ChaFileLoadFilePostfix));
+            }
+#pragma warning restore CA1031
         }
 
 
@@ -87,17 +97,26 @@ namespace TranslationHelperPlugin.Chara
         private static void ChaFileControlLoadCharaFilePostfix(ChaFileControl __instance, string filename,
             bool __result)
         {
-            if (!__result || __instance == null || string.IsNullOrEmpty(filename) ||
-                !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled ||
-                (!MakerAPI.CharaListIsLoading && !Configuration.TrackCharaFileControlPaths))
+            try
             {
-                return;
-            }
+                if (!__result || __instance == null || string.IsNullOrEmpty(filename) ||
+                    !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled ||
+                    (!MakerAPI.CharaListIsLoading && !Configuration.TrackCharaFileControlPaths))
+                {
+                    return;
+                }
 #if HS2||AI
             if (!filename.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) return;
 #endif
-            Configuration.TrackCharaFileControlPath(__instance, filename,
-                fullPath => __instance.GetTranslationHelperController().SafeProc(c => c.FullPath = fullPath));
+                Configuration.TrackCharaFileControlPath(__instance, filename,
+                    fullPath => __instance.GetTranslationHelperController().SafeProc(c => c.FullPath = fullPath));
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(ChaFileControlLoadCharaFilePostfix));
+            }
+#pragma warning restore CA1031
         }
 
 
@@ -109,8 +128,17 @@ namespace TranslationHelperPlugin.Chara
 #endif
         private static void ChaFile_SaveFile_Postfix(ChaFile __instance)
         {
-            __instance.SafeProc(i => i.GetTranslationHelperController()
-                .SafeProc(c => c.OnCardSaveComplete(KoikatuAPI.GetCurrentGameMode())));
+            try
+            {
+                __instance.SafeProc(i => i.GetTranslationHelperController()
+                    .SafeProc(c => c.OnCardSaveComplete(KoikatuAPI.GetCurrentGameMode())));
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(ChaFile_SaveFile_Postfix));
+            }
+#pragma warning restore CA1031
         }
     }
 }

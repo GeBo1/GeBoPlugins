@@ -1,5 +1,7 @@
 ﻿using System;
+using BepInEx.Logging;
 using ChaCustom;
+using GeBoCommon.Utilities;
 using HarmonyLib;
 using TranslationHelperPlugin.Utils;
 using UnityEngine;
@@ -8,6 +10,8 @@ namespace TranslationHelperPlugin.Translation.Party
 {
     internal class Hooks
     {
+        internal static ManualLogSource Logger => TranslationHelper.Logger;
+
         internal static void Setup()
         {
             var harmony = Harmony.CreateAndPatchAll(typeof(Hooks));
@@ -37,7 +41,8 @@ namespace TranslationHelperPlugin.Translation.Party
 #pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception err)
                     {
-                        TranslationHelper.Logger.LogError($"{typeof(Hooks).FullName}: {err.Message}");
+                        Logger?.LogException(err,
+                            $"{typeof(Hooks).GetPrettyTypeFullName()}.{nameof(Setup)}");
                     }
 #pragma warning restore CA1031 // Do not catch general exception types
                 }
@@ -45,7 +50,7 @@ namespace TranslationHelperPlugin.Translation.Party
 
             if (!patched)
             {
-                TranslationHelper.Logger.LogWarning(
+                Logger?.LogWarning(
                     $"{typeof(Hooks).FullName}: unable to hook pointer enter/exit, some functionality will be disabled");
             }
         }
@@ -63,13 +68,22 @@ namespace TranslationHelperPlugin.Translation.Party
         */
         public static void OnPointerEnterPostfix(CustomFileListCtrl __instance, MonoBehaviour fic)
         {
-            if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
-            if (fic == null) return;
-            var info = Traverse.Create(fic).Property("info").GetValue();
-            if (info == null) return;
-            var infoType = Traverse.Create(fic).Property("info").GetValueType();
-            Translation.Hooks.OnPointerEnterPostfix(__instance,
-                CharaFileInfoWrapper.CreateWrapper(infoType, info));
+            try
+            {
+                if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
+                if (fic == null) return;
+                var info = Traverse.Create(fic).Property("info").GetValue();
+                if (info == null) return;
+                var infoType = Traverse.Create(fic).Property("info").GetValueType();
+                Translation.Hooks.OnPointerEnterPostfix(__instance,
+                    CharaFileInfoWrapper.CreateWrapper(infoType, info));
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, fic, nameof(OnPointerEnterPostfix));
+            }
+#pragma warning restore CA1031
         }
     }
 }

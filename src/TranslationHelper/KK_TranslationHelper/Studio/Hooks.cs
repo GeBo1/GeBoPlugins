@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GeBoCommon;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
+using GeBoCommon.Utilities;
 using HarmonyLib;
 using Studio;
 using UnityEngine;
@@ -37,18 +38,36 @@ namespace TranslationHelperPlugin.Studio
         [HarmonyPatch(typeof(CharaList), "InitCharaList")]
         internal static void StudioInitCharaListPrefix(CharaList __instance)
         {
-            if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
-            if (CharaListsInProgress.Contains(__instance)) return;
-            CharaListsInProgress.Add(__instance);
-            EnableCharaListHandler();
+            try
+            {
+                if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
+                if (CharaListsInProgress.Contains(__instance)) return;
+                CharaListsInProgress.Add(__instance);
+                EnableCharaListHandler();
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, __instance, nameof(StudioInitCharaListPrefix));
+            }
+#pragma warning restore CA1031
         }
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CharaList), "InitCharaList")]
         internal static void StudioInitCharaListPostfix(CharaList __instance)
         {
-            CharaListsInProgress.Remove(__instance);
-            if (CharaListsInProgress.Count == 0) DisableCharaListHandler();
+            try
+            {
+                CharaListsInProgress.Remove(__instance);
+                if (CharaListsInProgress.Count == 0) DisableCharaListHandler();
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, __instance, nameof(StudioInitCharaListPostfix));
+            }
+#pragma warning restore CA1031
         }
 
         internal static void ResetTranslatingCallbacks()

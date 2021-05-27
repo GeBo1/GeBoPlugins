@@ -1,5 +1,6 @@
 ﻿using System;
 using AIProject;
+using GeBoCommon.Utilities;
 using HarmonyLib;
 
 namespace TranslationHelperPlugin.MainGame
@@ -19,8 +20,7 @@ namespace TranslationHelperPlugin.MainGame
 #pragma warning disable CA1031
             catch (Exception err)
             {
-                Logger.LogWarning($"Unexpected error: {err.Message}");
-                Logger.LogDebug(err);
+                Logger.LogException(err, nameof(MerchantActorCharaNameGetterPostfix));
             }
 #pragma warning restore CA1031
         }

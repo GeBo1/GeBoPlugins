@@ -3,6 +3,7 @@ using ADV;
 using AIChara;
 using GeBoCommon;
 using GeBoCommon.AutoTranslation;
+using GeBoCommon.Utilities;
 using HarmonyLib;
 using TranslationHelperPlugin.Chara;
 using UnityEngine.UI;
@@ -43,10 +44,20 @@ namespace TranslationHelperPlugin.MainGame
         {
             if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
             // ADV scene started
-            _advScene = __instance;
-            if (_advTranslationCallbackRegistered) return;
-            GeBoAPI.Instance.AutoTranslationHelper.RegisterOnTranslatingCallback(AdvTranslationCallback);
-            _advTranslationCallbackRegistered = true;
+            try
+            {
+                _advScene = __instance;
+                if (_advTranslationCallbackRegistered) return;
+                GeBoAPI.Instance.AutoTranslationHelper.RegisterOnTranslatingCallback(AdvTranslationCallback);
+                _advTranslationCallbackRegistered = true;
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(ADVSceneOnEnablePostfix));
+                _advTranslationCallbackRegistered = false;
+            }
+#pragma warning restore CA1031
         }
 
         [HarmonyPostfix]
@@ -54,9 +65,18 @@ namespace TranslationHelperPlugin.MainGame
         internal static void ADVSceneOnDisablePostfix()
         {
             // ADV scene exited
-            _advScene = null;
-            GeBoAPI.Instance.AutoTranslationHelper.UnregisterOnTranslatingCallback(AdvTranslationCallback);
-            _advTranslationCallbackRegistered = false;
+            try
+            {
+                _advScene = null;
+                GeBoAPI.Instance.AutoTranslationHelper.UnregisterOnTranslatingCallback(AdvTranslationCallback);
+                _advTranslationCallbackRegistered = false;
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(ADVSceneOnDisablePostfix));
+            }
+#pragma warning restore CA1031
         }
 
         [HarmonyPostfix]
@@ -66,15 +86,18 @@ namespace TranslationHelperPlugin.MainGame
             try
             {
                 if (!__result || __instance == null ||
-                    !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
+                    !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled)
+                {
+                    return;
+                }
+
                 __instance.currentChara.SafeProc(cc =>
                     cc.chaCtrl.GetTranslationHelperController().SafeProc(tc => tc.TranslateCardNames()));
             }
 #pragma warning disable CA1031
             catch (Exception err)
             {
-                Logger.LogWarning($"Unexpected error: {err.Message}");
-                Logger.LogDebug(err);
+                Logger.LogException(err, nameof(TextScenarioChangeCurrentCharaPostfix));
             }
 #pragma warning restore CA1031
         }

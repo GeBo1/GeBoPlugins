@@ -63,6 +63,10 @@ namespace TranslationHelperPlugin.MainGame
                 __state = true;
                 chaFileCtrl.StartMonitoredCoroutine(TranslationHelper.CardNameManager.TranslateCardNames(chaFileCtrl));
             }
+            catch (Exception err)
+            {
+                Logger.LogException(err, __instance, nameof(RosterSetCharaInfoPrefix));
+            }
             finally
             {
                 Logger.DebugLogDebug($"RosterSetCharaInfoPrefix: {Time.realtimeSinceStartup - start:000.0000000000}");
@@ -76,21 +80,30 @@ namespace TranslationHelperPlugin.MainGame
             typeof(ChaFileControl))]
         internal static void RosterSetCharaInfoPostfix(Component __instance, ChaFileControl chaFileCtrl, object __state)
         {
-            if (__state == null || !(bool)__state) return;
-
-            void UpdateDisplayedCard(string name)
+            try
             {
-                if (string.IsNullOrEmpty(name)) return;
-                foreach (var textName in FindChildComponents<Text>(__instance, "textName",
-                    "resize/text/name", "resize/image/chara"))
+                if (__state == null || !(bool)__state) return;
+
+                void UpdateDisplayedCard(string name)
                 {
-                    textName.SafeProc(tn => tn.text = name);
+                    if (string.IsNullOrEmpty(name)) return;
+                    foreach (var textName in FindChildComponents<Text>(__instance, "textName",
+                        "resize/text/name", "resize/image/chara"))
+                    {
+                        textName.SafeProc(tn => tn.text = name);
+                    }
                 }
+
+                chaFileCtrl.TranslateFullName(UpdateDisplayedCard);
+
+                FreeHUpdateUI();
             }
-
-            chaFileCtrl.TranslateFullName(UpdateDisplayedCard);
-
-            FreeHUpdateUI();
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, __instance, nameof(RosterSetCharaInfoPostfix));
+            }
+#pragma warning restore CA1031
         }
 
         private static void FreeHUpdateUI()
@@ -134,7 +147,6 @@ namespace TranslationHelperPlugin.MainGame
             var callbackMap = DictionaryPool<SaveData.Heroine, List<Action<string>>>.Get();
             try
             {
-
                 if (member.resultHeroine.HasValue && member.resultHeroine.Value != null)
                 {
                     if (!callbackMap.TryGetValue(member.resultHeroine.Value, out var callbacks))
@@ -185,7 +197,7 @@ namespace TranslationHelperPlugin.MainGame
 #pragma warning disable CA1031 // Do not catch general exception types
                                     catch (Exception err)
                                     {
-                                        Logger.LogWarning($"FreeHUpdateUI: {err.Message}");
+                                        Logger.LogException(err, freeHScene, nameof(FreeHUpdateUI));
                                     }
 #pragma warning restore CA1031 // Do not catch general exception types
                                 }

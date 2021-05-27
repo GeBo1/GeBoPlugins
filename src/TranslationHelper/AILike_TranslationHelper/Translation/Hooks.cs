@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using CharaCustom;
 using GameLoadCharaFileSystem;
@@ -52,7 +53,16 @@ namespace TranslationHelperPlugin.Translation
         [HarmonyPatch(typeof(GameCharaFileInfoAssist), nameof(GameCharaFileInfoAssist.CreateCharaFileInfoList))]
         internal static void CreateCharaFileInfoListPostfix(List<GameCharaFileInfo> __result)
         {
-            TranslateFileInfos(__result);
+            try
+            {
+                TranslateFileInfos(__result);
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(CreateCharaFileInfoListPostfix));
+            }
+#pragma warning restore CA1031
         }
 
         [HarmonyPrefix]
@@ -60,7 +70,16 @@ namespace TranslationHelperPlugin.Translation
         [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]
         internal static void GameCharaFileInfoListPrefix(List<GameCharaFileInfo> _lst)
         {
-            TranslateFileInfos(_lst);
+            try
+            {
+                TranslateFileInfos(_lst);
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(GameCharaFileInfoListPrefix));
+            }
+#pragma warning restore CA1031
         }
 
         [HarmonyPrefix]
@@ -68,7 +87,16 @@ namespace TranslationHelperPlugin.Translation
         [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]
         internal static void CustomCharaFileInfoListPrefix(List<CustomCharaFileInfo> _lst)
         {
-            TranslateFileInfos(_lst);
+            try
+            {
+                TranslateFileInfos(_lst);
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(CustomCharaFileInfoListPrefix));
+            }
+#pragma warning restore CA1031
         }
     }
 }

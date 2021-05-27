@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using ChaCustom;
 using GeBoCommon.AutoTranslation;
@@ -87,6 +88,10 @@ namespace TranslationHelperPlugin.Translation
 
                 __instance.TranslateFullName(Handler);
             }
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(ChaFileControl_LoadCharaFile_Postfix));
+            }
             finally
             {
                 Logger.DebugLogDebug(
@@ -143,6 +148,10 @@ namespace TranslationHelperPlugin.Translation
                 TranslationHelper.Instance.StartCoroutine(
                     TranslationHelper.TranslateFileInfo(info, Handler));
             }
+            catch (Exception err)
+            {
+                Logger.LogException(err, __instance, nameof(FileListCtrlAddListPrefix));
+            }
             finally
             {
                 Logger.DebugLogDebug($"FileListCtrlAddListPrefix: {Time.realtimeSinceStartup - start:000.0000000000}");
@@ -151,42 +160,60 @@ namespace TranslationHelperPlugin.Translation
 
         internal static void OnPointerEnterPostfix(MonoBehaviour instance, ICharaFileInfo wrapper)
         {
-            if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
-            var name = wrapper.Name;
-            //Logger.LogDebug($"OnPointerEnterPostfix: name={name}");
-
-            var textDrawName = Traverse.Create(instance)?.Field<Text>("textDrawName")?.Value;
-
-            if (TranslationHelper.TryFastTranslateFullName(wrapper, out var tmpName))
+            try
             {
-                wrapper.Name = tmpName;
-                if (textDrawName != null) textDrawName.text = tmpName;
-                return;
-            }
+                if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
+                var name = wrapper.Name;
+                //Logger.LogDebug($"OnPointerEnterPostfix: name={name}");
 
-            void Handler(ITranslationResult result)
+                var textDrawName = Traverse.Create(instance)?.Field<Text>("textDrawName")?.Value;
+
+                if (TranslationHelper.TryFastTranslateFullName(wrapper, out var tmpName))
+                {
+                    wrapper.Name = tmpName;
+                    if (textDrawName != null) textDrawName.text = tmpName;
+                    return;
+                }
+
+                void Handler(ITranslationResult result)
+                {
+                    //Logger.LogDebug($"OnPointerEnterPostfix: Handler: {result}");
+                    /*var newName = ProcessTranslationResult(scope, wrapper.FullPath, name, result);*/
+                    if (!result.Succeeded || result.TranslatedText == name) return;
+                    wrapper.Name = result.TranslatedText;
+                    if (textDrawName == null) return;
+                    textDrawName.text = result.TranslatedText;
+                }
+
+                if (textDrawName != null) textDrawName.text = name;
+
+
+                _pointerEnterCoroutine = TranslationHelper.Instance.StartCoroutine(
+                    TranslationHelper.TranslateFileInfo(wrapper,
+                        //TranslationHelper.CardNameManager.TranslateFullName(name, new NameScope((CharacterSex)sex),
+                        Handler, _ => _pointerEnterCoroutine = null));
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
             {
-                //Logger.LogDebug($"OnPointerEnterPostfix: Handler: {result}");
-                /*var newName = ProcessTranslationResult(scope, wrapper.FullPath, name, result);*/
-                if (!result.Succeeded || result.TranslatedText == name) return;
-                wrapper.Name = result.TranslatedText;
-                if (textDrawName == null) return;
-                textDrawName.text = result.TranslatedText;
+                Logger.LogException(err, instance, nameof(OnPointerEnterPostfix));
             }
-
-            if (textDrawName != null) textDrawName.text = name;
-
-
-            _pointerEnterCoroutine = TranslationHelper.Instance.StartCoroutine(
-                TranslationHelper.TranslateFileInfo(wrapper,
-                    //TranslationHelper.CardNameManager.TranslateFullName(name, new NameScope((CharacterSex)sex),
-                    Handler, _ => _pointerEnterCoroutine = null));
+#pragma warning restore CA1031
         }
 
         internal static void OnPointerExitPrefix()
         {
-            if (_pointerEnterCoroutine == null) return;
-            TranslationHelper.Instance.StopCoroutine(_pointerEnterCoroutine);
+            try
+            {
+                if (_pointerEnterCoroutine == null) return;
+                TranslationHelper.Instance.StopCoroutine(_pointerEnterCoroutine);
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(OnPointerExitPrefix));
+            }
+#pragma warning restore CA1031
             _pointerEnterCoroutine = null;
         }
     }

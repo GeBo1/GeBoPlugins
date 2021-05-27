@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using CharaCustom;
 using GeBoCommon;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
+using GeBoCommon.Utilities;
 using HarmonyLib;
 using KKAPI.Maker;
 using UnityEngine.UI;
@@ -30,15 +32,15 @@ namespace TranslationHelperPlugin.Maker
 
         private static void EnableSelectTextHandling()
         {
-            if (_pointerCallbackRegistered) return;
-            GeBoAPI.Instance.AutoTranslationHelper.RegisterOnTranslatingCallback(SelectTextCallback);
+            if (!GeBoAPI.Instance.SafeProc(g =>
+                g.AutoTranslationHelper.RegisterOnTranslatingCallback(SelectTextCallback))) return;
             _pointerCallbackRegistered = true;
         }
 
         private static void DisableSelectTextHandling()
         {
-            if (GeBoAPI.Instance == null) return;
-            GeBoAPI.Instance.AutoTranslationHelper.UnregisterOnTranslatingCallback(SelectTextCallback);
+            if (!GeBoAPI.Instance.SafeProc(g =>
+                g.AutoTranslationHelper.UnregisterOnTranslatingCallback(SelectTextCallback))) return;
             _pointerCallbackRegistered = false;
         }
 
@@ -60,8 +62,17 @@ namespace TranslationHelperPlugin.Maker
         {
             if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled || ___text == null ||
                 ___text.name != "SelectText") return;
-            PointerCallbackActiveTexts.Add(___text);
-            EnableSelectTextHandling();
+            try
+            {
+                PointerCallbackActiveTexts.Add(___text);
+                EnableSelectTextHandling();
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(OnPointerEnterPatch));
+            }
+#pragma warning restore CA1031
         }
 
 
@@ -70,8 +81,17 @@ namespace TranslationHelperPlugin.Maker
         [SuppressMessage("ReSharper", "InconsistentNaming")]
         internal static void OnPointerExitPatch(Text ___text)
         {
-            PointerCallbackActiveTexts.Remove(___text);
-            DisableSelectTextHandling();
+            try
+            {
+                PointerCallbackActiveTexts.Remove(___text);
+                DisableSelectTextHandling();
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(OnPointerExitPatch));
+            }
+#pragma warning restore CA1031
         }
 
 
@@ -79,7 +99,16 @@ namespace TranslationHelperPlugin.Maker
         [HarmonyPatch(typeof(CustomCharaScrollController), nameof(CustomCharaScrollController.CreateList))]
         internal static void CreateListPatch()
         {
-            ResetSelectTextHandling();
+            try
+            {
+                ResetSelectTextHandling();
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(CreateListPatch));
+            }
+#pragma warning restore CA1031
         }
     }
 }

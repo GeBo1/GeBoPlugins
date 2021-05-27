@@ -1,10 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using AIChara;
 using GameLoadCharaFileSystem;
 using GeBoCommon;
 using GeBoCommon.AutoTranslation;
+using GeBoCommon.Utilities;
 using HarmonyLib;
 using HS2;
 using TranslationHelperPlugin.Chara;
@@ -49,17 +51,26 @@ namespace TranslationHelperPlugin.MainGame
             typeof(bool), typeof(bool))]
         internal static void ChaFileControl_LoadCharaFile_Postfix(ChaFileControl __instance)
         {
-            if (!_inMapSelecCursorEnter || __instance == null) return;
-            var label = InMapSelecCursorLabels[_inMapSelecCursorEnterIndex];
-            InMapSelecCursorLabels[_inMapSelecCursorEnterIndex] = null;
-            _inMapSelecCursorEnterIndex++;
-
-            if (label == null || !TranslationHelper.CardNameManager.CardNeedsTranslation(__instance)) return;
-            __instance.TranslateFullName(r =>
+            try
             {
-                if (string.IsNullOrEmpty(r) || label == null) return;
-                TranslationHelper.Instance.StartCoroutine(UpdateText(label, r));
-            });
+                if (!_inMapSelecCursorEnter || __instance == null) return;
+                var label = InMapSelecCursorLabels[_inMapSelecCursorEnterIndex];
+                InMapSelecCursorLabels[_inMapSelecCursorEnterIndex] = null;
+                _inMapSelecCursorEnterIndex++;
+
+                if (label == null || !TranslationHelper.CardNameManager.CardNeedsTranslation(__instance)) return;
+                __instance.TranslateFullName(r =>
+                {
+                    if (string.IsNullOrEmpty(r) || label == null) return;
+                    TranslationHelper.Instance.StartCoroutine(UpdateText(label, r));
+                });
+            }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(ChaFileControl_LoadCharaFile_Postfix));
+            }
+#pragma warning restore CA1031
         }
 
 
@@ -69,27 +80,36 @@ namespace TranslationHelperPlugin.MainGame
         [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "Inherited naming")]
         internal static void MapSelecCursorEnterPrefix(MapSelectUI __instance)
         {
-            if (__instance == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
-            _inMapSelecCursorEnter = true;
-            _inMapSelecCursorEnterIndex = 0;
-            var i = 0;
-            foreach (var uiName in new[] {"firstCharaThumbnailUI", "secondCharaThumbnailUI"})
+            try
             {
-                try
+                if (__instance == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
+                _inMapSelecCursorEnter = true;
+                _inMapSelecCursorEnterIndex = 0;
+                var i = 0;
+                foreach (var uiName in new[] {"firstCharaThumbnailUI", "secondCharaThumbnailUI"})
                 {
-                    var label = InMapSelecCursorLabels[i] = Traverse.Create(__instance)?.Field(uiName)
-                        ?.Field<Text>("text")?.Value;
-                    GeBoAPI.Instance.AutoTranslationHelper.IgnoreTextComponent(label);
-                }
+                    try
+                    {
+                        var label = InMapSelecCursorLabels[i] = Traverse.Create(__instance)?.Field(uiName)
+                            ?.Field<Text>("text")?.Value;
+                        GeBoAPI.Instance.AutoTranslationHelper.IgnoreTextComponent(label);
+                    }
 #pragma warning disable CA1031 // Do not catch general exception types
-                catch
-                {
-                    InMapSelecCursorLabels[i] = null;
-                }
+                    catch
+                    {
+                        InMapSelecCursorLabels[i] = null;
+                    }
 #pragma warning restore CA1031 // Do not catch general exception types
 
-                i++;
+                    i++;
+                }
             }
+#pragma warning disable CA1031
+            catch (Exception err)
+            {
+                Logger.LogException(err, nameof(MapSelecCursorEnterPrefix));
+            }
+#pragma warning restore CA1031
         }
 
         // ReSharper disable once StringLiteralTypo IdentifierTypo

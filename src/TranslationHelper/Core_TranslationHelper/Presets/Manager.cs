@@ -57,12 +57,12 @@ namespace TranslationHelperPlugin.Presets
             _fullNameCache = new Dictionary<CharacterSex, Dictionary<string, string>>(comparer);
             _nickNameCache = new Dictionary<CharacterSex, Dictionary<CardNameCacheKey, Dictionary<string, string>>>(comparer);
             Reset();
-            TranslationHelper.BehaviorChanged += TranslationHelperBehaviorChanged;
+            TranslationHelper.CardTranslationBehaviorChanged += CardTranslationHelperBehaviorChanged;
         }
 
         private static ManualLogSource Logger => TranslationHelper.Logger;
 
-        private void TranslationHelperBehaviorChanged(object sender, EventArgs e)
+        private void CardTranslationHelperBehaviorChanged(object sender, EventArgs e)
         {
             Reset();
         }

@@ -31,7 +31,7 @@ namespace TranslationHelperPlugin
         private void GivenNameFirstChanged(object sender, EventArgs e)
         {
             ShowGivenNameFirst = KK_GivenNameFirst.Value;
-            OnBehaviorChanged(e);
+            OnCardTranslationBehaviorChanged(e);
         }
 
         [UsedImplicitly]

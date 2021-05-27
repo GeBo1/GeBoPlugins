@@ -50,7 +50,7 @@ namespace TranslationHelperPlugin
             _nameTracker = new TranslationTracker($"{nameof(CardNameTranslationManager)}.{nameof(_nameTracker)}");
             _cardsInProgress = new HashSet<string>();
             _waitWhileCardsAreInProgress = new WaitWhile(AreCardsInProgress);
-            TranslationHelper.BehaviorChanged += TranslationHelperBehaviorChanged;
+            TranslationHelper.CardTranslationBehaviorChanged += CardTranslationHelperBehaviorChanged;
         }
 
         private static char[] SpaceSplitter => TranslationHelper.SpaceSplitter;
@@ -61,7 +61,7 @@ namespace TranslationHelperPlugin
 
         internal NameTranslator NameTranslator => TranslationHelper.Instance.NameTranslator;
 
-        private void TranslationHelperBehaviorChanged(object sender, EventArgs e)
+        private void CardTranslationHelperBehaviorChanged(object sender, EventArgs e)
         {
             ClearCaches();
         }

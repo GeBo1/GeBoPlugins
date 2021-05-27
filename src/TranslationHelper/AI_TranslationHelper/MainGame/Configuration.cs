@@ -27,24 +27,27 @@ namespace TranslationHelperPlugin.MainGame
         internal static void AI_GameSpecificSetup(Harmony harmony)
         {
             Assert.IsNotNull(harmony);
-            TranslationHelper.BehaviorChanged += AIMainGameBehaviorChanged;
+            TranslationHelper.CardTranslationBehaviorChanged += AIMainGameCardTranslationBehaviorChanged;
         }
 
-        private static void AIMainGameBehaviorChanged(object sender, EventArgs e)
+        private static void AIMainGameCardTranslationBehaviorChanged(object sender, EventArgs e)
         {
             MerchantCharaName = null;
             // Merchant character is special in that in has as extra name used that's not
             // stored on the card
             if (_merchantRegistrationCoroutine != null)
             {
-                TranslationHelper.Instance.StopCoroutine(_merchantRegistrationCoroutine);
+                try
+                {
+                    TranslationHelper.Instance.SafeProc(th => th.StopCoroutine(_merchantRegistrationCoroutine));
+                }
+                catch { }
             }
 
             if (TranslationHelper.RegistrationGameModes.Contains(TranslationHelper.Instance.CurrentGameMode))
             {
-                _merchantRegistrationCoroutine =
-                    TranslationHelper.Instance.StartCoroutine(RegisterMerchantReplacements()
-                        .AppendCo(() => _merchantRegistrationCoroutine = null));
+                TranslationHelper.Instance.SafeProc(th => _merchantRegistrationCoroutine = th.StartCoroutine(
+                    RegisterMerchantReplacements().AppendCo(() => _merchantRegistrationCoroutine = null)));
             }
         }
 

@@ -43,7 +43,7 @@ namespace TranslationHelperPlugin
                 PathUtils.NormalizedPathComparer);
             _pathsInProgress = new HashSet<string>();
             _waitWhileFileInfosInProgress = new WaitWhile(AreFileInfosInProgress);
-            TranslationHelper.BehaviorChanged += TranslationHelperBehaviorChanged;
+            TranslationHelper.CardTranslationBehaviorChanged += CardTranslationHelperBehaviorChanged;
             ExtendedSave.CardBeingSaved += CardBeingSaved;
         }
 
@@ -61,7 +61,7 @@ namespace TranslationHelperPlugin
             _pathsInProgress.RemoveWhere(p => Path.GetFileName(p) == file.charaFileName);
         }
 
-        private void TranslationHelperBehaviorChanged(object sender, EventArgs e)
+        private void CardTranslationHelperBehaviorChanged(object sender, EventArgs e)
         {
             ClearCaches();
         }
@@ -209,7 +209,7 @@ namespace TranslationHelperPlugin
             void CallbackWrapper(string translationResult)
             {
                 Logger.DebugLogDebug(
-                    $"{nameof(CallbackWrapper)}: translationResult={translationResult}, origName={origName}, charafileInfo={charaFileInfo}, callback={callback}");
+                    $"{nameof(CallbackWrapper)}: translationResult={translationResult}, origName={origName}, charaFileInfo={charaFileInfo}, callback={callback}");
                 if (!translationResult.IsNullOrEmpty() &&
                     !TranslationHelper.NameStringComparer.Equals(translationResult, origName))
                 {

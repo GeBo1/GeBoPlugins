@@ -11,7 +11,7 @@ namespace TranslationHelperPlugin.Studio
         {
             Assert.IsNotNull(harmony);
             AlternateStudioCharaLoaderTranslators.Add(TryApplyLoadCharaFileTranslatedMap);
-            TranslationHelper.BehaviorChanged += CleanupHandler;
+            TranslationHelper.CardTranslationBehaviorChanged += CleanupHandler;
         }
 
         private static void CleanupHandler(object sender, EventArgs e)

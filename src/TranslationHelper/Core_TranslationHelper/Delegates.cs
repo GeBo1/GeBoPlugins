@@ -13,8 +13,6 @@ namespace TranslationHelperPlugin
     // Slow implementations should return false immediately when fast == true
     public delegate bool TryAlternateStudioCharaLoaderTranslation(NameScope sexOnlyScope, CharaFileInfo charaFileInfo, string originalName, bool fast);
 
-    public delegate void BehaviorChangedEventHandler(object sender, EventArgs e);
-
     [PublicAPI]
     public delegate NameScope NameScopeGetter();
 }

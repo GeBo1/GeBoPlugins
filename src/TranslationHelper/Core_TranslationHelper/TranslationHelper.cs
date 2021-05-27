@@ -7,6 +7,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using ExtensibleSaveFormat;
 using GeBoCommon;
+using GeBoCommon.AutoTranslation;
 using GeBoCommon.Utilities;
 using JetBrains.Annotations;
 using KKAPI;
@@ -29,12 +30,12 @@ namespace TranslationHelperPlugin
     [BepInDependency(GeBoAPI.GUID, GeBoAPI.Version)]
     [BepInDependency(KoikatuAPI.GUID, KoikatuAPI.VersionConst)]
     [BepInDependency(ExtendedSave.GUID)]
-    [BepInDependency(PluginData.Identifier, "4.13.0")] // need new APIs
+    [BepInDependency(PluginData.Identifier, "4.16.0")] // need new APIs
     public partial class TranslationHelper
     {
         public const string GUID = "com.gebo.bepinex.translationhelper";
         public const string PluginName = "Translation Helper";
-        public const string Version = "1.1.0.1";
+        public const string Version = "1.1.0.5";
 
         internal static new ManualLogSource Logger;
         private static TranslationHelper _instance;
@@ -149,8 +150,23 @@ namespace TranslationHelperPlugin
         /// <summary>
         ///     Occurs when behavior changes in such a way that previous translations are likely no longer correct.
         ///     Caches should be cleared and UI should be updated if possible.
+        ///     Will propagate to CardTranslationBehaviorChanged and AccelerationBehaviorChanged
         /// </summary>
-        public static event BehaviorChangedEventHandler BehaviorChanged;
+        public static event EventHandler<EventArgs> BehaviorChanged;
+
+        /// <summary>
+        ///     Occurs when behavior changes for card translation in such a way that previous translations are likely no longer
+        ///     correct.
+        ///     Caches should be cleared and UI should be updated if possible.
+        /// </summary>
+        public static event EventHandler<EventArgs> CardTranslationBehaviorChanged;
+
+        /// <summary>
+        ///     Occurs when behavior changes for acceleration in such a way that previous translations are likely no longer
+        ///     correct.
+        ///     Caches should be cleared and UI should be updated if possible.
+        /// </summary>
+        public static event EventHandler<EventArgs> AccelerationBehaviorChanged;
 
         internal static Dictionary<string, string> StringCacheInitializer()
         {
@@ -176,14 +192,39 @@ namespace TranslationHelperPlugin
 
         internal static void NotifyBehaviorChanged(EventArgs e)
         {
-            Instance.OnBehaviorChanged(e);
+            Instance.SafeProc(i => i.OnBehaviorChanged(e));
+        }
+
+        internal static void NotifyCardTranslationBehaviorChanged(EventArgs e)
+        {
+            Instance.SafeProc(i => i.OnCardTranslationBehaviorChanged(e));
+        }
+
+        internal static void NotifyAccelerationBehaviourChanged(EventArgs e)
+        {
+            Instance.SafeProc(i => i.OnAccelerationBehaviorChanged(e));
         }
 
         protected void OnBehaviorChanged(EventArgs e)
         {
-            Logger.DebugLogDebug($"{nameof(OnBehaviorChanged)}({e})");
-            BehaviorChanged?.Invoke(this, e);
+            Logger.DebugLogDebug($"{nameof(OnCardTranslationBehaviorChanged)}({e})");
+            NotifyCardTranslationBehaviorChanged(e);
+            NotifyAccelerationBehaviourChanged(e);
+            BehaviorChanged?.SafeInvoke(this, e);
         }
+
+        protected void OnCardTranslationBehaviorChanged(EventArgs e)
+        {
+            Logger.DebugLogDebug($"{nameof(OnCardTranslationBehaviorChanged)}({e})");
+            CardTranslationBehaviorChanged?.SafeInvoke(this, e);
+        }
+
+        protected void OnAccelerationBehaviorChanged(EventArgs e)
+        {
+            Logger.DebugLogDebug($"{nameof(OnCardTranslationBehaviorChanged)}({e})");
+            AccelerationBehaviorChanged?.SafeInvoke(this, e);
+        }
+
 
         internal void UpdateCurrentCardTranslationMode()
         {
@@ -227,7 +268,7 @@ namespace TranslationHelperPlugin
             }
 
             Logger.LogDebug($"UpdateCurrentCardTranslationMode: {origMode} => {CurrentCardLoadTranslationMode}");
-            OnBehaviorChanged(EventArgs.Empty);
+            OnCardTranslationBehaviorChanged(EventArgs.Empty);
         }
 
         internal void Main()
@@ -286,6 +327,7 @@ namespace TranslationHelperPlugin
             Logger = Logger ?? base.Logger;
 
             Configuration.Setup();
+            Acceleration.Configuration.Setup();
             Chara.Configuration.Setup();
             if (StudioAPI.InsideStudio)
             {
@@ -298,6 +340,12 @@ namespace TranslationHelperPlugin
             }
 
             GameSpecificAwake();
+            GeBoAPI.TranslationsLoaded += GeBoAPI_TranslationsLoaded;
+        }
+
+        private void GeBoAPI_TranslationsLoaded(object sender, EventArgs eventArgs)
+        {
+            NotifyBehaviorChanged(eventArgs);
         }
 
         internal void OnDestroy()

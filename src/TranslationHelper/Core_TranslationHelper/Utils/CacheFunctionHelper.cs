@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BepInEx.Logging;
 using GeBoCommon.Utilities;
 using UnityEngine;
 
@@ -11,12 +12,15 @@ namespace TranslationHelperPlugin.Utils
         private float _lastCheck;
         private float _staleTime;
 
+        internal static ManualLogSource Logger => TranslationHelper.Logger;
+
         internal CacheFunctionHelper()
         {
             _recentCalls = new HashSet<object>();
             _lastCheck = _staleTime = 0f;
 
-            TranslationHelper.BehaviorChanged += TranslationHelper_BehaviorChanged;
+            TranslationHelper.CardTranslationBehaviorChanged += TranslationHelper_BehaviorChanged;
+            TranslationHelper.AccelerationBehaviorChanged += TranslationHelper_BehaviorChanged;
         }
 
         private void TranslationHelper_BehaviorChanged(object sender, EventArgs e)
@@ -29,7 +33,7 @@ namespace TranslationHelperPlugin.Utils
             if (Time.fixedUnscaledTime <= _lastCheck) return;
             if (Time.fixedUnscaledTime >= _staleTime && _recentCalls.Count > 0)
             {
-                TranslationHelper.Logger.DebugLogDebug($"FreshnessCheck clearing: {_recentCalls.Count}");
+                Logger?.DebugLogDebug($"FreshnessCheck clearing: {_recentCalls.Count}");
                 _recentCalls.Clear();
             }
 

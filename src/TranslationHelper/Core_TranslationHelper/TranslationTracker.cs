@@ -19,12 +19,13 @@ namespace TranslationHelperPlugin
         private readonly string _trackerName;
         private readonly NameScopeDictionary<NameScopeTracker> _trackers;
 
-        public TranslationTracker(string trackerName, IEqualityComparer<string> comparer=null)
+        public TranslationTracker(string trackerName, IEqualityComparer<string> comparer = null)
         {
             _trackerName = trackerName;
             var stringComparer = comparer ?? StringComparer.Ordinal;
-            _trackers = new NameScopeDictionary<NameScopeTracker>(() => new NameScopeTracker(_trackerName, stringComparer));
-            TranslationHelper.BehaviorChanged += TranslationHelper_BehaviorChanged;
+            _trackers = new NameScopeDictionary<NameScopeTracker>(() =>
+                new NameScopeTracker(_trackerName, stringComparer));
+            TranslationHelper.CardTranslationBehaviorChanged += TranslationHelper_CardTranslationHelperBehaviorChanged;
         }
 
         [UsedImplicitly]
@@ -33,7 +34,7 @@ namespace TranslationHelperPlugin
 
         internal static ManualLogSource Logger => TranslationHelper.Logger;
 
-        private void TranslationHelper_BehaviorChanged(object sender, EventArgs e)
+        private void TranslationHelper_CardTranslationHelperBehaviorChanged(object sender, EventArgs e)
         {
             CancelOutstandingCoroutines();
             _trackers?.Clear();
@@ -46,14 +47,14 @@ namespace TranslationHelperPlugin
                 try
                 {
                     Logger.DebugLogDebug($"canceling {coroutine}");
-                    TranslationHelper.Instance.StartCoroutine(coroutine);
+                    TranslationHelper.Instance.StopCoroutine(coroutine);
                 }
 #pragma warning disable CA1031 // Do not catch general exception types
-                catch (Exception e)
+                catch (Exception err)
                 {
                     if (TranslationHelper.IsShuttingDown) continue;
-                    Logger.LogWarning(
-                        $"{_trackerName}.{nameof(CancelOutstandingCoroutines)}: unable to stop {coroutine}: {e.Message}");
+                    Logger.LogException(err,
+                        $"{_trackerName}.{nameof(CancelOutstandingCoroutines)}: unable to stop {coroutine}");
                 }
 #pragma warning restore CA1031 // Do not catch general exception types
             }
@@ -93,11 +94,7 @@ namespace TranslationHelperPlugin
         {
             lock (GetLock(scope))
             {
-                if (TryAddHandlers(scope, trackedKey, handlers))
-                {
-                    yield break;
-                }
-
+                if (TryAddHandlers(scope, trackedKey, handlers)) yield break;
                 TrackKey(scope, trackedKey, handlers);
             }
 
@@ -219,7 +216,6 @@ namespace TranslationHelperPlugin
                 {
                     while (true)
                     {
-
                         lock (_lock)
                         {
                             if (TryGetHandlers(trackedKey, out var handlers))

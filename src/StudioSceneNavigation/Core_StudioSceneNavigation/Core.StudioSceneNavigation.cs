@@ -33,7 +33,7 @@ namespace StudioSceneNavigationPlugin
     {
         public const string GUID = "com.gebo.bepinex.studioscenenavigation";
         public const string PluginName = "Studio Scene Navigation";
-        public const string Version = "1.0.0";
+        public const string Version = "1.0.2";
 
         private const float SaveDelay = 5f;
 
@@ -110,7 +110,7 @@ namespace StudioSceneNavigationPlugin
             }
         }
 
-        private static List<string> ScenePaths { get; set; } = new List<string>();
+        private static List<string> ScenePaths { get; set; } = new List<string>(0);
 
         private static List<string> NormalizedScenePaths => _normalizedScenePaths ??
                                                             (_normalizedScenePaths =
@@ -320,8 +320,7 @@ namespace StudioSceneNavigationPlugin
                     catch (Exception err)
                     {
                         if (!File.Exists(oldFile)) throw;
-                        Logger.LogError($"Error encountered, restoring {TrackLastLoadedSceneFile}: {err.Message}");
-                        Logger.DebugLogDebug(err);
+                        Logger.LogException(err, $"Error encountered, restoring {TrackLastLoadedSceneFile}");
 
                         File.Copy(oldFile, TrackLastLoadedSceneFile);
 
@@ -429,9 +428,8 @@ namespace StudioSceneNavigationPlugin
 #pragma warning disable CA1031 // Do not catch general exception types
                         catch (Exception err)
                         {
-                            Logger.LogError(
-                                $"{nameof(LoadTrackingFile)}: line {count}: {line.TrimEnd()}\n{err.Message}");
-                            Logger.LogDebug(err);
+                            Logger.LogException(err,
+                                $"{nameof(LoadTrackingFile)}: line {count}: {line.TrimEnd()}");
                         }
 #pragma warning restore CA1031 // Do not catch general exception types
                     }
@@ -518,8 +516,7 @@ namespace StudioSceneNavigationPlugin
 #pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception err)
             {
-                Logger.LogErrorMessage($"Error navigating scene: {err.Message}");
-                Logger.LogDebug(err);
+                Logger.LogException(err, "Error navigating scene");
             }
 #pragma warning restore CA1031 // Do not catch general exception types
             finally
@@ -611,9 +608,30 @@ namespace StudioSceneNavigationPlugin
             SetPage(page, sceneLoadScene);
 
             if (sceneLoadScene == null || page == 0) yield break;
-            sceneLoadScene.SafeProc(sls => sls.GetComponentsInChildren<ScrollRect>().SafeProc(0,
-                r => r.verticalScrollbar.SafeProc(sb =>
-                    sb.value = 1.0f - ((GetPage() + 1f) / GetNumPages(sls)))));
+
+
+            sceneLoadScene.SafeProc(sls => sls.GetComponentsInChildren<ScrollRect>().SafeProc(0, r =>
+            {
+                var buttonHeight = -1f;
+                var scrollBarHeight = -1f;
+
+
+                r.GetComponentsInChildren<Button>().SafeProc(0,
+                    b => b.GetComponent<RectTransform>().SafeProc(rt => buttonHeight = rt.rect.height));
+                r.verticalScrollbar.SafeProc(
+                    sb => sb.GetComponent<RectTransform>().SafeProc(rt => scrollBarHeight = rt.rect.height));
+                float scrollPos;
+                if (buttonHeight > 0f && scrollBarHeight > 0f)
+                {
+                    scrollPos = 1.0f - Mathf.Max(0f, (buttonHeight * (page - 1)) - scrollBarHeight);
+                }
+                else
+                {
+                    scrollPos = 1.0f - ((GetPage() + 1f) / GetNumPages(sls));
+                }
+
+                r.verticalScrollbar.SafeProc(sb => sb.value = scrollPos);
+            }));
         }
 
         private void TrackLastLoadedScene()

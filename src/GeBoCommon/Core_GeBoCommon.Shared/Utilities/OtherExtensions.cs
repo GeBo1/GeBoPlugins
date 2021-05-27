@@ -5,12 +5,14 @@ using System.Linq;
 using BepInEx.Logging;
 using JetBrains.Annotations;
 using BepInLogLevel = BepInEx.Logging.LogLevel;
+using Object = UnityEngine.Object;
 
 namespace GeBoCommon.Utilities
 {
     [PublicAPI]
     public static class OtherExtensions
     {
+        private static ManualLogSource Logger => Common.CurrentLogger;
         public static IEnumerable<KeyValuePair<int, T>> Enumerate<T>(this IEnumerable<T> array)
         {
             return array.Select((item, index) => new KeyValuePair<int, T>(index, item));
@@ -40,6 +42,27 @@ namespace GeBoCommon.Utilities
         public static void LogWarningMessage(this ManualLogSource logger, object obj)
         {
             logger.Log(BepInLogLevel.Message | BepInLogLevel.Warning, obj);
+        }
+
+        public static void LogException(this ManualLogSource logger, Exception exception, string message = null)
+        {
+            LogException(logger, exception, null, message);
+        }
+
+        public static void LogException(this ManualLogSource logger, Exception exception, Object context,
+            string message = null)
+        {
+            logger.LogWarning(string.IsNullOrEmpty(message)
+                ? $"{exception.GetPrettyTypeFullName()}: {exception.Message}"
+                : $"{exception.GetPrettyTypeFullName()}: {message}: {exception.Message}");
+            if (context == null)
+            {
+                UnityEngine.Debug.LogException(exception);
+            }
+            else
+            {
+                UnityEngine.Debug.LogException(exception, context);
+            }
         }
 
         public static ulong Sum(this IEnumerable<ulong> source)
@@ -75,6 +98,43 @@ namespace GeBoCommon.Utilities
         public static string GetPrettyTypeFullName(this object obj)
         {
             return obj.GetType().PrettyTypeFullName();
+        }
+
+
+        private static void SafeInvoke<TEventArgs>(Delegate[] eventHandlers, object sender, TEventArgs args)
+            where TEventArgs : EventArgs
+        {
+            foreach (var handler in eventHandlers)
+            {
+                try
+                {
+                    handler.DynamicInvoke(sender, args);
+                }
+                catch (Exception err)
+                {
+                    if (sender is Object unityObj)
+                    {
+                        Logger?.LogException(err, unityObj, "Unexpected error during event handling");
+                    }
+                    else
+                    {
+                        Logger?.LogException(err, "Unexpected error during event handling");
+                    }
+                }
+            }
+        }
+
+        public static void SafeInvoke<TEventArgs>(this EventHandler<TEventArgs> eventHandler, object sender,
+            TEventArgs args) where TEventArgs : EventArgs
+        {
+            if (eventHandler == null) return;
+            SafeInvoke(eventHandler.GetInvocationList(), sender, args);
+        }
+
+        public static void SafeInvoke(this EventHandler eventHandler, object sender, EventArgs args)
+        {
+            if (eventHandler == null) return;
+            SafeInvoke(eventHandler.GetInvocationList(), sender, args);
         }
     }
 }

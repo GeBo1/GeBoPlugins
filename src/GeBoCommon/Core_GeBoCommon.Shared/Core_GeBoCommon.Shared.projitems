@@ -9,6 +9,7 @@
     <Import_RootNamespace>GeBoCommon</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Common.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\OtherExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\StringUtils.cs" />

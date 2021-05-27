@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using BepInEx.Logging;
 using GeBoCommon;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
@@ -25,6 +26,9 @@ namespace TranslationHelperPlugin.Chara
     {
         private static readonly TranslationTracker TranslateFullNameTracker =
             new TranslationTracker(nameof(TranslateFullNameTracker));
+
+        [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Future proofing")]
+        private static ManualLogSource Logger => TranslationHelper.Logger;
 
         public static string GetRegistrationID(this ChaFile chaFile)
         {
@@ -55,7 +59,7 @@ namespace TranslationHelperPlugin.Chara
         public static Controller GetTranslationHelperController(this ChaControl chaControl)
         {
             Controller result = default;
-            //TranslationHelper.Logger?.LogDebug($"Extensions.GetTranslationHelperController (chaControl): {chaControl}");
+            //Logger?.LogDebug($"Extensions.GetTranslationHelperController (chaControl): {chaControl}");
 
             chaControl.SafeProcObject(cc => cc.gameObject.SafeProcObject(go => result = go.GetComponent<Controller>()));
             return result;
@@ -64,7 +68,7 @@ namespace TranslationHelperPlugin.Chara
         public static Controller GetTranslationHelperController(this ChaFile chaFile)
         {
             Controller result = default;
-            //TranslationHelper.Logger?.LogDebug($"Extensions.GetTranslationHelperController (chaFile): {chaFile}");
+            //Logger?.LogDebug($"Extensions.GetTranslationHelperController (chaFile): {chaFile}");
 
             chaFile.SafeProc(
                 cf => cf.GetChaControl().SafeProcObject(cc => result = cc.GetTranslationHelperController()));
@@ -86,7 +90,7 @@ namespace TranslationHelperPlugin.Chara
 
         public static void SetTranslatedName(this ChaFile chaFile, int index, string name)
         {
-            //TranslationHelper.Logger?.DebugLogDebug($"Extensions.SetTranslatedName: {chaFile} {index} {name}");
+            //Logger?.DebugLogDebug($"Extensions.SetTranslatedName: {chaFile} {index} {name}");
             chaFile.SafeProc(cf =>
                 cf.GetTranslationHelperController().SafeProcObject(c => c.SetTranslatedName(index, name)));
         }
@@ -144,10 +148,10 @@ namespace TranslationHelperPlugin.Chara
 
             var wrappedCallback =
                 CharaFileInfoTranslationManager.MakeCachingCallbackWrapper(origName, chaFile, scope, callback);
-            
+
 
             if (TranslationHelper.TryFastTranslateFullName(scope, origName, chaFile.GetFullPath(),
-                out string fastName) && !TranslationHelper.NameStringComparer.Equals(origName, fastName))
+                out var fastName) && !TranslationHelper.NameStringComparer.Equals(origName, fastName))
             {
                 wrappedCallback(fastName);
                 return;
@@ -161,17 +165,18 @@ namespace TranslationHelperPlugin.Chara
             var scope = new NameScope(chaFile.GetSex());
             var trackedName = chaFile.GetFullName();
 
-            
+
             IEnumerator TrackedCoroutine(IEnumerable<TranslationResultHandler> handlers)
             {
-                if (TranslationHelper.TryFastTranslateFullName(scope, trackedName, chaFile.GetFullPath(), out var fastName))
+                if (TranslationHelper.TryFastTranslateFullName(scope, trackedName, chaFile.GetFullPath(),
+                    out var fastName))
                 {
                     handlers.CallHandlers(new TranslationResult(trackedName, fastName));
                     yield break;
                 }
-                
+
                 yield return null;
-                
+
                 if (!CardNameTranslationManager.Instance.CardNeedsTranslation(chaFile))
                 {
                     // it's possible chaFile updated async

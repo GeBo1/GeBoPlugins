@@ -13,9 +13,9 @@ using TranslationHelperPlugin.Chara;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
-
 #if AI||HS2
 using AIChara;
+
 #endif
 
 namespace TranslationHelperPlugin.Maker
@@ -81,7 +81,7 @@ namespace TranslationHelperPlugin.Maker
 #pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception err)
                 {
-                    Logger.LogError($"Unable to monitor {entry.Key} InputField for changes: {err}");
+                    Logger.LogException(err, $"Unable to monitor {entry.Key} InputField for changes");
                 }
 #pragma warning restore CA1031 // Do not catch general exception types
             }

@@ -58,6 +58,7 @@ namespace TranslationHelperPlugin.Chara
                 {
                     _fullPath = PathUtils.NormalizePath(value);
                 }
+
                 return _fullPath;
             }
             internal set
@@ -65,7 +66,6 @@ namespace TranslationHelperPlugin.Chara
                 try
                 {
                     _fullPath = PathUtils.NormalizePath(value);
-
                 }
 #pragma warning disable CA1031 // Do not catch general exception types
                 catch
@@ -111,14 +111,14 @@ namespace TranslationHelperPlugin.Chara
 
         protected override void OnCardBeingSaved(GameMode currentGameMode)
         {
-            //TranslationHelper.Logger?.LogDebug($"Controller.OnCardBeingSaved: {RegistrationID}");
+            //Logger?.LogDebug($"Controller.OnCardBeingSaved: {RegistrationID}");
             if (RestoreNamesOnSave) RestoreCardNames();
             SetExtendedData(null);
         }
 
         internal void OnCardSaveComplete(GameMode gameMode)
         {
-            //TranslationHelper.Logger?.LogDebug($"Controller.OnCardSaveComplete: {RegistrationID}");
+            //Logger?.LogDebug($"Controller.OnCardSaveComplete: {RegistrationID}");
             if (!RestoreNamesOnSave) return;
             IsTranslated = false;
             for (var i = 0; i < GeBoAPI.Instance.ChaFileNameCount; i++)
@@ -166,7 +166,7 @@ namespace TranslationHelperPlugin.Chara
 #pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception err)
                 {
-                    Logger.LogWarning($"{this.GetPrettyTypeFullName()}: error stopping {routine}: {err}");
+                    Logger.LogException(err, this, $"error stopping {routine}");
                 }
 #pragma warning restore CA1031 // Do not catch general exception types
             }
@@ -176,7 +176,7 @@ namespace TranslationHelperPlugin.Chara
 
         private void RestoreCardNames()
         {
-            TranslationHelper.Logger?.DebugLogDebug($"Controller.RestoreCardNames: {RegistrationID}");
+            Logger?.DebugLogDebug($"Controller.RestoreCardNames: {RegistrationID}");
             if (!IsTranslated || TranslationHelper.IsShuttingDown || GeBoAPI.Instance == null) return;
             IsTranslated = false;
             for (var i = 0; i < GeBoAPI.Instance.ChaFileNames.Count; i++)
@@ -200,7 +200,7 @@ namespace TranslationHelperPlugin.Chara
 
         public void TranslateCardNames(bool cardFullyLoaded = true)
         {
-            TranslationHelper.Logger?.DebugLogDebug($"Controller.TranslateCardNames: {RegistrationID} {IsTranslated}");
+            Logger?.DebugLogDebug($"Controller.TranslateCardNames: {RegistrationID} {IsTranslated}");
             if (TranslationHelper.Instance.CurrentCardLoadTranslationMode == CardLoadTranslationMode.Disabled) return;
             if (!IsTranslated)
             {
@@ -225,7 +225,7 @@ namespace TranslationHelperPlugin.Chara
 
         public void RegisterReplacements(bool alreadyTranslated = false)
         {
-            //TranslationHelper.Logger?.DebugLogDebug($"Controller.RegisterReplacements: {RegistrationID}");
+            //Logger?.DebugLogDebug($"Controller.RegisterReplacements: {RegistrationID}");
             if (!TranslationHelper.RegisterActiveCharacters.Value ||
                 !TranslationHelper.RegistrationGameModes.Contains(TranslationHelper.Instance.CurrentGameMode))
             {
@@ -238,14 +238,14 @@ namespace TranslationHelperPlugin.Chara
 
         public void UnregisterReplacements()
         {
-            //TranslationHelper.Logger?.DebugLogDebug($"Controller.UnregisterReplacements: {RegistrationID}");
+            //Logger?.DebugLogDebug($"Controller.UnregisterReplacements: {RegistrationID}");
             if (TranslationHelper.IsShuttingDown) return;
             TranslationHelper.Instance.SafeProc(i => i.UnregisterReplacements(ChaFileControl).RunImmediately());
         }
 
         public void OnTranslationComplete(bool cardFullyLoaded = false)
         {
-            TranslationHelper.Logger?.DebugLogDebug($"Controller.OnTranslationComplete: {RegistrationID}");
+            Logger?.DebugLogDebug($"Controller.OnTranslationComplete: {RegistrationID}");
             TranslationInProgress = false;
             if (!cardFullyLoaded) return;
 

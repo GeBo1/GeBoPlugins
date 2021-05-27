@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using AIChara;
 using BepInEx.Logging;
+using GeBoCommon.Utilities;
 using HarmonyLib;
 using HS2;
 using UnityEngine.UI;
@@ -63,8 +64,7 @@ namespace GameWhoIsTherePlugin
 #pragma warning disable CA1031
             catch (Exception err)
             {
-                Logger.LogWarning($"Unexpected error: {err.Message}");
-                Logger.LogDebug(err);
+                Logger.LogException(err, nameof(MapSelecCursorEnterPrefix));
             }
 #pragma warning restore CA1031
         }
@@ -83,8 +83,7 @@ namespace GameWhoIsTherePlugin
 #pragma warning disable CA1031
             catch (Exception err)
             {
-                Logger.LogWarning($"Unexpected error: {err.Message}");
-                Logger.LogDebug(err);
+                Logger.LogException(err, nameof(ChaFileControl_LoadCharaFile_Postfix));
             }
 #pragma warning restore CA1031
         }
@@ -112,8 +111,7 @@ namespace GameWhoIsTherePlugin
 #pragma warning disable CA1031
             catch (Exception err)
             {
-                Logger.LogWarning($"Unexpected error: {err.Message}");
-                Logger.LogDebug(err);
+                Logger.LogException(err, nameof(MapSelecCursorEnterPostfix));
             }
 #pragma warning restore CA1031
         }

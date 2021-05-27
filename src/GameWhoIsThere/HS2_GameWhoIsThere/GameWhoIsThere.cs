@@ -15,9 +15,16 @@ namespace GameWhoIsTherePlugin
     {
         public const string GUID = "com.gebo.bepinex.whoisthere";
         public const string PluginName = "Who Is There?";
-        public const string Version = "1.0.1";
+        public const string Version = "1.0.1.1";
 
         private static GameWhoIsThere _instance;
+
+        internal static new ManualLogSource Logger;
+        private readonly ChaFileControl[] _chaFileControls = {null, null};
+
+        private readonly Text[] _labels = {null, null};
+        private bool _busy;
+        private bool _keyIdle = true;
 
         public static GameWhoIsThere Instance
         {
@@ -31,19 +38,38 @@ namespace GameWhoIsTherePlugin
                 return _instance;
             }
         }
-        
-        internal static new ManualLogSource Logger;
-        private readonly ChaFileControl[] _chaFileControls = {null, null};
-
-        private readonly Text[] _labels = {null, null};
-        private bool _busy;
-        private bool _keyIdle = true;
 
         public static ConfigEntry<bool> Enabled { get; private set; }
         public static ConfigEntry<KeyboardShortcut> ShowWhoIsThereShortcut { get; private set; }
 
         internal bool Active => InMyRoom && _labels.Any(x => x != null);
         internal bool InMyRoom { get; private set; }
+
+        internal void Reset()
+        {
+            for (var i = 0; i < _labels.Length; i++)
+            {
+                _labels[i] = null;
+                _chaFileControls[i] = null;
+            }
+        }
+
+        internal void Update()
+        {
+            if (!Active || _busy) return;
+
+            var isPressed = ShowWhoIsThereShortcut.Value.IsPressed();
+            if (_keyIdle)
+            {
+                if (!isPressed) return;
+                _keyIdle = false;
+                StartCoroutine(UpdateLabels());
+            }
+            else
+            {
+                if (!isPressed) _keyIdle = true;
+            }
+        }
 
         internal void Main()
         {
@@ -75,23 +101,6 @@ namespace GameWhoIsTherePlugin
             if (!Active && wasActive) Reset();
         }
 
-        internal void Update()
-        {
-            if (!Active || _busy) return;
-
-            var isPressed = ShowWhoIsThereShortcut.Value.IsPressed();
-            if (_keyIdle)
-            {
-                if (!isPressed) return;
-                _keyIdle = false;
-                StartCoroutine(UpdateLabels());
-            }
-            else
-            {
-                if (!isPressed) _keyIdle = true;
-            }
-        }
-
 
         private IEnumerator UpdateLabels()
         {
@@ -102,8 +111,9 @@ namespace GameWhoIsTherePlugin
             {
                 for (var i = 0; i < _labels.Length; i++)
                 {
-                    if (_labels[i] == null || _chaFileControls[i] == null) continue;
-                    _labels[i].text = _labels[i].text == "???" ? $"({_chaFileControls[i].parameter.fullname})" : "???";
+                    var cfc = _chaFileControls.SafeGet(i);
+                    if (cfc == null) continue;
+                    _labels.SafeProc(i, l => l.text = l.text == "???" ? $"({cfc.parameter.fullname})" : "???");
                 }
 
                 yield return null;
@@ -118,15 +128,6 @@ namespace GameWhoIsTherePlugin
         {
             _labels[index] = label;
             _chaFileControls[index] = who;
-        }
-
-        internal void Reset()
-        {
-            for (var i = 0; i < _labels.Length; i++)
-            {
-                _labels[i] = null;
-                _chaFileControls[i] = null;
-            }
         }
     }
 }

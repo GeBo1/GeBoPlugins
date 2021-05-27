@@ -9,6 +9,8 @@
     <Import_RootNamespace>TranslationHelperPlugin</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Acceleration\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Acceleration\Hooks.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AILike.TranslationHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Chara\Configuration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Chara\Extensions.cs" />

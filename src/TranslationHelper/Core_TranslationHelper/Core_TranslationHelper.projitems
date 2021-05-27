@@ -9,6 +9,8 @@
     <Import_RootNamespace>TranslationHelperPlugin</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Acceleration\Configuration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Acceleration\Hooks.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CharaFileInfoTranslationManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Chara\Controller.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Chara\Extensions.cs" />
@@ -48,6 +50,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Translation\NameTranslator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Translation\Configuration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Translation\Hooks.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Acceleration\StringMethodTranspilerHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\NamePresets.xsd">

@@ -284,7 +284,7 @@ namespace StudioSceneCharaInfoPlugin
                         //writer.Write($",{q}ERROR PROCESSING FILE{q}");
                         line.Add("ERROR PROCESSING FILE");
                         line.Add($"{err}".Replace(DQ, '\''));
-                        Logger.LogError($"error processing {displayPath}: {err}");
+                        Logger.LogException(err, $"error processing {displayPath}");
                     }
 #pragma warning restore CA1031 // Do not catch general exception types
 

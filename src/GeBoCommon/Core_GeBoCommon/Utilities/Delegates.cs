@@ -10,7 +10,7 @@ namespace GeBoCommon.Utilities
     [PublicAPI]
     public static class Delegates
     {
-        private static ManualLogSource Logger => GeBoAPI.Instance != null ? GeBoAPI.Instance.Logger : null;
+        private static ManualLogSource Logger => Common.CurrentLogger;
 
         public static Func<T> LazyReflectionGetter<T>(SimpleLazy<object> instLoader, string fieldName)
         {
@@ -51,7 +51,7 @@ namespace GeBoCommon.Utilities
                 innerGetter.Value(instance.Value);
             return getter.Compile();
         }
-        
+
         private static Func<object, T> LazyReflectionInstanceGetter<T>(Type type, string fieldName)
         {
             var fieldInfo = new SimpleLazy<FieldInfo>(() => AccessTools.Field(type, fieldName));

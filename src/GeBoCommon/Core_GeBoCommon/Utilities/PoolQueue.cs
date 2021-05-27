@@ -1,8 +1,8 @@
 ﻿using BepInEx.Logging;
 using JetBrains.Annotations;
-
 #if HS2||AI
 using System.Collections.Concurrent;
+
 #else
 using System.Collections.Generic;
 #endif
@@ -12,7 +12,7 @@ namespace GeBoCommon.Utilities
     [PublicAPI]
     internal abstract class BasePoolQueue<T>
     {
-        protected static ManualLogSource Logger => GeBoAPI.Instance != null ? GeBoAPI.Instance.Logger : null;
+        protected static ManualLogSource Logger => Common.CurrentLogger;
 
         public abstract int Count { get; }
         public abstract bool IsEmpty { get; }
@@ -20,7 +20,7 @@ namespace GeBoCommon.Utilities
         public abstract void Enqueue(T obj);
         public abstract void Clear();
 
-        public virtual int ReleaseObjects(int keep=-1)
+        public virtual int ReleaseObjects(int keep = -1)
         {
             var count = 0;
             while ((keep == -1 || Count > keep) && TryDequeue(out _)) count++;
@@ -38,7 +38,7 @@ namespace GeBoCommon.Utilities
 
         public override void Clear()
         {
-           _queue = new ConcurrentQueue<T>();
+            _queue = new ConcurrentQueue<T>();
         }
 
         public override bool TryDequeue(out T obj)

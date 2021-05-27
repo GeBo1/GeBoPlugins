@@ -8,7 +8,7 @@ namespace GeBoCommon.Utilities
         private static readonly Dictionary<IEqualityComparer<TKey>, ObjectPool<Dictionary<TKey, TValue>>> Pools =
             new Dictionary<IEqualityComparer<TKey>, ObjectPool<Dictionary<TKey, TValue>>>();
 
-        private static ManualLogSource Logger => GeBoAPI.Instance != null ? GeBoAPI.Instance.Logger : null;
+        private static ManualLogSource Logger => Common.CurrentLogger;
 
         public static Dictionary<TKey, TValue> Get()
         {
@@ -38,7 +38,8 @@ namespace GeBoCommon.Utilities
         public static void Release(Dictionary<TKey, TValue> obj)
         {
             if (!GeBoAPI.EnableObjectPools) return;
-            Logger?.DebugLogDebug($"{typeof(DictionaryPool<TKey, TValue>).PrettyTypeFullName()}.{nameof(Release)}: start");
+            Logger?.DebugLogDebug(
+                $"{typeof(DictionaryPool<TKey, TValue>).PrettyTypeFullName()}.{nameof(Release)}: start");
             if (Pools.TryGetValue(obj.Comparer, out var pool))
             {
                 pool.Release(obj);

@@ -31,7 +31,7 @@ namespace GeBoCommon.Utilities
 
         public long Limit { get; }
 
-        private static ManualLogSource Logger => GeBoAPI.Instance.Logger;
+        private static ManualLogSource Logger => Common.CurrentLogger;
 
         private void StudioSaveLoadApi_SceneLoad(object sender, SceneLoadEventArgs e)
         {
@@ -72,7 +72,6 @@ namespace GeBoCommon.Utilities
 
         public IEnumerator Start()
         {
-            
             // ReSharper disable RedundantAssignment - use in DEBUG
             var start = Time.realtimeSinceStartup;
             var startFrame = Time.renderedFrameCount;

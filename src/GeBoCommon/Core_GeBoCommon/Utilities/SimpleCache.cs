@@ -22,7 +22,7 @@ namespace GeBoCommon.Utilities
 
         protected bool Disposed { get; private set; }
 
-        protected ManualLogSource Logger => GeBoAPI.Instance != null ? GeBoAPI.Instance.Logger : null;
+        protected ManualLogSource Logger => Common.CurrentLogger;
         public int Count => _cache.Count;
 
         public TValue this[TKey key] => Get(key);
@@ -53,8 +53,7 @@ namespace GeBoCommon.Utilities
             }
             catch (Exception err)
             {
-                Logger.LogError($"Unexpected error, bypassing {this.GetPrettyTypeName()} caching: {err.Message}");
-                Logger.LogDebug(err);
+                Logger.LogException(err, $"Unexpected error, bypassing {this.GetPrettyTypeName()} caching");
             }
 
             return _loader(key);

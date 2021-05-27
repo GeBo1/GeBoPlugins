@@ -30,7 +30,7 @@ namespace GeBoCommon.Utilities
             KnownPools.Add(new WeakReference(this));
         }
 
-        protected static ManualLogSource Logger => GeBoAPI.Instance != null ? GeBoAPI.Instance.Logger : null;
+        protected static ManualLogSource Logger => Common.CurrentLogger;
 
 
         public abstract int Count { get; }

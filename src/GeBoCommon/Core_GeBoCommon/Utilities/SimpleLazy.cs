@@ -1,8 +1,10 @@
 ﻿using System;
 using JetBrains.Annotations;
+
 #if (HS || PH || KK)
 using System.Runtime.CompilerServices;
 using System.Threading;
+
 #endif
 
 namespace GeBoCommon.Utilities

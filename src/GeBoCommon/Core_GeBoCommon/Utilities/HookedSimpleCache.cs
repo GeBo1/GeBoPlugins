@@ -4,7 +4,6 @@ using System.ComponentModel;
 using HarmonyLib;
 using JetBrains.Annotations;
 using UnityEngine;
-using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 
 namespace GeBoCommon.Utilities
@@ -13,9 +12,6 @@ namespace GeBoCommon.Utilities
         where THookTarget : MonoBehaviour
     {
         public delegate TKey HookConverter(THookTarget hookTarget);
-
-        public delegate void HookEventHandler(HookedSimpleCache<TKey, TValue, THookTarget> sender,
-            HookedSimpleCacheEventArgs<TKey> e);
 
         private readonly HookConverter _convertTargetToKey;
 
@@ -79,14 +75,12 @@ namespace GeBoCommon.Utilities
             OnHookPostfix((HookedSimpleCacheEventArgs<TKey>)e);
         }
 
-        public event HookEventHandler HookPrefix;
-        public event HookEventHandler HookPostfix;
+        public event EventHandler<HookedSimpleCacheEventArgs<TKey>> HookPrefix;
+        public event EventHandler<HookedSimpleCacheEventArgs<TKey>> HookPostfix;
 
-        private void DefaultRemovalHook(HookedSimpleCache<TKey, TValue, THookTarget> sender,
-            HookedSimpleCacheEventArgs<TKey> e)
+        private void DefaultRemovalHook(object sender, HookedSimpleCacheEventArgs<TKey> e)
         {
-            Assert.IsNotNull(this);
-            sender.Remove(e.Target);
+            Remove(e.Target);
             if (HookedSimpleCacheState.NeedsCleanup(typeof(THookTarget)))
             {
                 HookedSimpleCacheState.Cleanup(typeof(THookTarget));
@@ -102,12 +96,12 @@ namespace GeBoCommon.Utilities
 
         public void OnHookPrefix(HookedSimpleCacheEventArgs<TKey> e)
         {
-            HookPrefix?.Invoke(this, e);
+            HookPrefix?.SafeInvoke(this, e);
         }
 
         public void OnHookPostfix(HookedSimpleCacheEventArgs<TKey> e)
         {
-            HookPostfix?.Invoke(this, e);
+            HookPostfix?.SafeInvoke(this, e);
         }
 
         internal static void PrefixHook(THookTarget __instance)

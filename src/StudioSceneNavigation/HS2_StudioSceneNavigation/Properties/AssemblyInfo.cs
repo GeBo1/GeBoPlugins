@@ -26,3 +26,4 @@ using static StudioSceneNavigationPlugin.StudioSceneNavigation;
 [assembly: AssemblyDescription(PluginName + " for " + GeBoCommon.Constants.GameName)]
 [assembly: AssemblyTitle(GeBoCommon.Constants.Prefix + "_" + nameof(StudioSceneNavigationPlugin.StudioSceneNavigation))]
 [assembly: AssemblyProduct(GeBoCommon.Constants.Prefix + "_" + nameof(StudioSceneNavigationPlugin.StudioSceneNavigation))]
+[assembly: AssemblyCompany("https://github.com/GeBo1/GeBoPlugins")]

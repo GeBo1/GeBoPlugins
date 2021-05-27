@@ -26,3 +26,4 @@ using static StudioMultiSelectCharaPlugin.StudioMultiSelectChara;
 [assembly: AssemblyTitle(GeBoCommon.Constants.Prefix + "_" + nameof(StudioMultiSelectCharaPlugin.StudioMultiSelectChara))]
 [assembly: AssemblyProduct(GeBoCommon.Constants.Prefix + "_" + nameof(StudioMultiSelectCharaPlugin.StudioMultiSelectChara))]
 
+[assembly: AssemblyCompany("https://github.com/GeBo1/GeBoPlugins")]

@@ -36,3 +36,4 @@ using static TranslationCacheCleanerPlugin.TranslationCacheCleaner;
 [assembly: AssemblyTitle(GeBoCommon.Constants.Prefix + "_" + nameof(TranslationCacheCleanerPlugin.TranslationCacheCleaner))]
 [assembly: AssemblyProduct(GeBoCommon.Constants.Prefix + "_" + nameof(TranslationCacheCleanerPlugin.TranslationCacheCleaner))]
 
+[assembly: AssemblyCompany("https://github.com/GeBo1/GeBoPlugins")]

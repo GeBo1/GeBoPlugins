@@ -25,3 +25,4 @@ using static StudioSceneCharaInfoPlugin.StudioSceneCharaInfo;
 [assembly: AssemblyDescription(PluginName + " for " + GeBoCommon.Constants.GameName)]
 [assembly: AssemblyTitle(GeBoCommon.Constants.Prefix + "_" + nameof(StudioSceneCharaInfoPlugin.StudioSceneCharaInfo))]
 [assembly: AssemblyProduct(GeBoCommon.Constants.Prefix + "_" + nameof(StudioSceneCharaInfoPlugin.StudioSceneCharaInfo))]
+[assembly: AssemblyCompany("https://github.com/GeBo1/GeBoPlugins")]

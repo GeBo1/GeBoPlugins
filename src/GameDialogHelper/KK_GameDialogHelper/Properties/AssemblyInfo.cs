@@ -25,3 +25,4 @@ using static GameDialogHelperPlugin.GameDialogHelper;
 [assembly: AssemblyDescription(PluginName + " for Koikatsu")]
 [assembly: AssemblyTitle("KK_" + nameof(GameDialogHelperPlugin.GameDialogHelper))]
 [assembly: AssemblyProduct("KK_" + nameof(GameDialogHelperPlugin.GameDialogHelper))]
+[assembly: AssemblyCompany("https://github.com/GeBo1/GeBoPlugins")]

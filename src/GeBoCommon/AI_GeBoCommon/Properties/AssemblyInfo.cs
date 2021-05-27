@@ -25,3 +25,4 @@ using static GeBoCommon.GeBoAPI;
 [assembly: AssemblyDescription(PluginName + " for " + GeBoCommon.Constants.GameName)]
 [assembly: AssemblyTitle(GeBoCommon.Constants.Prefix + "_" + PluginName)]
 [assembly: AssemblyProduct(GeBoCommon.Constants.Prefix + "_" + PluginName)]
+[assembly: AssemblyCompany("https://github.com/GeBo1/GeBoPlugins")]

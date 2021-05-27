@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using BepInEx.Logging;
 using GeBoCommon.Chara;
+using GeBoCommon.Utilities;
 using HarmonyLib;
 using JetBrains.Annotations;
 
@@ -12,6 +14,8 @@ namespace TranslationHelperPlugin.Utils
     internal static partial class CharaFileInfoWrapper
     {
         private static readonly Dictionary<string, Type> WrapperTypes = new Dictionary<string, Type>();
+
+        private static ManualLogSource Logger => TranslationHelper.Logger;
 
         public static ICharaFileInfo CreateWrapper(Type targetType, object target)
         {
@@ -24,8 +28,8 @@ namespace TranslationHelperPlugin.Utils
 #pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception err)
                 {
-                    TranslationHelper.Logger.LogDebug(
-                        $"CreateWrapper: Registered wrapper {wrapperType} for {targetType} failed, falling back to default wrapper: {err}");
+                    Logger?.LogException(err,
+                        $"CreateWrapper: Registered wrapper {wrapperType} for {targetType} failed, falling back to default wrapper");
                 }
 #pragma warning restore CA1031 // Do not catch general exception types
             }
@@ -65,6 +69,8 @@ namespace TranslationHelperPlugin.Utils
         {
             _target = target;
         }
+
+        private static ManualLogSource Logger => TranslationHelper.Logger;
 
 
         public int Index => IndexGetter(_target);
@@ -106,8 +112,8 @@ namespace TranslationHelperPlugin.Utils
                 var propSetter = prop?.GetSetMethod(false) ?? prop?.GetSetMethod(true);
                 if (propSetter == null) continue;
 
-                TranslationHelper.Logger.LogDebug(
-                    $"Found {names[0]} property for type {targetType.FullName} with name {name}");
+                Logger?.LogDebug(
+                    $"Found {names[0]} property for type {targetType.FullName} with name {name} (property type: {prop.PropertyType}, value type: {typeof(TValue)})");
 
                 try
                 {
@@ -129,13 +135,13 @@ namespace TranslationHelperPlugin.Utils
                 if (field == null) continue;
                 Expression<Action<T, TValue>> setter = (obj, value) => field.SetValue(obj, value);
                 // log if found as field because AccessTools will have warned of missing property
-                TranslationHelper.Logger.LogDebug(
-                    $"Found field {names[0]} for type {targetType.FullName} with name {name}");
+                Logger?.LogDebug(
+                    $"Found field {names[0]} for type {targetType.FullName} with name {name} (field type: {field.FieldType}, value type: {typeof(TValue)})");
                 return setter.Compile();
             }
 
             var msg = $"unable to expose setter for {names[0]} on {targetType.FullName}";
-            TranslationHelper.Logger.LogWarning(msg);
+            Logger?.LogWarning(msg);
             return (obj, value) => throw new NotSupportedException(msg);
         }
 
@@ -154,8 +160,8 @@ namespace TranslationHelperPlugin.Utils
                 if (propGetter == null) continue;
 
 
-                TranslationHelper.Logger.LogDebug(
-                    $"Found property {names[0]} for type {targetType.FullName} with name {name}");
+                Logger?.LogDebug(
+                    $"Found property {names[0]} for type {targetType.FullName} with name {name} (property type: {prop.PropertyType}, result type: {typeof(TResult)})");
 
 
                 try
@@ -177,14 +183,15 @@ namespace TranslationHelperPlugin.Utils
                 //var field = AccessTools.Field(targetType, name);
                 var field = targetType.GetField(name, AccessTools.all);
                 if (field == null) continue;
+                var destType = typeof(TResult);
                 Expression<Func<T, TResult>> getter = obj => (TResult)field.GetValue(obj);
-                TranslationHelper.Logger.LogDebug(
-                    $"Found field {names[0]} for type {targetType.FullName} with name {name}");
+                Logger?.LogDebug(
+                    $"Found field {names[0]} for type {targetType.FullName} with name {name} (field type: {field.FieldType}, result type: {typeof(TResult)})");
                 return getter.Compile();
             }
 
             var msg = $"unable to expose getter for {names[0]} on {targetType.FullName}";
-            TranslationHelper.Logger.LogWarning(msg);
+            Logger?.LogWarning(msg);
             return obj => throw new NotSupportedException(msg);
         }
     }

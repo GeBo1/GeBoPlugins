@@ -114,11 +114,12 @@ namespace GeBoCommon.Utilities
                 {
                     if (sender is Object unityObj)
                     {
-                        Logger?.LogException(err, unityObj, "Unexpected error during event handling");
+                        Logger?.LogException(err, unityObj,
+                            $"{nameof(SafeInvoke)}<{typeof(TEventArgs).GetPrettyTypeName()}>");
                     }
                     else
                     {
-                        Logger?.LogException(err, "Unexpected error during event handling");
+                        Logger?.LogException(err, $"{nameof(SafeInvoke)}<{typeof(TEventArgs).GetPrettyTypeName()}>");
                     }
                 }
             }

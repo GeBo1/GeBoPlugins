@@ -1,22 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using JetBrains.Annotations;
 
 namespace GeBoCommon.Chara
 {
     [SerializableAttribute]
     public enum NameType
     {
+        [UsedImplicitly]
         Unclassified = 0,
+        [UsedImplicitly]
         Given = 1,
+        [UsedImplicitly]
         Family = 2
     }
 
     [SerializableAttribute]
     public enum CharacterSex
     {
+        [UsedImplicitly]
         Unspecified = -1,
+        [UsedImplicitly]
         Male = 0,
+        [UsedImplicitly]
         Female = 1
     }
 

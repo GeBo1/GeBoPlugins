@@ -75,7 +75,9 @@ namespace GeBoCommon.Utilities
             OnHookPostfix((HookedSimpleCacheEventArgs<TKey>)e);
         }
 
+        [PublicAPI]
         public event EventHandler<HookedSimpleCacheEventArgs<TKey>> HookPrefix;
+        [PublicAPI]
         public event EventHandler<HookedSimpleCacheEventArgs<TKey>> HookPostfix;
 
         private void DefaultRemovalHook(object sender, HookedSimpleCacheEventArgs<TKey> e)

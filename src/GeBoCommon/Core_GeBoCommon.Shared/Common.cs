@@ -1,4 +1,5 @@
 ﻿using BepInEx.Logging;
+using JetBrains.Annotations;
 
 namespace GeBoCommon
 {
@@ -9,6 +10,7 @@ namespace GeBoCommon
         internal static ManualLogSource CurrentLogger =>
             _currentLogger ?? (_currentLogger = new ManualLogSource(nameof(GeBoCommon)));
 
+        [UsedImplicitly]
         internal static void SetCurrentLogger(ManualLogSource logger)
         {
             _currentLogger = logger;

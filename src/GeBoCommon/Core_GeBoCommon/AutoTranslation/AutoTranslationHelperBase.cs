@@ -7,27 +7,30 @@ namespace GeBoCommon.AutoTranslation
 {
     internal class AutoTranslationHelperBase
     {
-        protected ManualLogSource Logger => Common.CurrentLogger;
+        protected static ManualLogSource Logger => Common.CurrentLogger;
 
-        protected bool FallbackTryTranslate(string _, out string translatedText)
+        protected static bool FallbackTryTranslate(string key, out string translatedText)
         {
             translatedText = string.Empty;
+            _ = key;
             return false;
         }
 
-        protected void FallbackAddTranslationToCache(string key, string value, bool persistToDisk, int translationType,
+        protected static void FallbackAddTranslationToCache(string key, string value, bool persistToDisk,
+            int translationType,
             int scope)
         {
             _ = persistToDisk || translationType == scope || string.IsNullOrEmpty(key ?? value);
         }
 
-        protected void FallbackTranslateAsync(string _, Action<ITranslationResult> onCompleted,
+        protected static void FallbackTranslateAsync(string key, Action<ITranslationResult> onCompleted,
             ITranslationResult cannedResult)
         {
+            _ = key;
             onCompleted(cannedResult);
         }
 
-        protected int FallbackGetCurrentTranslationScope()
+        protected static int FallbackGetCurrentTranslationScope()
         {
             try
             {
@@ -48,13 +51,14 @@ namespace GeBoCommon.AutoTranslation
             }
         }
 
-        protected string NoOpTransformStringDelegate(string text)
+        protected static string NoOpTransformStringDelegate(string text)
         {
             return text;
         }
 
-        protected bool AlwaysFalseTestStringDelegate(string text)
+        protected static bool AlwaysFalseTestStringDelegate(string text)
         {
+            _ = text;
             return false;
         }
     }

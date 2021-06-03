@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Threading;
 using BepInEx.Logging;
+using JetBrains.Annotations;
 using KKAPI;
 using KKAPI.Studio;
 using KKAPI.Studio.SaveLoad;
@@ -92,6 +93,7 @@ namespace GeBoCommon.Utilities
                 $"CoroutineLimiter {_limiterName} ready ({current}/{Limit}): limited: {limited}, delay: {Time.realtimeSinceStartup - start:000.0000000000} ({Time.renderedFrameCount - startFrame} frames)");
         }
 
+        [PublicAPI]
         public IEnumerator End()
         {
             EndImmediately();

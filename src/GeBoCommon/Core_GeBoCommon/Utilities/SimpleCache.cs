@@ -33,6 +33,7 @@ namespace GeBoCommon.Utilities
             GC.SuppressFinalize(this);
         }
 
+        [SuppressMessage("ReSharper", "VirtualMemberNeverOverridden.Global")]
         protected virtual void Dispose(bool disposing)
         {
             Logger?.DebugLogDebug($"Dispose({disposing}): {this.GetPrettyTypeFullName()}");
@@ -43,6 +44,7 @@ namespace GeBoCommon.Utilities
             Lock.Dispose();
         }
 
+        // ReSharper disable Unity.PerformanceAnalysis
         [SuppressMessage("Design", "CA1031:Do not catch general exception types",
             Justification = "Any non-cache related exception should be hit again when _loader is called")]
         public TValue Get(TKey key)
@@ -85,6 +87,7 @@ namespace GeBoCommon.Utilities
             }
         }
 
+        [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
         public virtual bool Remove(TKey key)
         {
             if (Disposed) return false;

@@ -25,6 +25,7 @@ namespace GameWhoIsTherePlugin
         private static readonly List<ChaFileControl> InMapSeleChaFileControls = new List<ChaFileControl> {null, null};
         internal static ManualLogSource Logger => GameWhoIsThere.Logger;
 
+        // ReSharper disable once UnusedMethodReturnValue.Global
         internal static Harmony SetupHooks()
         {
             return Harmony.CreateAndPatchAll(typeof(Hooks));
@@ -32,34 +33,31 @@ namespace GameWhoIsTherePlugin
 
 
         [HarmonyPrefix]
-        // ReSharper disable once StringLiteralTypo
-        [HarmonyPatch(typeof(MapSelectUI), "MapSelecCursorEnter")]
+        [HarmonyPatch(typeof(MapSelectUI), nameof(MapSelectUI.MapSelecCursorEnter))]
         [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "HarmonyPatch")]
         internal static void MapSelecCursorEnterPrefix(MapSelectUI __instance)
         {
+            void SetLabel(int i, MapSelectUI.MapSelectThumbnailUI thumbUi)
+            {
+                InMapSelecCursorLabels[i] = null;
+                thumbUi.SafeProc(ui => InMapSelecCursorLabels[i] = ui.text);
+            }
             try
             {
                 if (!GameWhoIsThere.Instance.InMyRoom) return;
                 _inMapSelecCursorEnter = true;
                 GameWhoIsThere.Instance.Reset();
                 _inMapSelecCursorEnterIndex = 0;
-                var i = 0;
-                foreach (var uiName in new[] {"firstCharaThumbnailUI", "secondCharaThumbnailUI"})
+                if (__instance.SafeProc(inst =>
                 {
-                    try
-                    {
-                        InMapSelecCursorLabels[i] = Traverse.Create(__instance)?.Field(uiName)
-                            ?.Field<Text>("text")?.Value;
-                    }
-#pragma warning disable CA1031 // Do not catch general exception types
-                    catch
-                    {
-                        InMapSelecCursorLabels[i] = null;
-                    }
-#pragma warning restore CA1031 // Do not catch general exception types
-
-                    i++;
+                    SetLabel(0, inst.firstCharaThumbnailUI);
+                    SetLabel(1, inst.secondCharaThumbnailUI);
+                }))
+                {
+                    return;
                 }
+                InMapSelecCursorLabels[0] = null;
+                InMapSelecCursorLabels[1] = null;
             }
 #pragma warning disable CA1031
             catch (Exception err)
@@ -89,8 +87,7 @@ namespace GameWhoIsTherePlugin
         }
 
         [HarmonyPostfix]
-        // ReSharper disable once StringLiteralTypo
-        [HarmonyPatch(typeof(MapSelectUI), "MapSelecCursorEnter")]
+        [HarmonyPatch(typeof(MapSelectUI), nameof(MapSelectUI.MapSelecCursorEnter))]
         [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "HarmonyPatch")]
         internal static void MapSelecCursorEnterPostfix()
         {
@@ -105,7 +102,8 @@ namespace GameWhoIsTherePlugin
                     InMapSelecCursorLabels[i] = null;
                     InMapSelecCursorLabels[i] = null;
                     if (label == null || chaFileControl == null || label.text != "???") continue;
-                    GameWhoIsThere.Instance.ConfigureDisplay(i, label, chaFileControl);
+                    var idx = i;
+                    GameWhoIsThere.Instance.SafeProc(inst => inst.ConfigureDisplay(idx, label, chaFileControl));
                 }
             }
 #pragma warning disable CA1031

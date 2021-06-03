@@ -11,7 +11,7 @@ namespace StudioSceneNavigationPlugin
     {
         internal static class Hooks
         {
-            [HarmonyPatch(typeof(SceneLoadScene), "InitInfo")]
+            [HarmonyPatch(typeof(SceneLoadScene), nameof(SceneLoadScene.InitInfo))]
             [HarmonyPostfix]
             internal static void StudioInitInfoPost(SceneLoadScene __instance)
             {

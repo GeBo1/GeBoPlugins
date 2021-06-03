@@ -33,7 +33,7 @@ namespace StudioSceneNavigationPlugin
     {
         public const string GUID = "com.gebo.bepinex.studioscenenavigation";
         public const string PluginName = "Studio Scene Navigation";
-        public const string Version = "1.0.2";
+        public const string Version = "1.0.2.1";
 
         private const float SaveDelay = 5f;
 
@@ -208,7 +208,7 @@ namespace StudioSceneNavigationPlugin
             GeBoAPI.Instance.SetupNotificationSoundConfig(GUID, NotificationSoundsEnabled);
         }
 
-        private void PlayNotificationSound(NotificationSound notificationSound)
+        private static void PlayNotificationSound(NotificationSound notificationSound)
         {
             GeBoAPI.Instance.PlayNotificationSound(notificationSound, GUID);
         }
@@ -221,7 +221,7 @@ namespace StudioSceneNavigationPlugin
                 _currentScenePath = _currentScenePathCandidate = string.Empty;
             }
 
-            var coroutines = ListPool<IEnumerator>.Get();
+            var coroutines = GeBoCommon.Utilities.ListPool<IEnumerator>.Get();
             try
             {
                 if (!string.IsNullOrEmpty(_currentScenePathCandidate) && e.Operation == SceneOperationKind.Load)
@@ -246,7 +246,7 @@ namespace StudioSceneNavigationPlugin
             }
             finally
             {
-                ListPool<IEnumerator>.Release(coroutines);
+                GeBoCommon.Utilities.ListPool<IEnumerator>.Release(coroutines);
             }
         }
 
@@ -320,7 +320,7 @@ namespace StudioSceneNavigationPlugin
                     catch (Exception err)
                     {
                         if (!File.Exists(oldFile)) throw;
-                        Logger.LogException(err, $"Error encountered, restoring {TrackLastLoadedSceneFile}");
+                        Logger.LogException(err, this, $"{nameof(SaveTrackingFile)}: Error encountered, restoring {TrackLastLoadedSceneFile}");
 
                         File.Copy(oldFile, TrackLastLoadedSceneFile);
 
@@ -339,7 +339,7 @@ namespace StudioSceneNavigationPlugin
             }
         }
 
-        private bool TryReadTrackingHeader(StreamReader reader, out Version version, out int expectedCount)
+        private static bool TryReadTrackingHeader(StreamReader reader, out Version version, out int expectedCount)
         {
             version = new Version(0, 0, 0, 0);
             expectedCount = -1;
@@ -492,7 +492,7 @@ namespace StudioSceneNavigationPlugin
                         nextImage = null;
                     }
 
-                    var coroutines = ListPool<IEnumerator>.Get();
+                    var coroutines = GeBoCommon.Utilities.ListPool<IEnumerator>.Get();
                     try
                     {
                         coroutines.AddRange(new[]
@@ -507,7 +507,7 @@ namespace StudioSceneNavigationPlugin
                     }
                     finally
                     {
-                        ListPool<IEnumerator>.Release(coroutines);
+                        GeBoCommon.Utilities.ListPool<IEnumerator>.Release(coroutines);
                     }
 
                     navigated = true;
@@ -516,7 +516,7 @@ namespace StudioSceneNavigationPlugin
 #pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception err)
             {
-                Logger.LogException(err, "Error navigating scene");
+                Logger.LogException(err, this, nameof(NavigateScene));
             }
 #pragma warning restore CA1031 // Do not catch general exception types
             finally

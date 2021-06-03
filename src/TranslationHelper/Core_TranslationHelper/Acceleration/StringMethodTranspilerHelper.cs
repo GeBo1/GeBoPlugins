@@ -110,7 +110,7 @@ namespace TranslationHelperPlugin.Acceleration
                 }
                 catch (Exception err)
                 {
-                    Logger?.LogException(err, "Falling back to standard string.Format");
+                    Logger?.LogException(err, $"{nameof(Format)}: Falling back to standard string.Format");
                     // ReSharper disable once RedundantAssignment - used in debug builds
                     return result = string.Format(format, args);
                 }

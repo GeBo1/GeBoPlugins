@@ -59,7 +59,7 @@ namespace TranslationHelperPlugin
 
         internal static CardNameTranslationManager Instance => TranslationHelper.CardNameManager;
 
-        internal NameTranslator NameTranslator => TranslationHelper.Instance.NameTranslator;
+        internal virtual NameTranslator NameTranslator => TranslationHelper.Instance == null ? null : TranslationHelper.Instance.NameTranslator;
 
         private void CardTranslationHelperBehaviorChanged(object sender, EventArgs e)
         {
@@ -81,7 +81,7 @@ namespace TranslationHelperPlugin
             yield return _waitWhileCardsAreInProgress;
         }
 
-        public bool CardNeedsTranslation(ChaFile file)
+        public virtual bool CardNeedsTranslation(ChaFile file)
         {
             return file.EnumerateNames().Any(name => StringUtils.ContainsJapaneseChar(name.Value));
         }
@@ -105,7 +105,7 @@ namespace TranslationHelperPlugin
             Logger.DebugLogDebug($"TranslateCardNames: {file}: card done: {regId}");
         }
 
-        private void ApplyTranslations(ChaFile file)
+        protected virtual void ApplyTranslations(ChaFile file)
         {
             if (file.TryGetTranslationHelperController(out var controller))
             {
@@ -439,6 +439,7 @@ namespace TranslationHelperPlugin
                 Complete = false;
             }
 
+            [UsedImplicitly]
             internal bool Complete { get; private set; }
 
             protected abstract IEnumerator StartJobs();
@@ -590,12 +591,11 @@ namespace TranslationHelperPlugin
 
             protected override Coroutine StartCoroutine(IEnumerator enumerator)
             {
-                Controller controller = null;
-                _chaFile.SafeProc(cf => cf.GetTranslationHelperController().SafeProcObject(c => controller = c));
-
-                return controller != null
-                    ? controller.StartMonitoredCoroutine(enumerator)
-                    : base.StartCoroutine(enumerator);
+                Coroutine result = null;
+                _chaFile.SafeProc(cf =>
+                    cf.GetTranslationHelperController()
+                        .SafeProcObject(c => result = c.StartMonitoredCoroutine(enumerator)));
+                return result ?? base.StartCoroutine(enumerator);
             }
 
             protected override ChaFile GetResult()

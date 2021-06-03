@@ -56,7 +56,7 @@ namespace TranslationHelperPlugin.Maker
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(CustomCharaScrollController), "OnPointerEnter")]
+        [HarmonyPatch(typeof(CustomCharaScrollController), nameof(CustomCharaScrollController.OnPointerEnter))]
         [SuppressMessage("ReSharper", "InconsistentNaming")]
         internal static void OnPointerEnterPatch(Text ___text)
         {
@@ -77,7 +77,7 @@ namespace TranslationHelperPlugin.Maker
 
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(CustomCharaScrollController), "OnPointerExit")]
+        [HarmonyPatch(typeof(CustomCharaScrollController), nameof(CustomCharaScrollController.OnPointerExit))]
         [SuppressMessage("ReSharper", "InconsistentNaming")]
         internal static void OnPointerExitPatch(Text ___text)
         {

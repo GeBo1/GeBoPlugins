@@ -19,7 +19,7 @@ namespace TranslationHelperPlugin.Utils
             }
             catch (Exception err)
             {
-                Logger?.LogException(err, "Unexpected error determining sex from Maker");
+                Logger?.LogException(err, $"{nameof(GuessSex)}: Unexpected error determining sex from Maker");
             }
 
             try
@@ -29,7 +29,7 @@ namespace TranslationHelperPlugin.Utils
             catch (Exception err)
             {
                 Logger?.LogException(err,
-                    $"Unexpected error attempting to guess sex for {fileInfo.GetPrettyTypeFullName()}");
+                    $"{nameof(GuessSex)}: Unexpected error attempting to guess sex for {fileInfo.GetPrettyTypeFullName()}");
             }
 
             return CharacterSex.Unspecified;

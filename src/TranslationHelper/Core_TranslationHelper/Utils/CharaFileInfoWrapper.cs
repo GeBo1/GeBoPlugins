@@ -29,7 +29,7 @@ namespace TranslationHelperPlugin.Utils
                 catch (Exception err)
                 {
                     Logger?.LogException(err,
-                        $"CreateWrapper: Registered wrapper {wrapperType} for {targetType} failed, falling back to default wrapper");
+                        $"{nameof(CreateWrapper)}: Registered wrapper {wrapperType} for {targetType} failed, falling back to default wrapper");
                 }
 #pragma warning restore CA1031 // Do not catch general exception types
             }
@@ -183,7 +183,6 @@ namespace TranslationHelperPlugin.Utils
                 //var field = AccessTools.Field(targetType, name);
                 var field = targetType.GetField(name, AccessTools.all);
                 if (field == null) continue;
-                var destType = typeof(TResult);
                 Expression<Func<T, TResult>> getter = obj => (TResult)field.GetValue(obj);
                 Logger?.LogDebug(
                     $"Found field {names[0]} for type {targetType.FullName} with name {name} (field type: {field.FieldType}, result type: {typeof(TResult)})");

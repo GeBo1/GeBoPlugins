@@ -41,7 +41,10 @@ namespace TranslationHelperPlugin.MainGame
                 {
                     TranslationHelper.Instance.SafeProc(th => th.StopCoroutine(_merchantRegistrationCoroutine));
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
             }
 
             if (TranslationHelper.RegistrationGameModes.Contains(TranslationHelper.Instance.CurrentGameMode))

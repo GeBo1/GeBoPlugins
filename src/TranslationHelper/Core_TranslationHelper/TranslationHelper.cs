@@ -7,7 +7,6 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using ExtensibleSaveFormat;
 using GeBoCommon;
-using GeBoCommon.AutoTranslation;
 using GeBoCommon.Utilities;
 using JetBrains.Annotations;
 using KKAPI;
@@ -40,18 +39,8 @@ namespace TranslationHelperPlugin
         internal static new ManualLogSource Logger;
         private static TranslationHelper _instance;
 
-        public static TranslationHelper Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = FindObjectOfType<TranslationHelper>();
-                }
-
-                return _instance;
-            }
-        }
+        public static TranslationHelper Instance =>
+            _instance != null ? _instance : _instance = FindObjectOfType<TranslationHelper>();
 
         /// <summary>
         ///     There are times the ExtendedSave events don't fire for performance reasons (avoiding loading extended data).
@@ -152,6 +141,7 @@ namespace TranslationHelperPlugin
         ///     Caches should be cleared and UI should be updated if possible.
         ///     Will propagate to CardTranslationBehaviorChanged and AccelerationBehaviorChanged
         /// </summary>
+        [PublicAPI]
         public static event EventHandler<EventArgs> BehaviorChanged;
 
         /// <summary>
@@ -159,6 +149,7 @@ namespace TranslationHelperPlugin
         ///     correct.
         ///     Caches should be cleared and UI should be updated if possible.
         /// </summary>
+        [PublicAPI]
         public static event EventHandler<EventArgs> CardTranslationBehaviorChanged;
 
         /// <summary>
@@ -166,6 +157,7 @@ namespace TranslationHelperPlugin
         ///     correct.
         ///     Caches should be cleared and UI should be updated if possible.
         /// </summary>
+        [PublicAPI]
         public static event EventHandler<EventArgs> AccelerationBehaviorChanged;
 
         internal static Dictionary<string, string> StringCacheInitializer()
@@ -456,10 +448,11 @@ namespace TranslationHelperPlugin
 
         internal IEnumerator UnregisterReplacements(ChaFile file)
         {
-            if (file == null) yield break;
+            if (file == null || IsShuttingDown) yield break;
             //if (!RegistrationGameModes.Contains(CurrentGameMode)) yield break;
             yield return null;
             RegistrationManager.Untrack(file);
+            var _ = this;
         }
 
         [PublicAPI]

@@ -39,7 +39,7 @@ namespace TranslationHelperPlugin.MainGame
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(ADVScene), "OnEnable")]
+        [HarmonyPatch(typeof(ADVScene), nameof(ADVScene.OnEnable))]
         internal static void ADVSceneOnEnablePostfix(ADVScene __instance)
         {
             if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
@@ -61,7 +61,7 @@ namespace TranslationHelperPlugin.MainGame
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(ADVScene), "OnDisable")]
+        [HarmonyPatch(typeof(ADVScene), nameof(ADVScene.OnDisable))]
         internal static void ADVSceneOnDisablePostfix()
         {
             // ADV scene exited

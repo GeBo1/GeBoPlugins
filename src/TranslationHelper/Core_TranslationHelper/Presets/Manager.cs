@@ -67,7 +67,7 @@ namespace TranslationHelperPlugin.Presets
             Reset();
         }
 
-        private void ResetCache<T>(Dictionary<CharacterSex, T> cache, Func<T> initializer = null) where T : new()
+        private static void ResetCache<T>(IDictionary<CharacterSex, T> cache, Func<T> initializer = null) where T : new()
         {
             foreach (var entry in Enum.GetValues(typeof(CharacterSex)))
             {
@@ -274,6 +274,7 @@ namespace TranslationHelperPlugin.Presets
             return false;
         }
 
+        // ReSharper disable Unity.PerformanceAnalysis
         public bool TryTranslateCardNames(ChaFile chaFile, out Dictionary<string, string> result)
         {
             var origName = chaFile.GetFullName();

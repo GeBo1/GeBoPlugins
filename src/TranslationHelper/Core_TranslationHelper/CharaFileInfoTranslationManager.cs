@@ -84,7 +84,7 @@ namespace TranslationHelperPlugin
             yield return _waitWhileFileInfosInProgress;
         }
 
-        public bool FileInfoNeedsTranslation(ICharaFileInfo fileInfo)
+        public static bool FileInfoNeedsTranslation(ICharaFileInfo fileInfo)
         {
             return StringUtils.ContainsJapaneseChar(fileInfo.Name);
         }
@@ -109,7 +109,7 @@ namespace TranslationHelperPlugin
             Logger.DebugLogDebug($"WaitOnFileInfo: {fileInfo}: done: {path}");
         }
 
-        private void ApplyTranslations(ICharaFileInfo fileInfo)
+        private static void ApplyTranslations(ICharaFileInfo fileInfo)
         {
             var scope = new NameScope(fileInfo.Sex);
             if (scope.Sex == CharacterSex.Unspecified) return;

@@ -112,7 +112,7 @@ namespace TranslationHelperPlugin.Acceleration
 
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(HomeMenu), "OnBeforeStart")]
+        [HarmonyPatch(typeof(HomeMenu), nameof(HomeMenu.OnBeforeStart))]
         [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Harmony Patch")]
         private static void HomeMenuOnBeforeStartPrefix(Text ____temperatureLabel, Text ____timeLabel)
         {

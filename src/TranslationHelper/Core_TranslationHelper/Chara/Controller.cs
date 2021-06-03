@@ -46,7 +46,11 @@ namespace TranslationHelperPlugin.Chara
 
         // ReSharper disable once MergeConditionalExpression
         private string RegistrationID => ChaFileControl != null ? ChaFileControl.GetRegistrationID() : null;
+
+        [PublicAPI]
         public bool IsTranslated { get; private set; }
+
+        [PublicAPI]
         public bool TranslationInProgress { get; private set; }
 
         public string FullPath
@@ -166,7 +170,7 @@ namespace TranslationHelperPlugin.Chara
 #pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception err)
                 {
-                    Logger.LogException(err, this, $"error stopping {routine}");
+                    Logger.LogException(err, this, $"{nameof(StopMonitoredCoroutines)}: error stopping {routine}");
                 }
 #pragma warning restore CA1031 // Do not catch general exception types
             }

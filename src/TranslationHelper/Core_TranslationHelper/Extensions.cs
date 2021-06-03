@@ -22,7 +22,7 @@ namespace TranslationHelperPlugin
 #pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception err)
                 {
-                    Logger.LogException(err, $"Error executing {handler.Method}");
+                    Logger.LogException(err, $"{nameof(CallHandlers)}: Error executing {handler.Method}");
                 }
 #pragma warning restore CA1031 // Do not catch general exception types
             }

@@ -18,8 +18,8 @@ namespace TranslationHelperPlugin.Studio
 
         // KK has separate firstname/lastname fields which allows for more accurate translation
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(CharaList), "InitFemaleList")]
-        [HarmonyPatch(typeof(CharaList), "InitMaleList")]
+        [HarmonyPatch(typeof(CharaList), nameof(CharaList.InitFemaleList))]
+        [HarmonyPatch(typeof(CharaList), nameof(CharaList.InitMaleList))]
         internal static void InitGenderListPrefix()
         {
             Translation.Configuration.LoadCharaFileMonitorEnabled = true;
@@ -27,15 +27,15 @@ namespace TranslationHelperPlugin.Studio
 
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(CharaList), "InitFemaleList")]
-        [HarmonyPatch(typeof(CharaList), "InitMaleList")]
+        [HarmonyPatch(typeof(CharaList), nameof(CharaList.InitFemaleList))]
+        [HarmonyPatch(typeof(CharaList), nameof(CharaList.InitMaleList))]
         internal static void InitGenderListPostfix()
         {
             Translation.Configuration.LoadCharaFileMonitorEnabled = false;
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(CharaList), "InitCharaList")]
+        [HarmonyPatch(typeof(CharaList), nameof(CharaList.InitCharaList))]
         internal static void StudioInitCharaListPrefix(CharaList __instance)
         {
             try
@@ -54,7 +54,7 @@ namespace TranslationHelperPlugin.Studio
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(CharaList), "InitCharaList")]
+        [HarmonyPatch(typeof(CharaList), nameof(CharaList.InitCharaList))]
         internal static void StudioInitCharaListPostfix(CharaList __instance)
         {
             try

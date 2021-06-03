@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using ChaCustom;
 using GeBoCommon.AutoTranslation;
@@ -21,14 +20,14 @@ namespace TranslationHelperPlugin.Translation
 
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(CustomCharaFile), "Initialize")]
+        [HarmonyPatch(typeof(CustomCharaFile), nameof(CustomCharaFile.Initialize))]
         internal static void CustomCharaFileInitializePrefix()
         {
             Configuration.LoadCharaFileMonitorEnabled = true;
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(CustomCharaFile), "Initialize")]
+        [HarmonyPatch(typeof(CustomCharaFile), nameof(CustomCharaFile.Initialize))]
         internal static void CustomCharaFileInitializePostfix()
         {
             Configuration.LoadCharaFileMonitorEnabled = false;
@@ -118,7 +117,8 @@ namespace TranslationHelperPlugin.Translation
 
                     if (TranslationHelper.NameStringComparer.Equals(origName, newName)) return;
 
-                    var lstFileInfo = Traverse.Create(__instance)?.Field<List<CustomFileInfo>>("lstFileInfo")?.Value;
+                    var lstFileInfo = __instance.lstFileInfo;
+                    
                     var entry = lstFileInfo?.FirstOrDefault(x =>
                     {
                         int index;

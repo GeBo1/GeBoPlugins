@@ -10,7 +10,7 @@ namespace TranslationHelperPlugin
 
         public static readonly NameScope DefaultNameScope = new NameScope();
 
-        public NameScope(CharacterSex sex, NameType nameType)
+        public NameScope(CharacterSex sex, NameType nameType = NameType.Unclassified)
         {
             NameType = nameType;
             Sex = sex;
@@ -20,8 +20,7 @@ namespace TranslationHelperPlugin
         [PublicAPI]
         public NameScope(NameType nameType) : this(CharacterSex.Unspecified, nameType) { }
 
-        public NameScope(CharacterSex sex) : this(sex, NameType.Unclassified) { }
-        public NameScope() : this(CharacterSex.Unspecified, NameType.Unclassified) { }
+        public NameScope() : this(CharacterSex.Unspecified) { }
         public int TranslationScope { get; }
         public NameType NameType { get; }
         public CharacterSex Sex { get; }

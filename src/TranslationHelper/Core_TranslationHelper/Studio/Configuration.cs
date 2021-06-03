@@ -22,6 +22,7 @@ namespace TranslationHelperPlugin.Studio
     [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     internal static partial class Configuration
     {
+        [UsedImplicitly] // depends on target game
         internal static readonly List<TryAlternateStudioCharaLoaderTranslation> AlternateStudioCharaLoaderTranslators =
             new List<TryAlternateStudioCharaLoaderTranslation>();
 

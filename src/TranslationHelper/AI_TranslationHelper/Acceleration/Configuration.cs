@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using ADV.Commands.Base;
 using AIProject;
 using AIProject.Animal;
 using AIProject.UI;
@@ -22,11 +21,10 @@ namespace TranslationHelperPlugin.Acceleration
             TranslationHelper.AccelerationBehaviorChanged += AI_AccelerationBehaviorChanged;
             ResetCaches();
 
-            StringMethodTranspilerHelper.PatchMethod(harmony, typeof(WildGround), "InitializeCommandLabels");
-            StringMethodTranspilerHelper.PatchMethod(harmony, typeof(Format), nameof(Format.Do));
-            StringMethodTranspilerHelper.PatchMethod(harmony, typeof(FormatVAR), nameof(Format.Do));
-            StringMethodTranspilerHelper.PatchMethod(harmony, typeof(AgentActor), "InitCommands");
-            StringMethodTranspilerHelper.PatchMethod(harmony, typeof(PetHomeUI), "RemoveAnimal");
+            StringMethodTranspilerHelper.PatchMethod(harmony, typeof(WildGround),
+                nameof(WildGround.InitializeCommandLabels));
+            StringMethodTranspilerHelper.PatchMethod(harmony, typeof(AgentActor), nameof(AgentActor.InitCommands));
+            StringMethodTranspilerHelper.PatchMethod(harmony, typeof(PetHomeUI), nameof(PetHomeUI.RemoveAnimal));
         }
 
         private static void AI_AccelerationBehaviorChanged(object sender, EventArgs e)

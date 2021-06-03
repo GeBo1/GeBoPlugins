@@ -37,9 +37,7 @@ namespace TranslationHelperPlugin.MainGame
             void Handler(ITranslationResult result)
             {
                 if (!result.Succeeded || string.IsNullOrEmpty(result.TranslatedText) || __instance == null) return;
-                var txtCharaName = Traverse.Create(__instance)?.Field<Text>("txtCharaName")?.Value;
-                if (txtCharaName == null) return;
-                txtCharaName.text = result.TranslatedText;
+                __instance.SafeProc(inst => inst.txtCharaName.SafeProc(tcn => tcn.text = result.TranslatedText));
             }
 
             Translation.Hooks.TranslateFileInfo(_info, Handler);
@@ -76,33 +74,38 @@ namespace TranslationHelperPlugin.MainGame
 
         [HarmonyPrefix]
         // ReSharper disable once StringLiteralTypo
-        [HarmonyPatch(typeof(MapSelectUI), "MapSelecCursorEnter")]
+        [HarmonyPatch(typeof(MapSelectUI), nameof(MapSelectUI.MapSelecCursorEnter))]
         [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "Inherited naming")]
         internal static void MapSelecCursorEnterPrefix(MapSelectUI __instance)
         {
+            void SetLabel(int i, MapSelectUI.MapSelectThumbnailUI thumbUi)
+            {
+                InMapSelecCursorLabels[i] = null;
+                thumbUi.SafeProc(ui =>
+                {
+                    InMapSelecCursorLabels[i] = ui.text;
+                    GeBoAPI.Instance.AutoTranslationHelper.IgnoreTextComponent(ui.text);
+                });
+            }
+
             try
             {
                 if (__instance == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
                 _inMapSelecCursorEnter = true;
                 _inMapSelecCursorEnterIndex = 0;
-                var i = 0;
-                foreach (var uiName in new[] {"firstCharaThumbnailUI", "secondCharaThumbnailUI"})
-                {
-                    try
-                    {
-                        var label = InMapSelecCursorLabels[i] = Traverse.Create(__instance)?.Field(uiName)
-                            ?.Field<Text>("text")?.Value;
-                        GeBoAPI.Instance.AutoTranslationHelper.IgnoreTextComponent(label);
-                    }
-#pragma warning disable CA1031 // Do not catch general exception types
-                    catch
-                    {
-                        InMapSelecCursorLabels[i] = null;
-                    }
-#pragma warning restore CA1031 // Do not catch general exception types
 
-                    i++;
+                if (__instance.SafeProc(inst =>
+                {
+                    SetLabel(0, inst.firstCharaThumbnailUI);
+                    SetLabel(1, inst.secondCharaThumbnailUI);
+                }))
+                {
+                    return;
                 }
+
+                InMapSelecCursorLabels[0] = null;
+                InMapSelecCursorLabels[1] = null;
+
             }
 #pragma warning disable CA1031
             catch (Exception err)
@@ -114,7 +117,7 @@ namespace TranslationHelperPlugin.MainGame
 
         // ReSharper disable once StringLiteralTypo IdentifierTypo
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(MapSelectUI), "MapSelecCursorEnter")]
+        [HarmonyPatch(typeof(MapSelectUI), nameof(MapSelectUI.MapSelecCursorEnter))]
         internal static void MapSelecCursorEnterPostfix()
         {
             _inMapSelecCursorEnter = false;

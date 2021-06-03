@@ -95,6 +95,7 @@ namespace TranslationHelperPlugin
 
         private Dictionary<string, string> GetReplacements()
         {
+            var _ = this;
             return GeBoAPI.Instance.AutoTranslationHelper.GetReplacements();
         }
 
@@ -185,7 +186,7 @@ namespace TranslationHelperPlugin
             }
         }
 
-        private bool NameQualifiesForRegistration(string name)
+        protected virtual bool NameQualifiesForRegistration(string name)
         {
             if (name.IsNullOrWhiteSpace()) return false;
             if (StringUtils.ContainsJapaneseChar(name))
@@ -197,7 +198,7 @@ namespace TranslationHelperPlugin
             return name.Length > MinLength;
         }
 
-        private IEnumerable<KeyValuePair<string, string>> GetNamesToRegister(ChaFile chaFile)
+        protected virtual IEnumerable<KeyValuePair<string, string>> GetNamesToRegister(ChaFile chaFile)
         {
             var handled = HashSetPool<string>.Get();
             var controller = chaFile.GetTranslationHelperController();

@@ -63,9 +63,9 @@ namespace TranslationHelperPlugin.Chara
 
         [HarmonyPostfix]
 #if KK
-        [HarmonyPatch(typeof(ChaFile), "LoadFile", typeof(string), typeof(bool), typeof(bool))]
+        [HarmonyPatch(typeof(ChaFile), nameof(ChaFile.LoadFile), typeof(string), typeof(bool), typeof(bool))]
 #else
-        [HarmonyPatch(typeof(ChaFile), "LoadFile", typeof(string), typeof(int), typeof(bool), typeof(bool))]
+        [HarmonyPatch(typeof(ChaFile), nameof(ChaFile.LoadFile), typeof(string), typeof(int), typeof(bool), typeof(bool))]
 #endif
         private static void ChaFileLoadFilePostfix(ChaFile __instance, string path, bool __result)
         {
@@ -122,9 +122,9 @@ namespace TranslationHelperPlugin.Chara
 
 #if KK
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(ChaFile), "SaveFile", typeof(BinaryWriter), typeof(bool))]
+        [HarmonyPatch(typeof(ChaFile), nameof(ChaFile.SaveFile), typeof(BinaryWriter), typeof(bool))]
 #else
-        [HarmonyPostfix, HarmonyPatch(typeof(ChaFile), "SaveFile", typeof(BinaryWriter), typeof(bool), typeof(int))]
+        [HarmonyPostfix, HarmonyPatch(typeof(ChaFile), nameof(ChaFile.SaveFile), typeof(BinaryWriter), typeof(bool), typeof(int))]
 #endif
         private static void ChaFile_SaveFile_Postfix(ChaFile __instance)
         {

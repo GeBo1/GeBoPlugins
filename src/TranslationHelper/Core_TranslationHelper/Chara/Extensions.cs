@@ -41,26 +41,26 @@ namespace TranslationHelperPlugin.Chara
         {
             ChaControl chaControl = null;
             chaFile.SafeProc(cf => chaControl = cf.GetChaControl());
-            return chaControl != null
-                ? chaControl.StartMonitoredCoroutine(enumerator)
-                : TranslationHelper.Instance.StartCoroutine(enumerator);
+            Coroutine result = null;
+            chaControl.SafeProc(ctrl => result = ctrl.StartMonitoredCoroutine(enumerator));
+            return result ?? TranslationHelper.Instance.StartCoroutine(enumerator);
         }
 
         public static Coroutine StartMonitoredCoroutine(this ChaControl chaControl, IEnumerator enumerator)
         {
             Controller controller = null;
             chaControl.SafeProcObject(cc => controller = cc.GetTranslationHelperController());
-            return controller != null
-                ? controller.StartMonitoredCoroutine(enumerator)
-                : TranslationHelper.Instance.StartCoroutine(enumerator);
+            Coroutine result = null;
+            controller.SafeProc(ctrl => result = ctrl.StartMonitoredCoroutine(enumerator));
+            return result ?? TranslationHelper.Instance.StartCoroutine(enumerator);
         }
 
 
+        // ReSharper disable Unity.PerformanceAnalysis
         public static Controller GetTranslationHelperController(this ChaControl chaControl)
         {
             Controller result = default;
             //Logger?.LogDebug($"Extensions.GetTranslationHelperController (chaControl): {chaControl}");
-
             chaControl.SafeProcObject(cc => cc.gameObject.SafeProcObject(go => result = go.GetComponent<Controller>()));
             return result;
         }
@@ -77,14 +77,12 @@ namespace TranslationHelperPlugin.Chara
 
         public static bool TryGetTranslationHelperController(this ChaControl chaControl, out Controller controller)
         {
-            controller = GetTranslationHelperController(chaControl);
-            return controller != null;
+            return (controller = GetTranslationHelperController(chaControl)) != null;
         }
 
         public static bool TryGetTranslationHelperController(this ChaFile chaFile, out Controller controller)
         {
-            controller = GetTranslationHelperController(chaFile);
-            return controller != null;
+            return (controller = GetTranslationHelperController(chaFile)) != null;
         }
 
 

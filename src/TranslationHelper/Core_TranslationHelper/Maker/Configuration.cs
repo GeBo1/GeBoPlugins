@@ -81,7 +81,7 @@ namespace TranslationHelperPlugin.Maker
 #pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception err)
                 {
-                    Logger.LogException(err, $"Unable to monitor {entry.Key} InputField for changes");
+                    Logger.LogException(err, $"{nameof(SetupNameInputFields)}: Unable to monitor {entry.Key} InputField for changes");
                 }
 #pragma warning restore CA1031 // Do not catch general exception types
             }

@@ -112,7 +112,7 @@ namespace TranslationHelperPlugin.MainGame
             // easiest to just update each time.
             var freeHScene = Object.FindObjectOfType<FreeHScene>();
             if (freeHScene == null) return;
-            var member = Traverse.Create(freeHScene).Field<FreeHScene.Member>("member")?.Value;
+            var member = freeHScene.member;
             if (member == null) return;
 
             Action<string> GetUpdateUIField(string fieldName)
@@ -151,7 +151,7 @@ namespace TranslationHelperPlugin.MainGame
                 {
                     if (!callbackMap.TryGetValue(member.resultHeroine.Value, out var callbacks))
                     {
-                        callbackMap[member.resultHeroine.Value] = callbacks = ListPool<Action<string>>.Get();
+                        callbackMap[member.resultHeroine.Value] = callbacks = GeBoCommon.Utilities.ListPool<Action<string>>.Get();
                     }
 
                     callbacks.Add(GetUpdateUIField("textFemaleName1"));
@@ -161,19 +161,20 @@ namespace TranslationHelperPlugin.MainGame
                 {
                     if (!callbackMap.TryGetValue(member.resultPartner.Value, out var callbacks))
                     {
-                        callbackMap[member.resultPartner.Value] = callbacks = ListPool<Action<string>>.Get();
+                        callbackMap[member.resultPartner.Value] = callbacks =  GeBoCommon.Utilities.ListPool<Action<string>>.Get();
                     }
 
                     callbacks.Add(GetUpdateUIField("textFemaleName2"));
                 }
 
+                // leaving traverse to work with earlier versions
                 var resultDarkHeroine = Traverse.Create(member)
                     .Field<ReactiveProperty<SaveData.Heroine>>("resultDarkHeroine")?.Value;
                 if (resultDarkHeroine != null && resultDarkHeroine.HasValue && resultDarkHeroine.Value != null)
                 {
                     if (!callbackMap.TryGetValue(resultDarkHeroine.Value, out var callbacks))
                     {
-                        callbackMap[resultDarkHeroine.Value] = callbacks = ListPool<Action<string>>.Get();
+                        callbackMap[resultDarkHeroine.Value] = callbacks =  GeBoCommon.Utilities.ListPool<Action<string>>.Get();
                     }
 
                     callbacks.Add(
@@ -207,7 +208,7 @@ namespace TranslationHelperPlugin.MainGame
             }
             finally
             {
-                foreach (var entry in callbackMap) ListPool<Action<string>>.Release(entry.Value);
+                foreach (var entry in callbackMap)  GeBoCommon.Utilities.ListPool<Action<string>>.Release(entry.Value);
                 DictionaryPool<SaveData.Heroine, List<Action<string>>>.Release(callbackMap);
             }
         }

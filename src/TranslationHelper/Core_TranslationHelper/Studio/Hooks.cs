@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx.Logging;
@@ -26,7 +27,7 @@ namespace TranslationHelperPlugin.Studio
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(TreeNodeCtrl), "RefreshVisibleLoop")]
+        [HarmonyPatch(typeof(TreeNodeCtrl), nameof(TreeNodeCtrl.RefreshVisibleLoop))]
         [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]
         internal static void RefreshVisibleLoopPatch(TreeNodeObject _source)
         {
@@ -75,7 +76,7 @@ namespace TranslationHelperPlugin.Studio
         */
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(CharaList), "InitCharaList")]
+        [HarmonyPatch(typeof(CharaList), nameof(CharaList.InitCharaList))]
         internal static void CharaList_InitCharaList_Postfix(CharaList __instance, ref object __state)
         {
             try
@@ -198,11 +199,14 @@ namespace TranslationHelperPlugin.Studio
                     return;
                 }
 
-                var cfiList = Traverse.Create(charaList)?.Field<CharaFileSort>("charaFileSort")?.Value?.cfiList;
-                if (cfiList == null || cfiList.Count == 0) return;
-
-                var sex = Traverse.Create(charaList)?.Field<int>("sex")?.Value ?? -1;
-                if (sex == -1) return;
+                List<CharaFileInfo> cfiList = null;
+                var sex = -1;
+                charaList.SafeProc(cl =>
+                {
+                    sex = cl.sex;
+                    cl.charaFileSort.SafeProc(cfs => cfiList = cfs.cfiList);
+                });
+                if (sex == -1 || cfiList == null || cfiList.Count == 0) return;
 
                 var scope = new NameScope((CharacterSex)sex);
 

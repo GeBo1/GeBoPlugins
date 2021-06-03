@@ -1,5 +1,6 @@
 ﻿using System;
 using BepInEx.Configuration;
+using UnityEngine.Assertions;
 
 namespace TranslationHelperPlugin
 {
@@ -17,7 +18,10 @@ namespace TranslationHelperPlugin
             SplitNamesBeforeTranslate = AILike_SplitNamesBeforeTranslate.Value;
         }
 
-        internal void AILikeStart() { }
+        internal void AILikeStart()
+        {
+            Assert.IsNotNull(this);
+        }
 
         private void AILike_SplitNamesBeforeTranslate_SettingChanged(object sender, EventArgs e)
         {

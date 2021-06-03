@@ -27,7 +27,7 @@ namespace StudioSceneCharaInfoPlugin
     {
         public const string GUID = "com.gebo.BepInEx.studioscenecharainfo";
         public const string PluginName = "Studio Scene Chara Info";
-        public const string Version = "0.2.0";
+        public const string Version = "0.2.0.1";
 
         // ReSharper disable once InconsistentNaming
         private const char DQ = '"';
@@ -47,7 +47,7 @@ namespace StudioSceneCharaInfoPlugin
             _resetHspeWrapper = LazyResetHspe;
         }
 
-        public SceneLoadScene StudioInitObject => _studioInitObject;
+        public static SceneLoadScene StudioInitObject => _studioInitObject;
 
         public static ConfigEntry<KeyboardShortcut> SceneCharaInfoDumpHotkey { get; private set; }
 
@@ -80,12 +80,12 @@ namespace StudioSceneCharaInfoPlugin
             }
         }
 
-        public List<string> GetListPath()
+        public static List<string> GetListPath()
         {
             return SceneUtils.GetSceneLoaderPaths(StudioInitObject);
         }
 
-        [HarmonyPatch(typeof(SceneLoadScene), "InitInfo")]
+        [HarmonyPatch(typeof(SceneLoadScene), nameof(SceneLoadScene.InitInfo))]
         [HarmonyPostfix]
         internal static void StudioInitInfoPost(SceneLoadScene __instance)
         {
@@ -284,7 +284,7 @@ namespace StudioSceneCharaInfoPlugin
                         //writer.Write($",{q}ERROR PROCESSING FILE{q}");
                         line.Add("ERROR PROCESSING FILE");
                         line.Add($"{err}".Replace(DQ, '\''));
-                        Logger.LogException(err, $"error processing {displayPath}");
+                        Logger.LogException(err, $"${nameof(ExecuteDump)}: error processing {displayPath}");
                     }
 #pragma warning restore CA1031 // Do not catch general exception types
 

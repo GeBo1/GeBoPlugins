@@ -26,7 +26,7 @@ namespace GameDressForSuccessPlugin
             internal static ManualLogSource Logger => Instance != null ? Instance.Logger : null;
 
             [HarmonyPostfix]
-            [HarmonyPatch(typeof(MapChange), "Do")]
+            [HarmonyPatch(typeof(MapChange), nameof(MapChange.Do))]
             internal static void StartTravelingHook(MapChange __instance)
             {
                 try
@@ -45,8 +45,8 @@ namespace GameDressForSuccessPlugin
             }
 
             [HarmonyPrefix]
-            [HarmonyPatch(typeof(ADV.Commands.Effect.SceneFade), "Do")]
-            [HarmonyPatch(typeof(Text), "Do")]
+            [HarmonyPatch(typeof(ADV.Commands.Effect.SceneFade), nameof(ADV.Commands.Effect.SceneFade.Do))]
+            [HarmonyPatch(typeof(Text), nameof(Text.Do))]
             internal static void StopTravelingHook(CommandBase __instance)
             {
                 try
@@ -65,7 +65,7 @@ namespace GameDressForSuccessPlugin
             }
 
             [HarmonyPostfix]
-            [HarmonyPatch(typeof(Coordinate), "Do")]
+            [HarmonyPatch(typeof(Coordinate), nameof(Coordinate.Do))]
             [SuppressMessage("ReSharper", "InconsistentNaming")]
             internal static void CoordinateDoPostfix(Coordinate __instance, int ___no,
                 ChaFileDefine.CoordinateType ___type)

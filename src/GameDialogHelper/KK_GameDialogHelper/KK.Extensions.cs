@@ -34,11 +34,11 @@ namespace GameDialogHelperPlugin
             {
                 return int.Parse(tmp[3], NumberStyles.Integer);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
+//#pragma warning disable CA1031 // Do not catch general exception types
             catch (OverflowException) { }
             catch (FormatException) { }
             catch (ArgumentException) { }
-#pragma warning restore CA1031 // Do not catch general exception types
+//#pragma warning restore CA1031 // Do not catch general exception types
 
             return -1;
         }

@@ -58,7 +58,7 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
         public long LastUpdated
         {
             get => _lastUpdated;
-            internal set
+            private set
             {
                 _lastUpdated = Math.Max(value, _lastUpdated);
                 if (_parent != null && _lastUpdated > _parent.LastUpdated) _parent.LastUpdated = _lastUpdated;

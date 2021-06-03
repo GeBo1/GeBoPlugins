@@ -14,6 +14,7 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
         [IgnoreMember]
         private readonly Dictionary<int, AnswerMemory> _answerMap = new Dictionary<int, AnswerMemory>();
 
+        [PublicAPI]
         [Key("answers")]
         public readonly List<AnswerMemory> InternalAnswers = new List<AnswerMemory>();
 

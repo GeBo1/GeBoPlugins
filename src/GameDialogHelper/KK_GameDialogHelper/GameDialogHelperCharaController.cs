@@ -41,9 +41,10 @@ namespace GameDialogHelperPlugin
         public long LastPersistedToCard
         {
             get => _lastPersistedToCard;
-            internal set => _lastPersistedToCard = Math.Max(value, _lastPersistedToCard);
+            private set => _lastPersistedToCard = Math.Max(value, _lastPersistedToCard);
         }
 
+        [PublicAPI]
         public int HeroineIndex
         {
             get
@@ -515,6 +516,7 @@ namespace GameDialogHelperPlugin
 
 
         [Conditional("DEBUG")]
+        [UsedImplicitly]
         internal void Dump()
         {
             if (!_dialogMemoryInitialized) return;

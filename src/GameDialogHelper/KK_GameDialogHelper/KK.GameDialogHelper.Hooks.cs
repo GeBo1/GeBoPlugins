@@ -16,8 +16,10 @@ namespace GameDialogHelperPlugin
         internal static class Hooks
         {
             [HarmonyPrefix]
-            [HarmonyPatch(typeof(Info), "CreateSelectADV", typeof(Info.SelectInfo), typeof(ChangeValueSelectInfo))]
-            [HarmonyPatch(typeof(Info), "CreateSelectADV", typeof(Info.SelectInfo), typeof(int))]
+            [HarmonyPatch(typeof(Info), nameof(ActionGame.Communication.Info.CreateSelectADV), typeof(Info.SelectInfo),
+                typeof(ChangeValueSelectInfo))]
+            [HarmonyPatch(typeof(Info), nameof(ActionGame.Communication.Info.CreateSelectADV), typeof(Info.SelectInfo),
+                typeof(int))]
             [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "HarmonyPatch")]
             internal static void Info_CreateSelectADV_Prefix(Info __instance, Info.SelectInfo _info)
             {
@@ -107,7 +109,7 @@ namespace GameDialogHelperPlugin
             }
 
             [HarmonyPostfix]
-            [HarmonyPatch(typeof(Choice), "ButtonProc")]
+            [HarmonyPatch(typeof(Choice), nameof(Choice.ButtonProc))]
             internal static void Choice_ButtonProc_Postfix(int __result)
             {
                 try

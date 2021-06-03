@@ -19,7 +19,7 @@
 
         public const int CurrentCharaGuidVersion = 6;
         public const int MaxCharaGuidVersion = CurrentCharaGuidVersion;
-        public const int MinimumSupportedCharaGuidVersion = 5; 
+        public const int MinimumSupportedCharaGuidVersion = 5;
 
         internal static class Keys
         {

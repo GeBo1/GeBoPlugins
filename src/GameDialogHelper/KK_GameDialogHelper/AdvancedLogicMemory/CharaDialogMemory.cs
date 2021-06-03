@@ -18,6 +18,7 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
         [IgnoreMember]
         private readonly Dictionary<int, QuestionMemory> _questionMap = new Dictionary<int, QuestionMemory>();
 
+        [PublicAPI]
         [Key("questions")]
         public readonly List<QuestionMemory> InternalQuestions = new List<QuestionMemory>();
 
@@ -80,6 +81,7 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
         public int CharaGuidVersion { get; internal set; } = -1;
 
 
+        [PublicAPI] // future use
         [Key("saveGuidVersion")]
         public int SaveGuidVersion { get; internal set; } = -1;
 
@@ -204,6 +206,7 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
             Sync();
         }
 
+        [UsedImplicitly]
         internal void Sync()
         {
             foreach (var question in _questionMap.Values)

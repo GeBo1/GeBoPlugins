@@ -10,12 +10,14 @@ using GeBoCommon;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Utilities;
 using HarmonyLib;
+using JetBrains.Annotations;
 using KKAPI;
 using KKAPI.Chara;
 using KKAPI.MainGame;
 using Manager;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 using Scene = UnityEngine.SceneManagement.Scene;
 
@@ -31,9 +33,10 @@ namespace GameDialogHelperPlugin
     [BepInProcess(Constants.MainGameProcessNameVRSteam)]
     public partial class GameDialogHelper : BaseUnityPlugin
     {
+        [PublicAPI]
         public const string GUID = "com.gebo.BepInEx.GameDialogHelper";
         public const string PluginName = "Game Dialog Helper";
-        public const string Version = "1.0.1";
+        public const string Version = "1.0.1.1";
 
         private const float ColorDelta = 2f / 3f;
 
@@ -161,6 +164,7 @@ namespace GameDialogHelperPlugin
 
         private void SetupPluginModeLogic(PluginMode pluginMode)
         {
+            Assert.IsNotNull(this);
             switch (pluginMode)
             {
                 case PluginMode.RelationshipBased:

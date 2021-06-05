@@ -96,7 +96,7 @@
     <Analyzer Include="..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\analyzers\dotnet\cs\Microsoft.CodeAnalysis.NetAnalyzers.dll" />
     <Analyzer Include="..\..\..\packages\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.3.3.1\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.PerformanceSensitiveAnalyzers.dll" />
     <Analyzer Include="..\..\..\packages\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.3.3.1\analyzers\dotnet\cs\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.dll" />
-    <Analyzer Include="..\..\..\packages\Microsoft.Unity.Analyzers.1.10.2\analyzers\dotnet\cs\Microsoft.Unity.Analyzers.dll" />
+    <Analyzer Include="..\..\..\packages\Microsoft.Unity.Analyzers.1.11.0\analyzers\dotnet\cs\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <Import Project="..\..\StudioSceneCharaInfo\Core_StudioSceneCharaInfo\Core_StudioSceneCharaInfo.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

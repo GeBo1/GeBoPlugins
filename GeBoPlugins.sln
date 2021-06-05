@@ -107,12 +107,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GameWhoIsThere", "GameWhoIs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HS2_GameWhoIsThere", "src\GameWhoIsThere\HS2_GameWhoIsThere\HS2_GameWhoIsThere.csproj", "{37A04B58-C00F-4B59-9F42-D0FB8DD9E7C1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KKS_GeBoCommon", "src\GeBoCommon\KKS_GeBoCommon\KKS_GeBoCommon.csproj", "{E9869C56-ED07-42C5-A203-136473033995}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KKS_TranslationHelper", "src\TranslationHelper\KKS_TranslationHelper\KKS_TranslationHelper.csproj", "{49542496-4956-48F9-91D7-1B6E86337B8A}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\StudioSceneNavigation\Core_StudioSceneNavigation\Core_StudioSceneNavigation.projitems*{19796e45-b2ff-4206-8901-a1821b797df8}*SharedItemsImports = 4
 		src\StudioSceneCharaInfo\Core_StudioSceneCharaInfo\Core_StudioSceneCharaInfo.projitems*{1bdc5051-b62d-44f9-b48f-12f78174d6cb}*SharedItemsImports = 4
 		src\StudioMultiselectChara\Core_StudioMultiselectChara\Core_StudioMultiselectChara.projitems*{347e78e9-4046-46c8-9569-d51d3a79fb69}*SharedItemsImports = 4
 		src\GeBoCommon\Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems*{37a04b58-c00f-4b59-9f42-d0fb8dd9e7c1}*SharedItemsImports = 4
+		src\TranslationHelper\Core_TranslationHelper\Core_TranslationHelper.projitems*{49542496-4956-48f9-91d7-1b6e86337b8a}*SharedItemsImports = 4
 		src\StudioSceneCharaInfo\Core_StudioSceneCharaInfo\Core_StudioSceneCharaInfo.projitems*{4ad155c4-ca3e-4e34-8d6d-822cd860f27f}*SharedItemsImports = 4
 		src\TranslationCacheCleaner\Core_TranslationCacheCleaner\Core_TranslationCacheCleaner.projitems*{5e80c7ec-d14a-490b-8f3c-70c4956a911d}*SharedItemsImports = 4
 		src\GeBoCommon\Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems*{622df8ad-567c-4036-8e13-636a5bbebb43}*SharedItemsImports = 4
@@ -137,6 +142,9 @@ Global
 		src\GeBoCommon\Core_GeBoCommon\Shared.Core.projitems*{c57337f1-3e5e-4880-9cc0-461a2d088a81}*SharedItemsImports = 13
 		src\TranslationCacheCleaner\Core_TranslationCacheCleaner\Core_TranslationCacheCleaner.projitems*{e268c317-7402-4376-9adb-1c6b272a8789}*SharedItemsImports = 13
 		src\StudioMultiselectChara\Core_StudioMultiselectChara\Core_StudioMultiselectChara.projitems*{e94c2711-d9e6-4b23-85af-af84cb4567db}*SharedItemsImports = 4
+		src\GeBoCommon\Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems*{e9869c56-ed07-42c5-a203-136473033995}*SharedItemsImports = 4
+		src\GeBoCommon\Core_GeBoCommon.Studio\Shared.CharaStudio.projitems*{e9869c56-ed07-42c5-a203-136473033995}*SharedItemsImports = 4
+		src\GeBoCommon\Core_GeBoCommon\Shared.Core.projitems*{e9869c56-ed07-42c5-a203-136473033995}*SharedItemsImports = 4
 		src\GeBoCommon\Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems*{eaf3bd49-5bcd-4b95-b929-b229da9c0596}*SharedItemsImports = 4
 		src\GeBoCommon\Core_GeBoCommon.Studio\Shared.CharaStudio.projitems*{eaf3bd49-5bcd-4b95-b929-b229da9c0596}*SharedItemsImports = 4
 		src\GeBoCommon\Core_GeBoCommon\Shared.Core.projitems*{eaf3bd49-5bcd-4b95-b929-b229da9c0596}*SharedItemsImports = 4
@@ -272,6 +280,18 @@ Global
 		{37A04B58-C00F-4B59-9F42-D0FB8DD9E7C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37A04B58-C00F-4B59-9F42-D0FB8DD9E7C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37A04B58-C00F-4B59-9F42-D0FB8DD9E7C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9869C56-ED07-42C5-A203-136473033995}.Debug + Asserts|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9869C56-ED07-42C5-A203-136473033995}.Debug + Asserts|Any CPU.Build.0 = Debug|Any CPU
+		{E9869C56-ED07-42C5-A203-136473033995}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9869C56-ED07-42C5-A203-136473033995}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9869C56-ED07-42C5-A203-136473033995}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9869C56-ED07-42C5-A203-136473033995}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49542496-4956-48F9-91D7-1B6E86337B8A}.Debug + Asserts|Any CPU.ActiveCfg = Debug|Any CPU
+		{49542496-4956-48F9-91D7-1B6E86337B8A}.Debug + Asserts|Any CPU.Build.0 = Debug|Any CPU
+		{49542496-4956-48F9-91D7-1B6E86337B8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49542496-4956-48F9-91D7-1B6E86337B8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49542496-4956-48F9-91D7-1B6E86337B8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49542496-4956-48F9-91D7-1B6E86337B8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -306,6 +326,8 @@ Global
 		{C2C7182A-8F3E-495F-B350-6CEF46627A2B} = {EDCAD560-423D-456F-A39A-818D3BB38290}
 		{65E7C5C7-24E3-49DF-A62E-51CD57350C88} = {DB633DB4-148A-452A-B5CC-957335BDA302}
 		{37A04B58-C00F-4B59-9F42-D0FB8DD9E7C1} = {244B8A95-25FA-44DE-A762-DA8CBA2CD978}
+		{E9869C56-ED07-42C5-A203-136473033995} = {41641F35-78E4-46DA-8047-EAB176F9B4E5}
+		{49542496-4956-48F9-91D7-1B6E86337B8A} = {DB633DB4-148A-452A-B5CC-957335BDA302}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ACC65545-B46C-4998-B489-9249F65FD93B}

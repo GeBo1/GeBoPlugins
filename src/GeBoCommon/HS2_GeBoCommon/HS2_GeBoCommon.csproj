@@ -58,8 +58,8 @@
       <HintPath>..\..\..\packages\IllusionLibs.BepInEx.Harmony.2.3.2\lib\net35\BepInEx.Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="HS2API, Version=1.20.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\IllusionModdingAPI.HS2API.1.20.0\lib\net46\HS2API.dll</HintPath>
+    <Reference Include="HS2API, Version=1.20.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\IllusionModdingAPI.HS2API.1.20.2\lib\net46\HS2API.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="HS2_ExtensibleSaveFormat, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -117,7 +117,7 @@
     <Analyzer Include="..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\analyzers\dotnet\cs\Microsoft.CodeAnalysis.NetAnalyzers.dll" />
     <Analyzer Include="..\..\..\packages\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.3.3.1\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.PerformanceSensitiveAnalyzers.dll" />
     <Analyzer Include="..\..\..\packages\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.3.3.1\analyzers\dotnet\cs\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.dll" />
-    <Analyzer Include="..\..\..\packages\Microsoft.Unity.Analyzers.1.10.2\analyzers\dotnet\cs\Microsoft.Unity.Analyzers.dll" />
+    <Analyzer Include="..\..\..\packages\Microsoft.Unity.Analyzers.1.11.0\analyzers\dotnet\cs\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <Import Project="..\..\GeBoCommon\Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems" Label="Shared" />
   <Import Project="..\..\GeBoCommon\Core_GeBoCommon.Studio\Shared.CharaStudio.projitems" Label="Shared" />

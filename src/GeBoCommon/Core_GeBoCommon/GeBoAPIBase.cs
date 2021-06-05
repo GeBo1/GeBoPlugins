@@ -30,11 +30,14 @@ namespace GeBoCommon
 #if HS
     [BepInProcess(Constants.BattleArenaProcessName)]
 #endif
+#if KKS
+    [BepInProcess(Constants.TrialProcessName)]
+#endif
     public partial class GeBoAPI : BaseUnityPlugin, IGeBoAPI
     {
         public const string GUID = "com.gebo.BepInEx.GeBoAPI";
         public const string PluginName = "GeBo Modding API";
-        public const string Version = "1.1.1.1";
+        public const string Version = "1.1.1.3";
 
         private static readonly Dictionary<string, bool> NotificationSoundsEnabled = new Dictionary<string, bool>();
 

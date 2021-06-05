@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 
 namespace GeBoCommon
@@ -42,6 +43,13 @@ namespace GeBoCommon
         public const string StudioProcessName = "CharaStudio";
         public const string Prefix = "KK";
         public const RegexOptions SupportedRegexCompilationOption = RegexOptions.None;
+#elif KKS
+        public const string GameName = "Koikatsu Sunshine";
+        public const string MainGameProcessName = "KoikatsuSunshine";
+        public const string TrialProcessName = "KoikatsuSunshineTrial";
+        public const string StudioProcessName = "CharaStudio";
+        public const string Prefix = "KKS";
+        public const RegexOptions SupportedRegexCompilationOption = RegexOptions.Compiled;
 #endif
     }
 }

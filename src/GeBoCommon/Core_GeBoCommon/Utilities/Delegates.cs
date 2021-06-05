@@ -4,6 +4,7 @@ using System.Reflection;
 using BepInEx.Logging;
 using HarmonyLib;
 using JetBrains.Annotations;
+using KKAPI.Utilities;
 
 namespace GeBoCommon.Utilities
 {
@@ -11,6 +12,7 @@ namespace GeBoCommon.Utilities
     public static class Delegates
     {
         private static ManualLogSource Logger => Common.CurrentLogger;
+        private static readonly object[] NoArgs = new object[0];
 
         public static Func<T> LazyReflectionGetter<T>(SimpleLazy<object> instLoader, string fieldName)
         {
@@ -40,7 +42,7 @@ namespace GeBoCommon.Utilities
         public static Func<T> LazyReflectionGetter<T>(Func<Type> typeLoader, Func<object> objLoader, string fieldName)
         {
             Logger?.DebugLogDebug(
-                $"{nameof(LazyReflectionGetter)}<{typeof(T).Name}>({typeLoader}, {objLoader}, {fieldName}");
+                $"{nameof(LazyReflectionGetter)}<{typeof(T).GetPrettyTypeName()}>({typeLoader}, {objLoader}, {fieldName}");
 
             var innerGetter =
                 new SimpleLazy<Func<object, T>>(() => LazyReflectionInstanceGetter<T>(typeLoader, fieldName));
@@ -54,10 +56,11 @@ namespace GeBoCommon.Utilities
 
         private static Func<object, T> LazyReflectionInstanceGetter<T>(Type type, string fieldName)
         {
-            var fieldInfo = new SimpleLazy<FieldInfo>(() => AccessTools.Field(type, fieldName));
+            Logger?.DebugLogDebug(
+                $"{nameof(LazyReflectionGetter)}<{typeof(T).GetPrettyTypeName()}>({type.GetPrettyTypeName()}, {fieldName}");
+            var innerGetter = new SimpleLazy<Func<object, T>>(() => FieldOrPropertyGetter<T>(type, fieldName));
 
-            Expression<Func<object, T>> getter = obj =>
-                (T)(fieldInfo.Value == null ? null : fieldInfo.Value.GetValue(obj));
+            Expression<Func<object, T>> getter = obj => innerGetter.Value(obj);
             return getter.Compile();
         }
 
@@ -107,7 +110,7 @@ namespace GeBoCommon.Utilities
         public static Action<T> LazyReflectionSetter<T>(Func<Type> typeLoader, Func<object> objLoader, string fieldName)
         {
             Logger?.DebugLogDebug(
-                $"{nameof(LazyReflectionSetter)}<{typeof(T).Name}>({typeLoader}, {objLoader}, {fieldName})");
+                $"{nameof(LazyReflectionSetter)}<{typeof(T).GetPrettyTypeName()}>({typeLoader}, {objLoader}, {fieldName})");
 
 
             var innerSetter =
@@ -120,8 +123,9 @@ namespace GeBoCommon.Utilities
 
         private static Action<object, T> LazyReflectionInstanceSetter<T>(Type type, string fieldName)
         {
-            var fieldInfo = new SimpleLazy<FieldInfo>(() => AccessTools.Field(type, fieldName));
-            Expression<Action<object, T>> setter = (obj, value) => fieldInfo.Value.SetValue(obj, value);
+            var innerSetter = new SimpleLazy<Action<object, T>>(() => FieldOrPropertySetter<T>(type, fieldName));
+
+            Expression<Action<object, T>> setter = (obj, value) => innerSetter.Value(obj, value);
             return setter.Compile();
         }
 
@@ -140,6 +144,71 @@ namespace GeBoCommon.Utilities
 
             Expression<Action<TObj, TField>> setter = (obj, value) => innerSetter.Value(obj, value);
             return setter.Compile();
+        }
+
+        private static Func<object, T> FieldOrPropertyGetter<T>(Type type, string fieldName)
+        {
+            Func<object, T> Searcher(Type innerType)
+            {
+                Expression<Func<object, T>> getter = null;
+
+                var fieldInfo = innerType.GetField(fieldName, AccessTools.all);
+
+                if (fieldInfo != null)
+                {
+                    getter = obj => (T)fieldInfo.GetValue(obj);
+                    return getter.Compile();
+                }
+
+                var propertyInfo = innerType.GetProperty(fieldName, AccessTools.all);
+
+                if (propertyInfo != null)
+                {
+                    getter = obj => (T)propertyInfo.GetValue(obj, NoArgs);
+                    return getter.Compile();
+                }
+
+                return null;
+            }
+
+            var result = AccessTools.FindIncludingBaseTypes(type, Searcher);
+            if (result != null) return result;
+
+            throw new ArgumentException(
+                $"Unable to find a field or property getter named {fieldName} on {type.GetPrettyTypeName()}");
+        }
+
+        private static Action<object, T> FieldOrPropertySetter<T>(Type type, string fieldName)
+        {
+    
+
+            Action<object, T> Searcher(Type innerType)
+            {
+                Expression<Action<object, T>> setter;
+                var fieldInfo = innerType.GetField(fieldName, AccessTools.all);
+
+                if (fieldInfo != null)
+                {
+                    setter = (obj, val) => fieldInfo.SetValue(obj, val);
+                    return setter.Compile();
+                }
+
+                var propertyInfo = innerType.GetProperty(fieldName, AccessTools.all);
+
+                if (propertyInfo != null)
+                {
+                    setter = (obj, val) => propertyInfo.SetValue(obj, val, NoArgs);
+                    return setter.Compile();
+                }
+
+                return null;
+            }
+
+            var result = AccessTools.FindIncludingBaseTypes(type, Searcher);
+            if (result != null) return result;
+
+            throw new ArgumentException(
+                $"Unable to find a field or property setter named {fieldName} on {type.GetPrettyTypeName()}");
         }
     }
 }

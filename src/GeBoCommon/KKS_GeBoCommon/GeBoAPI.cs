@@ -1,21 +1,12 @@
-﻿using Illusion.Game;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using GeBoCommon.Chara;
-using GeBoCommon.Utilities;
-using HarmonyLib;
-using JetBrains.Annotations;
+using Illusion.Game;
 
 namespace GeBoCommon
 {
     public partial class GeBoAPI
     {
-        private static readonly SimpleLazy<bool> LazyHasDarkness = new SimpleLazy<bool>(
-            () => typeof(ChaControl).GetProperty("exType", AccessTools.all) != null);
-
-        [PublicAPI]
-        public static bool HasDarkness => LazyHasDarkness.Value;
-
         private static readonly IList<KeyValuePair<string, NameType>> ChaFileNamesInternal =
             new List<KeyValuePair<string, NameType>>
             {
@@ -33,7 +24,10 @@ namespace GeBoCommon
             yield return new KeyValuePair<int, string>(++i, chaFile.parameter?.nickname);
         }
 
-        public string ChaFileFullName(ChaFile chaFile) => chaFile?.parameter.fullname;
+        public string ChaFileFullName(ChaFile chaFile)
+        {
+            return chaFile?.parameter.fullname;
+        }
 
         public void ChaFileSetName(ChaFile chaFile, int index, string chaName)
         {
@@ -62,7 +56,11 @@ namespace GeBoCommon
             switch (notificationSound)
             {
                 case NotificationSound.Success:
+#if KKS
+                    sound = SystemSE.ok_l;
+#else
                     sound = SystemSE.result_single;
+#endif
                     break;
 
                 case NotificationSound.Error:

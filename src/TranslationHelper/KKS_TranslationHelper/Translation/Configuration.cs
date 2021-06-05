@@ -14,10 +14,10 @@ namespace TranslationHelperPlugin.Translation
 {
     internal static partial class Configuration
     {
-        internal static readonly Dictionary<string, string> ListInfoNameTranslatedMap =
+        internal static Dictionary<string, string> ListInfoNameTranslatedMap =
             TranslationHelper.StringCacheInitializer();
 
-        internal static readonly NameScopeDictionary<Dictionary<string, string>> LoadCharaFileTranslatedMap =
+        internal static NameScopeDictionary<Dictionary<string, string>> LoadCharaFileTranslatedMap =
             new NameScopeDictionary<Dictionary<string, string>>(
                 () => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
 
@@ -30,14 +30,8 @@ namespace TranslationHelperPlugin.Translation
             ExtendedSave.CardBeingSaved += CardBeingSaved;
             TranslationHelper.CardTranslationBehaviorChanged += TranslationHelperCardTranslationBehaviorChanged;
 
-            if (KoikatuAPI.IsSteamRelease())
-            {
-                Party.Hooks.Setup();
-            }
-            else
-            {
-                Standard.Hooks.Setup();
-            }
+           Standard.Hooks.Setup();
+           
         }
 
         private static void TranslationHelperCardTranslationBehaviorChanged(object sender, EventArgs e)

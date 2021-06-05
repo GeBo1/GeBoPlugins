@@ -61,6 +61,7 @@
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\NamePresets\AI\StockMale.xml" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\NamePresets\HS2\NPCs.xml" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\NamePresets\HS2\StockFemale.xml" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\NamePresets\KKS\StockFemale.xml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\NamePresets\KK\StockMale.xml" />

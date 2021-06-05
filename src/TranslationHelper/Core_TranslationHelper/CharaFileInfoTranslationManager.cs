@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using BepInEx.Logging;
 using ExtensibleSaveFormat;
+using GeBoCommon;
 using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
@@ -95,6 +96,7 @@ namespace TranslationHelperPlugin
             if (fileInfo == null) yield break;
 
             var path = fileInfo.FullPath;
+            var origName = fileInfo.Name;
 
             bool NotDone()
             {
@@ -105,7 +107,7 @@ namespace TranslationHelperPlugin
             if (!NotDone()) yield return null;
 
             yield return new WaitWhile(NotDone);
-            if (fileInfo.Sex != CharacterSex.Unspecified) ApplyTranslations(fileInfo);
+            if (fileInfo.Sex != CharacterSex.Unspecified && fileInfo.FullPath == path) ApplyTranslations(fileInfo);
             Logger.DebugLogDebug($"WaitOnFileInfo: {fileInfo}: done: {path}");
         }
 
@@ -119,6 +121,10 @@ namespace TranslationHelperPlugin
 
         public static bool TryGetRecentTranslation(ICharaFileInfo fileInfo, out string result)
         {
+            result = null;
+            #if KK
+            if (!GeBoAPI.HasDarkness) return false;
+            #endif
             var hit = RecentTranslationsByPath[new NameScope(fileInfo.Sex)].TryGetValue(fileInfo.FullPath, out result);
             Logger.DebugLogDebug(
                 $"CharaFileInfoTranslationManager.TryGetRecentTranslation({fileInfo.Sex}, {fileInfo.FullPath}) => {result} {hit}");
@@ -127,6 +133,10 @@ namespace TranslationHelperPlugin
 
         public static bool TryGetRecentTranslation(NameScope scope, string path, out string result)
         {
+            result = null;
+#if KK
+            if (!GeBoAPI.HasDarkness) return false;
+#endif
             path = PathUtils.NormalizePath(path);
 
             var hit = RecentTranslationsByPath[scope].TryGetValue(path, out result);
@@ -135,39 +145,7 @@ namespace TranslationHelperPlugin
             return hit;
         }
 
-        public static void CacheRecentTranslation(ICharaFileInfo fileInfo, string translatedName)
-        {
-            // ReSharper disable RedundantAssignment - used in DEBUG
-            var added = false;
-            var start = Time.realtimeSinceStartup;
-            // ReSharper restore RedundantAssignment
-            var key = new {fileInfo.FullPath, translatedName};
-            try
-            {
-                if (CacheRecentTranslationsHelper.WasCalledRecently(key)) return;
-                Logger.DebugLogDebug(
-                    $"CharaFileInfoTranslationManager.CacheRecentTranslation({fileInfo.Sex}, {fileInfo.FullPath}, {translatedName})");
-                if (translatedName.IsNullOrEmpty() || fileInfo.Name.IsNullOrEmpty() ||
-                    fileInfo.FullPath.IsNullOrEmpty())
-                {
-                    return;
-                }
-
-                if (TranslationHelper.NameStringComparer.Equals(fileInfo.Name, translatedName)) return;
-                RecentTranslationsByPath[new NameScope(fileInfo.Sex)][PathUtils.NormalizePath(fileInfo.FullPath)] =
-                    translatedName;
-                // ReSharper disable once RedundantAssignment - used in DEBUG
-                added = true;
-            }
-            finally
-            {
-                CacheRecentTranslationsHelper.RecordCall(key);
-                Logger.DebugLogDebug(
-                    $"CardFileInfoTranslationManager.CacheRecentTranslation(fileInfo): {Time.realtimeSinceStartup - start:000.0000000000}: added={added}");
-            }
-        }
-
-        public static void CacheRecentTranslation(NameScope scope, string path, string translatedName)
+        public static void CacheRecentTranslation(NameScope scope, string path, string translatedName, bool overwriteExisting=true)
         {
             // ReSharper disable RedundantAssignment - used in DEBUG
             var added = false;
@@ -186,7 +164,7 @@ namespace TranslationHelperPlugin
                 }
 
                 // this is less "safe" than the other version, so bail if we've already got cache data
-                if (RecentTranslationsByPath[scope].ContainsKey(path)) return;
+                if (!overwriteExisting && RecentTranslationsByPath[scope].ContainsKey(path)) return;
 
                 // this is the slowest check, keep until last
                 if (StringUtils.ContainsJapaneseChar(translatedName)) return;
@@ -203,40 +181,64 @@ namespace TranslationHelperPlugin
             }
         }
 
+        internal static Action<string> MakeCachingCallbackWrapper(ICharaFileInfo fileInfo, Action<string> callback =null)
+        {
+            var sex = fileInfo.Sex;
+            var origName = fileInfo.Name;
+            var path = fileInfo.FullPath;
+
+            void ICharaFileInfoCachingCallbackWrapper(string translationResult)
+            {
+                Logger.DebugLogDebug(
+                    $"{nameof(ICharaFileInfoCachingCallbackWrapper)}: translationResult={translationResult}, origName={origName}, path={path}, callback={callback}");
+                if (!translationResult.IsNullOrEmpty() &&
+                    !TranslationHelper.NameStringComparer.Equals(translationResult, origName) &&
+                    !path.IsNullOrEmpty())
+                {
+                    CacheRecentTranslation(new NameScope(sex), path, translationResult, false);
+                }
+
+                callback?.Invoke(translationResult);
+            }
+            
+            return ICharaFileInfoCachingCallbackWrapper;
+
+        }
+
         public static Action<string> MakeCachingCallbackWrapper(string origName, CharaFileInfo charaFileInfo,
             NameScope scope, Action<string> callback = null)
         {
-            void CallbackWrapper(string translationResult)
+            var path = charaFileInfo.file;
+
+            void CharaFileInfoCachingCallbackWrapper(string translationResult)
             {
                 Logger.DebugLogDebug(
-                    $"{nameof(CallbackWrapper)}: translationResult={translationResult}, origName={origName}, charaFileInfo={charaFileInfo}, callback={callback}");
+                    $"{nameof(CharaFileInfoCachingCallbackWrapper)}: translationResult={translationResult}, origName={origName}, path={path}, callback={callback}");
                 if (!translationResult.IsNullOrEmpty() &&
-                    !TranslationHelper.NameStringComparer.Equals(translationResult, origName))
-                {
-                    charaFileInfo.SafeProc(cfi =>
-                    {
-                        if (!string.IsNullOrEmpty(cfi.file))
+                    !TranslationHelper.NameStringComparer.Equals(translationResult, origName) &&
+                    !path.IsNullOrEmpty())
                         {
-                            CacheRecentTranslation(scope, cfi.file, translationResult);
-                        }
-                    });
+                    CacheRecentTranslation(scope, path, translationResult);
                 }
 
                 callback?.Invoke(translationResult);
             }
 
-            return CallbackWrapper;
+            return CharaFileInfoCachingCallbackWrapper;
         }
 
         public static Action<string> MakeCachingCallbackWrapper(string origName, ChaFile chaFile, NameScope scope,
             Action<string> callback = null)
         {
-            void CallbackWrapper(string translationResult)
+            var fullPath = chaFile.GetFullPath();
+            void ChaFileCachingCallbackWrapper(string translationResult)
             {
+                Logger.DebugLogDebug(
+                    $"{nameof(ChaFileCachingCallbackWrapper)}: translationResult={translationResult}, origName={origName}, path={fullPath}, callback={callback}");
                 if (!translationResult.IsNullOrEmpty() &&
                     !TranslationHelper.NameStringComparer.Equals(translationResult, origName))
                 {
-                    var fullPath = chaFile.GetFullPath();
+
                     if (!string.IsNullOrEmpty(fullPath))
                     {
                         CacheRecentTranslation(scope, fullPath, translationResult);
@@ -246,7 +248,7 @@ namespace TranslationHelperPlugin
                 callback?.Invoke(translationResult);
             }
 
-            return CallbackWrapper;
+            return ChaFileCachingCallbackWrapper;
         }
 
 
@@ -260,15 +262,17 @@ namespace TranslationHelperPlugin
 
             _pathsInProgress.Add(path);
 
+ 
+            var cacheWrapper = MakeCachingCallbackWrapper(fileInfo);
             void DoneHandler(ITranslationResult result)
             {
                 _pathsInProgress.Remove(path);
                 if (result.Succeeded)
                 {
-                    CacheRecentTranslation(fileInfo, result.TranslatedText);
+                    cacheWrapper(result.TranslatedText);
                     CardNameTranslationManager.CacheRecentTranslation(scope, originalName, result.TranslatedText);
                     // must be set after CacheRecentTranslation   
-                    fileInfo.Name = result.TranslatedText;
+                    fileInfo.SafeNameUpdate(path, originalName, result.TranslatedText);
                 }
 
                 done = true;
@@ -287,18 +291,20 @@ namespace TranslationHelperPlugin
 
             IEnumerator TranslationCoroutine(IEnumerable<TranslationResultHandler> handlers)
             {
-                if (TryGetRecentTranslation(fileInfo, out var cachedName))
+                if (TryGetRecentTranslation(scope, path, out var cachedName))
                 {
                     var result = new TranslationResult(originalName, cachedName);
-                    if (result.Succeeded) fileInfo.Name = cachedName;
+                    if (result.Succeeded) fileInfo.SafeNameUpdate(path, originalName, cachedName);
+     
                     handlers.CallHandlers(result);
                     yield break;
                 }
 
                 yield return null;
-                if (!FileInfoNeedsTranslation(fileInfo))
+              
+                if (!StringUtils.ContainsJapaneseChar(originalName))
                 {
-                    handlers.CallHandlers(new TranslationResult(false, fileInfo.Name));
+                    handlers.CallHandlers(new TranslationResult(false, originalName));
                     yield break;
                 }
 

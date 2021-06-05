@@ -271,7 +271,7 @@ namespace TranslationHelperPlugin.Chara
         [UsedImplicitly]
         public string GetFormattedOriginalName()
         {
-#if KK
+#if KK || KKS
             if (!TranslationHelper.ShowGivenNameFirst) return GetOriginalFullName();
             var givenIdx = GeBoAPI.Instance.ChaFileNameToIndex("firstname");
             var givenName = IsTranslated && !string.IsNullOrEmpty(OriginalNames[givenIdx])
@@ -291,7 +291,7 @@ namespace TranslationHelperPlugin.Chara
 
         public string GetOriginalFullName()
         {
-#if KK
+#if KK || KKS
             var givenIdx = GeBoAPI.Instance.ChaFileNameToIndex("firstname");
             var givenName = IsTranslated && !string.IsNullOrEmpty(OriginalNames[givenIdx])
                 ? OriginalNames[givenIdx]

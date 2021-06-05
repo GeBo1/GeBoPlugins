@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- ReSharper disable MarkupTextTypo -->
+<NamePresets>
+
+    <!-- 玉城 優 (ゆう)-->
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>優</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>玉城</Name>
+        </FamilyNames>
+        <NickNames>
+            <Name>ゆう</Name>
+        </NickNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Yuu</GivenName>
+                <FamilyName>Tamaki</FamilyName>
+                <NickName>Yuu</NickName>
+            </Translation>
+        </Translations>
+        <Notes>KKS stock character</Notes>
+    </NamePreset>
+
+    <!-- remaining stock chars are from KK (so far) -->
+
+</NamePresets>

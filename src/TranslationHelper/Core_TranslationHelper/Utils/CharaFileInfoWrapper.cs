@@ -48,8 +48,13 @@ namespace TranslationHelperPlugin.Utils
         {
             WrapperTypes[targetType.FullName ?? targetType.Name] = wrapperType;
         }
-    }
 
+        internal static void SafeNameUpdate(this ICharaFileInfo fileInfo, string path, string originalName,
+            string newName)
+        {
+            if (fileInfo.FullPath == path && fileInfo.Name == originalName) fileInfo.Name = newName;
+        }
+    }
 
     [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     internal partial class CharaFileInfoWrapper<T> : ICharaFileInfo

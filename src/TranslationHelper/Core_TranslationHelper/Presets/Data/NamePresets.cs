@@ -147,13 +147,17 @@ namespace TranslationHelperPlugin.Presets.Data
                 .Where(r => r.StartsWith(resourcePrefix) && r.EndsWith(".xml"))
                 .OrderBy(r => r);
 
+
+            var resourceLoaded = false;
             foreach (var resourceName in resourceNames)
             {
                 using (var stream = executingAssembly.GetManifestResourceStream(resourceName))
                 {
                     foreach (var namePreset in DeserializeNamePresets(stream, resourceName)) yield return namePreset;
+                    resourceLoaded = true;
                 }
             }
+            if (!resourceLoaded) Logger.LogWarning("No embedded resources loaded");
 
             var presetDirs = new[]
             {

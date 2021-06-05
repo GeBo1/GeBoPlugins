@@ -97,7 +97,7 @@ namespace TranslationHelperPlugin.Chara
         {
             return chaFile.TryGetTranslationHelperController(out var controller)
                 ? controller.GetOriginalFullName()
-#if KK
+#if KK || KKS
                 : string.Concat(chaFile.GetName("lastname"), " ", chaFile.GetName("firstname"));
 #else
                 : chaFile.GetFullName();
@@ -106,7 +106,7 @@ namespace TranslationHelperPlugin.Chara
 
         public static string GetFormattedOriginalName(this ChaFile chaFile)
         {
-#if KK
+#if KK || KKS
             if (!TranslationHelper.ShowGivenNameFirst) return chaFile.GetOriginalFullName();
 
             return chaFile.TryGetTranslationHelperController(out var controller)

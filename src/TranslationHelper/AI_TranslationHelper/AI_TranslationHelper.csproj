@@ -43,8 +43,8 @@
       <HintPath>..\..\..\packages\IllusionLibs.BepInEx.Harmony.2.3.2\lib\net35\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="AIAPI, Version=1.20.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\IllusionModdingAPI.AIAPI.1.20.0\lib\net46\AIAPI.dll</HintPath>
+    <Reference Include="AIAPI, Version=1.20.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\IllusionModdingAPI.AIAPI.1.20.2\lib\net46\AIAPI.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="AI_ExtensibleSaveFormat, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -122,7 +122,7 @@
     <Analyzer Include="..\..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.5.0.3\analyzers\dotnet\cs\Microsoft.CodeAnalysis.NetAnalyzers.dll" />
     <Analyzer Include="..\..\..\packages\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.3.3.1\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.PerformanceSensitiveAnalyzers.dll" />
     <Analyzer Include="..\..\..\packages\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.3.3.1\analyzers\dotnet\cs\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.dll" />
-    <Analyzer Include="..\..\..\packages\Microsoft.Unity.Analyzers.1.10.2\analyzers\dotnet\cs\Microsoft.Unity.Analyzers.dll" />
+    <Analyzer Include="..\..\..\packages\Microsoft.Unity.Analyzers.1.11.0\analyzers\dotnet\cs\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\GeBoCommon\AI_GeBoCommon\AI_GeBoCommon.csproj">

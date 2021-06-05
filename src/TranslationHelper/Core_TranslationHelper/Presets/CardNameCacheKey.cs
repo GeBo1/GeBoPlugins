@@ -1,6 +1,6 @@
 ﻿
 using JetBrains.Annotations;
-#if KK
+#if KK||KKS
 using GeBoCommon.Chara;
 #endif
 #if AI||HS2
@@ -17,7 +17,7 @@ namespace TranslationHelperPlugin.Presets
         [UsedImplicitly]
         internal CardNameCacheKey(string fullName) : base(fullName) { }
 
-#if KK
+#if KK || KKS
         internal CardNameCacheKey(ChaFile chaFile) :
             this(chaFile.GetName("lastname"), chaFile.GetName("firstname")) { }
 #else

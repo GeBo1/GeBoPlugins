@@ -62,7 +62,7 @@ namespace TranslationHelperPlugin.Chara
         */
 
         [HarmonyPostfix]
-#if KK
+#if KK || KKS
         [HarmonyPatch(typeof(ChaFile), nameof(ChaFile.LoadFile), typeof(string), typeof(bool), typeof(bool))]
 #else
         [HarmonyPatch(typeof(ChaFile), nameof(ChaFile.LoadFile), typeof(string), typeof(int), typeof(bool), typeof(bool))]
@@ -120,7 +120,7 @@ namespace TranslationHelperPlugin.Chara
         }
 
 
-#if KK
+#if KK || KKS
         [HarmonyPostfix]
         [HarmonyPatch(typeof(ChaFile), nameof(ChaFile.SaveFile), typeof(BinaryWriter), typeof(bool))]
 #else

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using BepInEx;
 using BepInEx.Configuration;
@@ -34,7 +35,7 @@ namespace TranslationHelperPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationhelper";
         public const string PluginName = "Translation Helper";
-        public const string Version = "1.1.0.5";
+        public const string Version = "1.1.0.6";
 
         internal static new ManualLogSource Logger;
         private static TranslationHelper _instance;
@@ -71,7 +72,7 @@ namespace TranslationHelperPlugin
 
         internal static readonly CardNameTranslationManager CardNameManager = new CardNameTranslationManager();
 
-        internal static ICollection<GameMode> RegistrationGameModes =
+        internal static readonly ICollection<GameMode> RegistrationGameModes =
             new HashSet<GameMode> {GameMode.MainGame};
 
         // space, middle dot (full/half-width), ideographic space

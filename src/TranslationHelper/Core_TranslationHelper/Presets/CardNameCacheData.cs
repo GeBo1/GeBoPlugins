@@ -5,7 +5,7 @@ namespace TranslationHelperPlugin.Presets
 {
     public abstract class CardNameCacheData<T> : CardNameCacheBase, IEquatable<T> where T : CardNameCacheBase
     {
-#if KK
+#if KK || KKS
         private const string KeyJoin = "|||||";
 #else
         private const string KeyJoin = " ";

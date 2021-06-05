@@ -1,4 +1,4 @@
-﻿using GeBoCommon.AutoTranslation;
+using GeBoCommon.AutoTranslation;
 using JetBrains.Annotations;
 using Studio;
 

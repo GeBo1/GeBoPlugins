@@ -26,4 +26,4 @@ using static GameWhoIsTherePlugin.GameWhoIsThere;
 [assembly: AssemblyDescription(PluginName + " for " + GeBoCommon.Constants.GameName)]
 [assembly: AssemblyTitle(GeBoCommon.Constants.Prefix + "_" + nameof(GeBoCommon))]
 [assembly: AssemblyProduct(GeBoCommon.Constants.Prefix + "_" + nameof(GeBoCommon))]
-[assembly: AssemblyCompany("https://github.com/GeBo1/GeBoPlugins")]
+[assembly: AssemblyCompany(GeBoCommon.Constants.RepoUrl)]

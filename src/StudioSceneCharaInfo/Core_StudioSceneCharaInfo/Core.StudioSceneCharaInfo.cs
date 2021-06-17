@@ -34,8 +34,6 @@ namespace StudioSceneCharaInfoPlugin
 
         private static Action _resetHspeWrapper;
 
-        private static SceneLoadScene _studioInitObject;
-
         internal static new ManualLogSource Logger;
 
         private static bool _dumping;
@@ -47,7 +45,7 @@ namespace StudioSceneCharaInfoPlugin
             _resetHspeWrapper = LazyResetHspe;
         }
 
-        public static SceneLoadScene StudioInitObject => _studioInitObject;
+        public static SceneLoadScene StudioInitObject { get; private set; }
 
         public static ConfigEntry<KeyboardShortcut> SceneCharaInfoDumpHotkey { get; private set; }
 
@@ -85,11 +83,11 @@ namespace StudioSceneCharaInfoPlugin
             return SceneUtils.GetSceneLoaderPaths(StudioInitObject);
         }
 
-        [HarmonyPatch(typeof(SceneLoadScene), nameof(SceneLoadScene.InitInfo))]
+        [HarmonyPatch(typeof(SceneLoadScene), "InitInfo")]
         [HarmonyPostfix]
         internal static void StudioInitInfoPost(SceneLoadScene __instance)
         {
-            _studioInitObject = __instance;
+            StudioInitObject = __instance;
         }
 
         [UsedImplicitly]
@@ -278,7 +276,6 @@ namespace StudioSceneCharaInfoPlugin
                             */
                         Logger.LogDebug($"finished {displayPath} ({i}/{scenes.Count})");
                     }
-#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception err)
                     {
                         //writer.Write($",{q}ERROR PROCESSING FILE{q}");
@@ -286,7 +283,6 @@ namespace StudioSceneCharaInfoPlugin
                         line.Add($"{err}".Replace(DQ, '\''));
                         Logger.LogException(err, $"${nameof(ExecuteDump)}: error processing {displayPath}");
                     }
-#pragma warning restore CA1031 // Do not catch general exception types
 
                     writer.Write(DQ);
                     try

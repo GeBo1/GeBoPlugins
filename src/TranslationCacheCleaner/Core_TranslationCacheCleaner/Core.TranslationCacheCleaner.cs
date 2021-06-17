@@ -35,7 +35,7 @@ namespace TranslationCacheCleanerPlugin
 
         public static ConfigEntry<KeyboardShortcut> CleanCacheHotkey { get; private set; }
 
-        private string AutoTranslationsFilePath => GeBoAPI.Instance.AutoTranslationHelper.GetAutoTranslationsFilePath();
+        private static string AutoTranslationsFilePath => GeBoAPI.Instance.AutoTranslationHelper.GetAutoTranslationsFilePath();
 
         internal void Awake()
         {

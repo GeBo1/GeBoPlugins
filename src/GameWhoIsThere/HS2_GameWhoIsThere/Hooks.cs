@@ -42,6 +42,7 @@ namespace GameWhoIsTherePlugin
                 InMapSelecCursorLabels[i] = null;
                 thumbUi.SafeProc(ui => InMapSelecCursorLabels[i] = ui.text);
             }
+
             try
             {
                 if (!GameWhoIsThere.Instance.InMyRoom) return;
@@ -56,15 +57,15 @@ namespace GameWhoIsTherePlugin
                 {
                     return;
                 }
+
                 InMapSelecCursorLabels[0] = null;
                 InMapSelecCursorLabels[1] = null;
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(MapSelecCursorEnterPrefix));
             }
-#pragma warning restore CA1031
         }
 
         [HarmonyPostfix]
@@ -78,12 +79,11 @@ namespace GameWhoIsTherePlugin
                 InMapSeleChaFileControls[_inMapSelecCursorEnterIndex] = __instance;
                 _inMapSelecCursorEnterIndex++;
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(ChaFileControl_LoadCharaFile_Postfix));
             }
-#pragma warning restore CA1031
         }
 
         [HarmonyPostfix]
@@ -106,12 +106,11 @@ namespace GameWhoIsTherePlugin
                     GameWhoIsThere.Instance.SafeProc(inst => inst.ConfigureDisplay(idx, label, chaFileControl));
                 }
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(MapSelecCursorEnterPostfix));
             }
-#pragma warning restore CA1031
         }
     }
 }

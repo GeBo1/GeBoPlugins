@@ -27,4 +27,4 @@ using static GameDressForSuccessPlugin.GameDressForSuccess;
 [assembly: AssemblyDescription(PluginName + " for " + GeBoCommon.Constants.GameName)]
 [assembly: AssemblyTitle(GeBoCommon.Constants.Prefix + "_" + nameof(GameDressForSuccessPlugin.GameDressForSuccess))]
 [assembly: AssemblyProduct(GeBoCommon.Constants.Prefix + "_" + nameof(GameDressForSuccessPlugin.GameDressForSuccess))]
-[assembly: AssemblyCompany("https://github.com/GeBo1/GeBoPlugins")]
+[assembly: AssemblyCompany(GeBoCommon.Constants.RepoUrl)]

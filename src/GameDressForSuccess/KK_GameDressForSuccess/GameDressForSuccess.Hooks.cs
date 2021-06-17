@@ -36,12 +36,11 @@ namespace GameDressForSuccessPlugin
                         i => i.scenario.SafeProc(
                             s => s.currentHeroine.SafeProc(Instance.TravelingStart)));
                 }
-#pragma warning disable CA1031
+
                 catch (Exception err)
                 {
                     Logger.LogException(err, nameof(StartTravelingHook));
                 }
-#pragma warning restore CA1031
             }
 
             [HarmonyPrefix]
@@ -56,12 +55,11 @@ namespace GameDressForSuccessPlugin
                         i => i.scenario.SafeProc(
                             s => s.currentHeroine.SafeProc(Instance.TravelingDone)));
                 }
-#pragma warning disable CA1031
+
                 catch (Exception err)
                 {
                     Logger.LogException(err, nameof(StopTravelingHook));
                 }
-#pragma warning restore CA1031
             }
 
             [HarmonyPostfix]
@@ -82,12 +80,11 @@ namespace GameDressForSuccessPlugin
                             if (!cc.GetChara(___no).IsNullOrNpc()) Instance.DressPlayer(___type);
                         })));
                 }
-#pragma warning disable CA1031
+
                 catch (Exception err)
                 {
                     Logger.LogException(err, nameof(CoordinateDoPostfix));
                 }
-#pragma warning restore CA1031
             }
 
             #region Right Click Clothing Support
@@ -125,12 +122,11 @@ namespace GameDressForSuccessPlugin
                         autoToggle = g.ActiveToggles().FirstOrDefault(t => t.name == AutoToggleName));
                     __state = autoToggle;
                 }
-#pragma warning disable CA1031
+
                 catch (Exception err)
                 {
                     Logger.LogException(err, nameof(ToggleOnPointerClickPrefix));
                 }
-#pragma warning restore CA1031
             }
 
             [HarmonyPostfix]
@@ -144,12 +140,11 @@ namespace GameDressForSuccessPlugin
                     // if we get here, click the automatic button afterwards
                     __state.OnSubmit(null);
                 }
-#pragma warning disable CA1031
+
                 catch (Exception err)
                 {
                     Logger.LogException(err, nameof(ToggleOnPointerClickPostfix));
                 }
-#pragma warning restore CA1031
             }
 
             #endregion

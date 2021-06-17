@@ -17,6 +17,7 @@ namespace StudioSceneNavigationPlugin
             {
                 try
                 {
+                    _sceneLoadScene = __instance;
                     _currentSceneFolder = string.Empty;
                     ScenePaths = SceneUtils.GetSceneLoaderPaths(__instance);
                     _normalizedScenePaths = null;
@@ -24,12 +25,11 @@ namespace StudioSceneNavigationPlugin
                         p => _currentSceneFolder = PathUtils.NormalizePath(Path.GetDirectoryName(p)));
                     Instance.SafeProc(i => i.ScrollToLastLoadedScene(__instance));
                 }
-#pragma warning disable CA1031
+
                 catch (Exception err)
                 {
                     Logger.LogException(err, __instance, nameof(StudioInitInfoPost));
                 }
-#pragma warning restore CA1031
             }
         }
     }

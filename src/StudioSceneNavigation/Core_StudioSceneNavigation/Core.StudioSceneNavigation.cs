@@ -44,6 +44,8 @@ namespace StudioSceneNavigationPlugin
         private static readonly object SavePendingLock = new object();
         private static bool _setPage;
 
+        private static SceneLoadScene _sceneLoadScene;
+
         private static readonly ExpiringSimpleCache<string, string> SceneRelativePathCache =
             new ExpiringSimpleCache<string, string>(CalculateSceneRelativePath, 360);
 
@@ -56,6 +58,7 @@ namespace StudioSceneNavigationPlugin
         private static readonly SimpleLazy<Func<SceneLoadScene, int>> SceneLoadScenePageNumGetter =
             new SimpleLazy<Func<SceneLoadScene, int>>(() =>
                 Delegates.LazyReflectionInstanceGetter<SceneLoadScene, int>("pageNum"));
+
 
         private static readonly string TrackLastLoadedSceneFile = PathUtils.CombinePaths(
             "BepInEx", "config", StringUtils.JoinStrings(".", GUID, "LastLoadedScene", "data"));
@@ -320,7 +323,8 @@ namespace StudioSceneNavigationPlugin
                     catch (Exception err)
                     {
                         if (!File.Exists(oldFile)) throw;
-                        Logger.LogException(err, this, $"{nameof(SaveTrackingFile)}: Error encountered, restoring {TrackLastLoadedSceneFile}");
+                        Logger.LogException(err, this,
+                            $"{nameof(SaveTrackingFile)}: Error encountered, restoring {TrackLastLoadedSceneFile}");
 
                         File.Copy(oldFile, TrackLastLoadedSceneFile);
 
@@ -361,11 +365,9 @@ namespace StudioSceneNavigationPlugin
             {
                 version = new Version(entry[1]);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (ArgumentException) { }
             catch (FormatException) { }
             catch (OverflowException) { }
-#pragma warning restore CA1031 // Do not catch general exception types
 
             if (!int.TryParse(entry[2], out expectedCount))
             {
@@ -425,13 +427,11 @@ namespace StudioSceneNavigationPlugin
 
                             lastLoadedScenes[entry[0]] = Path.GetFileName(entry[1]);
                         }
-#pragma warning disable CA1031 // Do not catch general exception types
                         catch (Exception err)
                         {
                             Logger.LogException(err,
                                 $"{nameof(LoadTrackingFile)}: line {count}: {line.TrimEnd()}");
                         }
-#pragma warning restore CA1031 // Do not catch general exception types
                     }
                 }
 
@@ -495,13 +495,10 @@ namespace StudioSceneNavigationPlugin
                     var coroutines = GeBoCommon.Utilities.ListPool<IEnumerator>.Get();
                     try
                     {
-                        coroutines.AddRange(new[]
-                        {
-                            CoroutineUtils.CreateCoroutine(
-                                () => Logger.LogInfoMessage(
-                                    $"Loading scene {paths.Count - index}/{paths.Count} ('{PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, nextImage)}')")),
-                            Singleton<Studio.Studio>.Instance.LoadSceneCoroutine(nextImage)
-                        });
+                        coroutines.Add(CoroutineUtils.CreateCoroutine(
+                            () => Logger.LogInfoMessage(
+                                $"Loading scene {paths.Count - index}/{paths.Count} ('{PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, nextImage)}')")));
+                        coroutines.Add(LoadScene(nextImage));
 
                         StartCoroutine(CoroutineUtils.ComposeCoroutine(coroutines.ToArray()));
                     }
@@ -513,12 +510,10 @@ namespace StudioSceneNavigationPlugin
                     navigated = true;
                 }
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception err)
             {
                 Logger.LogException(err, this, nameof(NavigateScene));
             }
-#pragma warning restore CA1031 // Do not catch general exception types
             finally
             {
                 // error encountered during navigation
@@ -532,6 +527,25 @@ namespace StudioSceneNavigationPlugin
             if (navigated) _setPage = true;
         }
 
+        private IEnumerator LoadScene(string nextImage)
+        {
+            if (_sceneLoadScene != null)
+            {
+                // try to mimic clicking scene from scene browser
+                try
+                {
+                    return _sceneLoadScene.LoadScene(nextImage);
+                }
+                catch (Exception err)
+                {
+                    Logger.LogException(err, this,
+                        $"{nameof(LoadScene)}: unexpected error loading scene via {_sceneLoadScene.GetPrettyTypeName()}, will try fallback");
+                }
+            }
+
+            return Singleton<Studio.Studio>.Instance.LoadSceneCoroutine(nextImage);
+        }
+
         private static void SetPage(int pageNum, SceneLoadScene sceneLoadScene = null)
         {
             if (sceneLoadScene != null)
@@ -542,12 +556,10 @@ namespace StudioSceneNavigationPlugin
                         ?.Invoke(sceneLoadScene, new object[] {pageNum});
                     return;
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch
                 {
                     // fall through
                 }
-#pragma warning restore CA1031 // Do not catch general exception types
             }
 
             SceneLoadScenePageSetter.Value(pageNum);

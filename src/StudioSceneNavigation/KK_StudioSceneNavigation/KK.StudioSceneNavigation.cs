@@ -1,4 +1,6 @@
-﻿namespace StudioSceneNavigationPlugin
+﻿using Studio;
+
+namespace StudioSceneNavigationPlugin
 {
     public partial class StudioSceneNavigation
     {

@@ -36,7 +36,7 @@ namespace GameDialogHelperPlugin
         [PublicAPI]
         public const string GUID = "com.gebo.BepInEx.GameDialogHelper";
         public const string PluginName = "Game Dialog Helper";
-        public const string Version = "1.0.1.1";
+        public const string Version = "1.0.1.2";
 
         private const float ColorDelta = 2f / 3f;
 

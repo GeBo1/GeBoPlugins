@@ -21,7 +21,7 @@ namespace StudioMultiSelectCharaPlugin
     {
         public const string GUID = "com.gebo.BepInEx.studiomultiselectchara";
         public const string PluginName = "Studio MultiSelect Chara";
-        public const string Version = "1.0.0.1";
+        public const string Version = "1.0.0.2";
         internal static new ManualLogSource Logger;
 
         private bool _busy;

@@ -23,7 +23,7 @@ namespace TranslationCacheCleanerPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationcachecleaner";
         public const string PluginName = "Translation Cache Cleaner";
-        public const string Version = "0.6.0.1";
+        public const string Version = "0.6.0.2";
 
         private const float NotifySeconds = 10f;
         private const float YieldSeconds = 0.1f;

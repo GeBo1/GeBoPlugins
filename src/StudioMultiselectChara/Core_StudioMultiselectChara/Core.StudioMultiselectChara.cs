@@ -5,6 +5,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using GeBoCommon;
+using GeBoCommon.Studio;
 using GeBoCommon.Utilities;
 using KKAPI.Studio;
 using KKAPI.Utilities;
@@ -54,54 +55,12 @@ namespace StudioMultiSelectCharaPlugin
             return StudioAPI.GetSelectedCharacters().Select(c => c.GetMatchId()).Distinct();
         }
 
-        private IEnumerable<TreeNodeObject> EnumerateTreeNodeObjects(TreeNodeObject root = null)
-        {
-            var roots = ListPool<TreeNodeObject>.Get();
-            if (root != null)
-            {
-                roots.Add(root);
-            }
-            else
-            {
-                root = StudioAPI.GetSelectedObjects().FirstOrDefault()?.treeNodeObject;
-                if (root != null)
-                {
-                    roots.AddRange(root.GetTreeNodeCtrl().GetTreeNodeObjects());
-                }
-            }
-
-            foreach (var entry in roots)
-            {
-                yield return entry;
-                foreach (var tnObj in entry.child.SelectMany(EnumerateTreeNodeObjects))
-                {
-                    yield return tnObj;
-                }
-            }
-
-            ListPool<TreeNodeObject>.Release(roots);
-        }
-
-        private IEnumerable<ObjectCtrlInfo> EnumerateObjects(ObjectCtrlInfo root = null)
-        {
-            TreeNodeObject tnRoot = null;
-            root.SafeProc(r => tnRoot = r.treeNodeObject);
-
-            foreach (var tnObj in EnumerateTreeNodeObjects(tnRoot))
-            {
-                if (Singleton<Studio.Studio>.Instance.dicInfo.TryGetValue(tnObj, out var result))
-                {
-                    yield return result;
-                }
-            }
-        }
-
-        private void SelectCharasById(CharaId matchId)
+        private static void SelectCharasById(CharaId matchId)
         {
             var selected = 0;
             var origCharCount = StudioAPI.GetSelectedCharacters().Count();
             var origObjCount = StudioAPI.GetSelectedObjects().Count() - origCharCount;
-            foreach (var objectCtrlInfo in EnumerateObjects())
+            foreach (var objectCtrlInfo in StudioUtils.EnumerateObjects())
             {
                 Logger.DebugLogDebug($"SelectCharasById: {objectCtrlInfo}");
                 if (objectCtrlInfo is OCIChar ociChar)

@@ -5,7 +5,6 @@ using System.Linq;
 using BepInEx.Logging;
 using ExtensibleSaveFormat;
 using GameDialogHelperPlugin.AdvancedLogicMemory;
-using GameDialogHelperPlugin.Utilities;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
 using JetBrains.Annotations;
@@ -263,12 +262,10 @@ namespace GameDialogHelperPlugin
                         {
                             saveGuid = new Guid((byte[])saveGuidVal);
                         }
-#pragma warning disable CA1031 // Do not catch general exception types
                         catch (ArgumentException)
                         {
                             saveGuid = Guid.Empty;
                         }
-#pragma warning restore CA1031 // Do not catch general exception types
 
                         if (saveGuid != Guid.Empty && saveGuid != GameDialogHelper.Instance.CurrentSaveGuid)
                         {
@@ -284,12 +281,11 @@ namespace GameDialogHelperPlugin
                         {
                             heroineGuidVersion = (int)tmpCharaGuidVersion;
                         }
-#pragma warning disable CA1031
+
                         catch
                         {
                             heroineGuidVersion = -1;
                         }
-#pragma warning restore CA1031
                     }
 
                     if (pluginData.data.TryGetValue(PluginDataInfo.Keys.CharaGuid, out var heroineGuidVal))
@@ -298,12 +294,10 @@ namespace GameDialogHelperPlugin
                         {
                             heroineGuid = new Guid((byte[])heroineGuidVal);
                         }
-#pragma warning disable CA1031 // Do not catch general exception types
                         catch (ArgumentException)
                         {
                             heroineGuid = Guid.Empty;
                         }
-#pragma warning restore CA1031 // Do not catch general exception types
                     }
                 }
 
@@ -322,12 +316,10 @@ namespace GameDialogHelperPlugin
                             {
                                 tmpGuid = h.GetCharaGuid(i);
                             }
-#pragma warning disable CA1031 // Do not catch general exception types
                             catch (ArgumentOutOfRangeException)
                             {
                                 continue;
                             }
-#pragma warning restore CA1031 // Do not catch general exception types
 
                             if (tmpGuid != cardMem.CharaGuid) continue;
                             Logger?.DebugLogDebug($"{nameof(LoadMemoryFromCardInternal)}: Setting Guid version to {i}");

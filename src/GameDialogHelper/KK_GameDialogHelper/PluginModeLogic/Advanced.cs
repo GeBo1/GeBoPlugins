@@ -80,7 +80,7 @@ namespace GameDialogHelperPlugin.PluginModeLogic
             GameDialogHelper.DefaultApplyHighlightSelection(answerId, text);
         }
 
-        private float CalculateChance(SaveData.Heroine heroine, DialogInfo dialogInfo, int answer)
+        private static float CalculateChance(SaveData.Heroine heroine, DialogInfo dialogInfo, int answer)
         {
             // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
             switch (dialogInfo.QuestionInfo.QuestionType)
@@ -106,7 +106,7 @@ namespace GameDialogHelperPlugin.PluginModeLogic
             return 0f;
         }
 
-        private float CalculateChance(SaveData.Heroine heroine, int question, int answer, int memoryWeight,
+        private static float CalculateChance(SaveData.Heroine heroine, int question, int answer, int memoryWeight,
             int relationshipWeight = 0, int intelligenceWeight = 0, float bonus = 0f)
         {
             var total = 0f;
@@ -192,7 +192,7 @@ namespace GameDialogHelperPlugin.PluginModeLogic
             return result;
         }
 
-        private Color BlendColors(Color baseColor, Color destColor, float percent)
+        private static Color BlendColors(Color baseColor, Color destColor, float percent)
         {
             var multiplier = Mathf.Clamp(percent, 0f, 1f);
 

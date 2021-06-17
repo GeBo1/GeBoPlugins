@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using BepInEx.Logging;
-using GameDialogHelperPlugin.Utilities;
 using GeBoCommon.Utilities;
 using JetBrains.Annotations;
 using MessagePack;
@@ -264,7 +263,7 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
 
                 if (invalid.Count <= 0) return true;
 
-                var msgBuilder = StringBuilderPool.Get();
+                var msgBuilder = GeBoCommon.Utilities.StringBuilderPool.Get();
                 try
                 {
                     msgBuilder.Append(nameof(IsValidForCurrentSession))

@@ -42,12 +42,11 @@ namespace GameDialogHelperPlugin
                         ClearCurrentDialog();
                     }
                 }
-#pragma warning disable CA1031
+
                 catch (Exception err)
                 {
                     Logger.LogException(err, nameof(Info_CreateSelectADV_Prefix));
                 }
-#pragma warning restore CA1031
             }
 
             /*
@@ -79,12 +78,11 @@ namespace GameDialogHelperPlugin
 
                     CurrentDialogHighlights.Clear();
                 }
-#pragma warning disable CA1031
+
                 catch (Exception err)
                 {
                     Logger.LogException(err, nameof(Choice_Do_Postfix));
                 }
-#pragma warning restore CA1031
             }
 
             [HarmonyPrefix]
@@ -100,16 +98,15 @@ namespace GameDialogHelperPlugin
                         SaveHighlightSelections(args);
                     }
                 }
-#pragma warning disable CA1031
+
                 catch (Exception err)
                 {
                     Logger.LogException(err, nameof(Transfer_Create_Prefix));
                 }
-#pragma warning restore CA1031
             }
 
             [HarmonyPostfix]
-            [HarmonyPatch(typeof(Choice), nameof(Choice.ButtonProc))]
+            [HarmonyPatch(typeof(Choice), "ButtonProc")]
             internal static void Choice_ButtonProc_Postfix(int __result)
             {
                 try
@@ -119,12 +116,11 @@ namespace GameDialogHelperPlugin
                     ProcessDialogAnswered(__result == CurrentDialog.CorrectAnswerId);
                     ClearCurrentDialog();
                 }
-#pragma warning disable CA1031
+
                 catch (Exception err)
                 {
                     Logger.LogException(err, nameof(Choice_ButtonProc_Postfix));
                 }
-#pragma warning restore CA1031
             }
         }
     }

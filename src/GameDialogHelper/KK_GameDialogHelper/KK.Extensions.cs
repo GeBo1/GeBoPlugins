@@ -6,7 +6,6 @@ using System.Security.Cryptography;
 using System.Text;
 using ActionGame.Communication;
 using BepInEx.Logging;
-using GameDialogHelperPlugin.Utilities;
 using GeBoCommon.Utilities;
 using JetBrains.Annotations;
 using MessagePack;
@@ -34,12 +33,11 @@ namespace GameDialogHelperPlugin
             {
                 return int.Parse(tmp[3], NumberStyles.Integer);
             }
-//#pragma warning disable CA1031 // Do not catch general exception types
-            catch (OverflowException) { }
+//             catch (OverflowException) { }
             catch (FormatException) { }
             catch (ArgumentException) { }
-//#pragma warning restore CA1031 // Do not catch general exception types
 
+// 
             return -1;
         }
 

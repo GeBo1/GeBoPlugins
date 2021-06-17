@@ -169,7 +169,7 @@ namespace GeBoCommon.AutoTranslation.Implementation
                 catch (ArgumentException e)
                 {
                     Logger.LogDebug(
-                        $"Mono bug preventing delegate creation for {method.Name} ({e.Message}), using workaround instead");
+                        $"Mono bug preventing delegate creation for {method.FullDescription()} ({e.Message}), using workaround instead");
 
                     Expression<AddTranslationToCacheDelegate> workaround =
                         (key, value, persistToDisk, translationType, scope) =>
@@ -278,12 +278,11 @@ namespace GeBoCommon.AutoTranslation.Implementation
             {
                 GeBoAPI.OnTranslationLoaded(EventArgs.Empty);
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Common.CurrentLogger?.LogException(err, nameof(TranslationsLoadedPostfix));
             }
-#pragma warning restore CA1031
         }
     }
 }

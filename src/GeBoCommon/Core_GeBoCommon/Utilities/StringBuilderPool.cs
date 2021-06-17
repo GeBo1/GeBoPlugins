@@ -1,8 +1,8 @@
-﻿using System.Text;
-using GeBoCommon;
-using GeBoCommon.Utilities;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace GameDialogHelperPlugin.Utilities
+namespace GeBoCommon.Utilities
 {
     public static class StringBuilderPool
     {

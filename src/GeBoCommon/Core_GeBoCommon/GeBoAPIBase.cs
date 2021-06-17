@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx;
 using BepInEx.Bootstrap;
@@ -9,11 +10,16 @@ using GeBoCommon.AutoTranslation;
 using GeBoCommon.AutoTranslation.Implementation;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
+using KKAPI;
+using KKAPI.Maker;
+using UnityEngine;
 using XUAPluginData = XUnity.AutoTranslator.Plugin.Core.Constants.PluginData;
 
 
 namespace GeBoCommon
 {
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
+    [BepInDependency(KoikatuAPI.GUID, KoikatuAPI.VersionConst)]
     [BepInDependency(XUAPluginData.Identifier, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(GUID, PluginName, Version)]
     [BepInProcess(Constants.StudioProcessName)]
@@ -37,7 +43,7 @@ namespace GeBoCommon
     {
         public const string GUID = "com.gebo.BepInEx.GeBoAPI";
         public const string PluginName = "GeBo Modding API";
-        public const string Version = "1.1.1.3";
+        public const string Version = "1.1.2.0";
 
         private static readonly Dictionary<string, bool> NotificationSoundsEnabled = new Dictionary<string, bool>();
 
@@ -69,8 +75,13 @@ namespace GeBoCommon
 
         private static ConfigEntry<bool> EnableObjectPoolsConfig { get; set; }
 
+
         public static bool EnableObjectPools { get; private set; }
 
+#if TIMERS
+        private static ConfigEntry<bool> TimersEnabledConfig { get; set; }
+        public static bool TimersEnabled { get; private set; }
+#endif
         public static event EventHandler<EventArgs> TranslationsLoaded;
 
         internal static void OnTranslationLoaded(EventArgs eventArgs)
@@ -86,14 +97,40 @@ namespace GeBoCommon
                 new ConfigDescription("Leave enabled unless requested otherwise", null, "Advanced"));
             EnableObjectPoolsConfig.SettingChanged += EnableObjectPoolsConfig_SettingChanged;
             EnableObjectPools = EnableObjectPoolsConfig.Value;
+
             Common.SetCurrentLogger(Logger);
+
+#if TIMERS
+            TimersEnabledConfig = Config.Bind("Developer Settings", "Enable Timer Messages", false,
+                new ConfigDescription("Adds log messages for how long certain events take.", null, "Advanced"));
+            TimersEnabledConfig.SettingChanged += TimersEnabledConfig_SettingChanged;
+            TimersEnabledConfig_SettingChanged(this, EventArgs.Empty);
+#endif
         }
 
+        private void MakerStartupTimerStart(object sender, RegisterCustomControlsEvent e)
+        {
+            var startTime = Time.realtimeSinceStartup;
+            MakerAPI.MakerFinishedLoading += MakerAPI_MakerFinishedLoading;
+        }
+
+        private void MakerAPI_MakerFinishedLoading(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
 
         private void EnableObjectPoolsConfig_SettingChanged(object sender, EventArgs e)
         {
             EnableObjectPools = EnableObjectPoolsConfig.Value;
         }
+
+#if Timers
+        private void TimersEnabledConfig_SettingChanged(object sender, EventArgs e)
+        {
+            TimersEnabled = TimersEnabledConfig.Value;
+            Timers.Setup();
+        }
+#endif
 
         private static IAutoTranslationHelper AutoTranslationHelperLoader()
         {

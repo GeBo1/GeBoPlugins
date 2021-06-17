@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 
 namespace GeBoCommon
@@ -51,5 +50,6 @@ namespace GeBoCommon
         public const string Prefix = "KKS";
         public const RegexOptions SupportedRegexCompilationOption = RegexOptions.Compiled;
 #endif
+        public const string RepoUrl = "https://github.com/GeBo1/GeBoPlugins";
     }
 }

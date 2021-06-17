@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using GeBoCommon.Utilities;
 using HarmonyLib;
@@ -8,7 +9,8 @@ using Studio;
 
 namespace GeBoCommon.Studio
 {
-    public static class SceneUtils
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
+    public static partial class SceneUtils
     {
         private static readonly SimpleLazy<Func<SceneLoadScene, List<string>>> SceneLoadSceneListPathGetter =
             new SimpleLazy<Func<SceneLoadScene, List<string>>>(() =>
@@ -19,7 +21,9 @@ namespace GeBoCommon.Studio
 
         public static List<string> GetSceneLoaderPaths(SceneLoadScene loader)
         {
-            return loader != null ? new List<string>(SceneLoadSceneListPathGetter.Value(loader)) : new List<string>();
+            var result = new List<string>();
+            loader.SafeProc(l => result.AddRange(SceneLoadSceneListPathGetter.Value(loader)));
+            return result;
         }
 
         [UsedImplicitly]

@@ -45,8 +45,6 @@ namespace GeBoCommon.Utilities
         }
 
         // ReSharper disable Unity.PerformanceAnalysis
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types",
-            Justification = "Any non-cache related exception should be hit again when _loader is called")]
         public TValue Get(TKey key)
         {
             try
@@ -55,6 +53,7 @@ namespace GeBoCommon.Utilities
             }
             catch (Exception err)
             {
+                // Any non-cache related exception should be hit again when _loader is called below
                 Logger.LogException(err, $"Unexpected error, bypassing {this.GetPrettyTypeName()} caching");
             }
 

@@ -1,18 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx.Logging;
+using HarmonyLib;
 using JetBrains.Annotations;
 using BepInLogLevel = BepInEx.Logging.LogLevel;
-using Object = UnityEngine.Object;
+using UnityEngineObject = UnityEngine.Object;
 
 namespace GeBoCommon.Utilities
 {
     [PublicAPI]
-    public static class OtherExtensions
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
+    public static partial class OtherExtensions
     {
         private static ManualLogSource Logger => Common.CurrentLogger;
+
         public static IEnumerable<KeyValuePair<int, T>> Enumerate<T>(this IEnumerable<T> array)
         {
             return array.Select((item, index) => new KeyValuePair<int, T>(index, item));
@@ -49,19 +53,77 @@ namespace GeBoCommon.Utilities
             LogException(logger, exception, null, message);
         }
 
-        public static void LogException(this ManualLogSource logger, Exception exception, Object context,
+        public static void LogException(this ManualLogSource logger, Exception exception, UnityEngineObject context,
             string message = null)
         {
-            logger.LogWarning(string.IsNullOrEmpty(message)
-                ? $"{exception.GetPrettyTypeFullName()}: {exception.Message}"
-                : $"{exception.GetPrettyTypeFullName()}: {message}: {exception.Message}");
-            if (context == null)
+            var msgBuilder = Common.RequestStringBuilder();
+            try
             {
-                UnityEngine.Debug.LogException(exception);
+                var currentException = exception;
+                var level = 0;
+
+                void StartLine()
+                {
+                    for (var i = 0; i < level; i++) msgBuilder.Append("> ");
+                }
+
+
+                while (currentException != null)
+                {
+                    StartLine();
+                    msgBuilder.Append(currentException.GetPrettyTypeFullName()).Append(": ");
+
+                    if (!string.IsNullOrEmpty(message))
+                    {
+                        msgBuilder.Append(message).Append(": ");
+                    }
+
+                    msgBuilder.Append(currentException.Message);
+
+                    if (level == 0) logger.LogWarning(msgBuilder.ToString());
+
+                    msgBuilder.AppendLine(":");
+
+                    if (level == 0 && context)
+                    {
+                        StartLine();
+                        msgBuilder.Append(" Context: ").Append(context).Append(" (")
+                            .Append(context.GetPrettyTypeFullName()).AppendLine(")");
+                    }
+
+                    var stackTrace = new StackTrace(currentException, true);
+                    var frames = stackTrace.GetFrames();
+                    if (frames != null)
+                    {
+                        foreach (var frame in frames)
+                        {
+                            StartLine();
+                            msgBuilder.Append(" at ").Append(frame.GetMethod());
+
+                            var filename = frame.GetFileName();
+                            if (!string.IsNullOrEmpty(filename))
+                            {
+                                msgBuilder.Append(" in ").Append(frame.GetFileName());
+                                var line = frame.GetFileLineNumber();
+                                if (line > 1) msgBuilder.Append(": line").Append(line);
+                            }
+
+                            msgBuilder.AppendLine();
+                        }
+                    }
+
+                    level++;
+                    currentException = currentException.InnerException;
+                    if (currentException == null) break;
+                    StartLine();
+                    msgBuilder.AppendLine("Inner exception:");
+                }
+
+                Logger.LogDebug(msgBuilder.ToString());
             }
-            else
+            finally
             {
-                UnityEngine.Debug.LogException(exception, context);
+                Common.ReleaseStringBuilder(msgBuilder);
             }
         }
 
@@ -108,11 +170,12 @@ namespace GeBoCommon.Utilities
             {
                 try
                 {
+                    Logger.DebugLogDebug($"{nameof(SafeInvoke)}: {handler.Method.FullDescription()}");
                     handler.DynamicInvoke(sender, args);
                 }
                 catch (Exception err)
                 {
-                    if (sender is Object unityObj)
+                    if (sender is UnityEngineObject unityObj)
                     {
                         Logger?.LogException(err, unityObj,
                             $"{nameof(SafeInvoke)}<{typeof(TEventArgs).GetPrettyTypeName()}>");

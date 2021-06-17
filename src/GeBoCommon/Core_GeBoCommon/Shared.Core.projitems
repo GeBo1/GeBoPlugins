@@ -23,6 +23,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)GeBoAPIBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IGeBoAPI.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\SimpleTranslationResult.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Studio\Extensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Studio\StudioUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Timers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\DictionaryPool.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\PoolQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\CoroutineUtils.cs" />
@@ -39,6 +42,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\PathUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleLazy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\StringBuilderPool.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\WeakCache.cs" />
   </ItemGroup>
 </Project>

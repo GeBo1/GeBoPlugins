@@ -17,7 +17,7 @@ namespace GeBoCommon.Utilities
         public const int CleanIdleMinCount = 10;
 
         private static readonly HashSet<WeakReference> KnownPools = new HashSet<WeakReference>();
-        private IEnumerator _cleanerHandler;
+        private Coroutine _cleanerHandler;
 
         // used to ensure only single handler running
         private long _cleanerRunning;
@@ -50,21 +50,22 @@ namespace GeBoCommon.Utilities
 
         private void StartCleaner()
         {
-            if (GeBoAPI.Instance == null || _cleanerHandler != null) return;
-            if (Interlocked.CompareExchange(ref _cleanerRunning, 1, 0) != 0) return;
-            _cleanerHandler = Cleaner();
-            GeBoAPI.Instance.StartCoroutine(_cleanerHandler);
+            if (_cleanerHandler != null) return;
+            GeBoAPI.Instance.SafeProc(api =>
+            {
+                if (Interlocked.CompareExchange(ref _cleanerRunning, 1, 0) != 0) return;
+                _cleanerHandler = api.StartCoroutine(Cleaner());
+            });
         }
 
         protected void StopCleaner()
         {
-            if (GeBoAPI.Instance != null && _cleanerHandler != null)
+            if (_cleanerHandler != null)
             {
-                GeBoAPI.Instance.StopCoroutine(_cleanerHandler);
+                GeBoAPI.Instance.SafeProc(api => api.StopCoroutine(_cleanerHandler));
+                _cleanerHandler = null;
             }
-
             Interlocked.Exchange(ref _cleanerRunning, 0);
-            _cleanerHandler = null;
         }
 
 

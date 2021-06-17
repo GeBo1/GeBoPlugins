@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+
 #if AI || HS2
 using AIChara;
 
@@ -12,9 +13,9 @@ namespace GeBoCommon.Chara
     public static partial class Extensions
     {
         /// <summary>
-        /// Enumerates the names.
+        ///     Enumerates the names.
         /// </summary>
-        /// <param name="chaFile"/>
+        /// <param name="chaFile" />
         /// <returns>Names as KeyValuePairs (key is index, value is name string)</returns>
         public static IEnumerable<KeyValuePair<int, string>> EnumerateNames(this ChaFile chaFile)
         {
@@ -22,9 +23,9 @@ namespace GeBoCommon.Chara
         }
 
         /// <summary>
-        /// Sets name at given index on a ChaFile
+        ///     Sets name at given index on a ChaFile
         /// </summary>
-        /// <param name="chaFile"/>
+        /// <param name="chaFile" />
         /// <param name="index">index of name to set</param>
         /// <param name="name">new name value</param>
         public static void SetName(this ChaFile chaFile, int index, string name)
@@ -33,9 +34,9 @@ namespace GeBoCommon.Chara
         }
 
         /// <summary>
-        /// Gets the name of given type
+        ///     Gets the name of given type
         /// </summary>
-        /// <param name="chaFile"/>
+        /// <param name="chaFile" />
         /// <param name="nameType">Type of the name.</param>
         /// <returns>name</returns>
         public static string GetName(this ChaFile chaFile, string nameType)
@@ -44,7 +45,7 @@ namespace GeBoCommon.Chara
         }
 
         /// <summary>
-        /// Gets the name at a given index
+        ///     Gets the name at a given index
         /// </summary>
         /// <param name="chaFile" />
         /// <param name="index">The index.</param>
@@ -55,7 +56,7 @@ namespace GeBoCommon.Chara
         }
 
         /// <summary>
-        /// Gets the type of the name at a given index
+        ///     Gets the type of the name at a given index
         /// </summary>
         /// <param name="chaFile" />
         /// <param name="index">The index.</param>
@@ -67,9 +68,9 @@ namespace GeBoCommon.Chara
         }
 
         /// <summary>
-        /// Gets the full name.
+        ///     Gets the full name.
         /// </summary>
-        /// <param name="chaFile"/>
+        /// <param name="chaFile" />
         /// <returns>full name</returns>
         public static string GetFullName(this ChaFile chaFile)
         {
@@ -78,7 +79,7 @@ namespace GeBoCommon.Chara
 
 
         /// <summary>
-        /// Gets the sex of the ChaFile
+        ///     Gets the sex of the ChaFile
         /// </summary>
         /// <param name="chaFile" />
         /// <returns>sex</returns>
@@ -88,12 +89,10 @@ namespace GeBoCommon.Chara
             {
                 return (CharacterSex)chaFile.parameter.sex;
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch
             {
                 return CharacterSex.Unspecified;
             }
-#pragma warning restore CA1031 // Do not catch general exception types
         }
     }
 }

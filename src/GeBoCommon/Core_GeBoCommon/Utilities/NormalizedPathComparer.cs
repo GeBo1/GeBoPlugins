@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace GeBoCommon.Utilities
 {
@@ -10,8 +9,6 @@ namespace GeBoCommon.Utilities
 
         internal NormalizedPathComparer() { }
 
-        
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types")]
         public static string NormalizePathString(string input)
         {
             try

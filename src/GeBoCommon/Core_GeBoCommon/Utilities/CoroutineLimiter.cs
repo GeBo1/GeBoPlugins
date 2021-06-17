@@ -46,12 +46,10 @@ namespace GeBoCommon.Utilities
             {
                 if (StudioAPI.InsideStudio) return;
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch
             {
                 //  InsideStudio blew up, assume we're not
             }
-#pragma warning restore CA1031 // Do not catch general exception types
 
             Reset();
         }

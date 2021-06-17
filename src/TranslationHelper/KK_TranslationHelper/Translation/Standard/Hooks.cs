@@ -12,13 +12,16 @@ using UnityEngine;
 
 namespace TranslationHelperPlugin.Translation.Standard
 {
+    [SuppressMessage("KK.Compatibility", "KKANAL03:Member is missing or has a different signature in KK Party.",
+        Justification = "Hooks in this class are non-Party only")]
+    [SuppressMessage("KK.Compatibility", "KKANAL04:Type is missing in KK Party.",
+        Justification = "Hooks in this class are non-Party only")]
     internal class Hooks
     {
-        internal static ManualLogSource Logger => TranslationHelper.Logger;
+        private static ManualLogSource Logger => TranslationHelper.Logger;
 
         internal static void Setup()
         {
-            CharaFileInfoWrapper.RegisterWrapperType(typeof(CustomFileInfo), typeof(CustomFileInfoWrapper));
             Harmony.CreateAndPatchAll(typeof(Hooks));
         }
 
@@ -27,22 +30,21 @@ namespace TranslationHelperPlugin.Translation.Standard
         [HarmonyPatch(typeof(CustomFileListCtrl), nameof(CustomFileListCtrl.AddList))]
         [HarmonyPatch(typeof(ClassRoomFileListCtrl), nameof(ClassRoomFileListCtrl.AddList))]
         [SuppressMessage("ReSharper", "IdentifierTypo", Justification = "HarmonyPatch")]
-        internal static void FileListCtrlAddListPrefix(CustomFileListCtrl __instance, int index, ref string name,
+        internal static void FileListCtrlAddListPrefix(MonoBehaviour __instance, int index, ref string name,
             string club, string personality, string fullpath)
         {
             try
             {
-                if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
+                if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled || __instance == null) return;
                 var wrapper = new DummyFileInfoWrapper(index, name, club, personality, fullpath);
                 Translation.Hooks.FileListCtrlAddListPrefix(__instance, wrapper);
                 name = wrapper.Name;
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, __instance, nameof(FileListCtrlAddListPrefix));
             }
-#pragma warning restore CA1031
         }
 
 
@@ -63,12 +65,11 @@ namespace TranslationHelperPlugin.Translation.Standard
 
                 Translation.Hooks.OnPointerEnterPostfix(__instance, wrapper);
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, __instance, nameof(OnPointerEnterPostfix));
             }
-#pragma warning restore CA1031
         }
 
         [HarmonyPrefix]
@@ -138,12 +139,11 @@ namespace TranslationHelperPlugin.Translation.Standard
                     TranslationHelper.CardNameManager.TranslateFullName(
                         name, new NameScope((CharacterSex)sex), Handler));
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, __instance, nameof(ChangeItemPostfix));
             }
-#pragma warning restore CA1031
         }
     }
 }

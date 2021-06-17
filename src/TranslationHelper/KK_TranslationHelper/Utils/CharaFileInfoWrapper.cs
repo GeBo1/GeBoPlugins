@@ -1,4 +1,5 @@
 ﻿using System;
+using ChaCustom;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
 using KKAPI.Maker;
@@ -10,16 +11,17 @@ namespace TranslationHelperPlugin.Utils
     {
         internal static CharacterSex GuessSex(this ICharaFileInfo fileInfo)
         {
-            try
+            if (MakerAPI.InsideMaker)
             {
-                if (MakerAPI.InsideMaker)
+                try
                 {
                     return (CharacterSex)MakerAPI.GetMakerSex();
                 }
-            }
-            catch (Exception err)
-            {
-                Logger?.LogException(err, $"{nameof(GuessSex)}: Unexpected error determining sex from Maker");
+
+                catch (Exception err)
+                {
+                    Logger?.LogException(err, $"{nameof(GuessSex)}: Unexpected error determining sex from Maker");
+                }
             }
 
             try
@@ -33,6 +35,13 @@ namespace TranslationHelperPlugin.Utils
             }
 
             return CharacterSex.Unspecified;
+        }
+
+        internal static void SafeNameUpdate(this CustomFileInfo fileInfo, string path, string originalName,
+            string newName)
+        {
+            if (fileInfo == null) return;
+            CreateWrapper(fileInfo).SafeNameUpdate(path, originalName, newName);
         }
     }
 

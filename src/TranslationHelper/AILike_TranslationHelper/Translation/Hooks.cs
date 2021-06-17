@@ -57,12 +57,11 @@ namespace TranslationHelperPlugin.Translation
             {
                 TranslateFileInfos(__result);
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(CreateCharaFileInfoListPostfix));
             }
-#pragma warning restore CA1031
         }
 
         [HarmonyPrefix]
@@ -74,12 +73,11 @@ namespace TranslationHelperPlugin.Translation
             {
                 TranslateFileInfos(_lst);
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(GameCharaFileInfoListPrefix));
             }
-#pragma warning restore CA1031
         }
 
         [HarmonyPrefix]
@@ -91,12 +89,11 @@ namespace TranslationHelperPlugin.Translation
             {
                 TranslateFileInfos(_lst);
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(CustomCharaFileInfoListPrefix));
             }
-#pragma warning restore CA1031
         }
     }
 }

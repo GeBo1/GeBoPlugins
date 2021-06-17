@@ -10,7 +10,8 @@ namespace TranslationHelperPlugin
     public partial class TranslationHelper : BaseUnityPlugin
     {
         public static ConfigEntry<bool> KK_GivenNameFirst { get; private set; }
-        internal void GameSpecificAwake()
+
+        internal static void GameSpecificAwake()
         {
             SplitNamesBeforeTranslate = false;
         }
@@ -24,8 +25,6 @@ namespace TranslationHelperPlugin
 
             KK_GivenNameFirst.SettingChanged += GivenNameFirstChanged;
             GivenNameFirstChanged(this, new SettingChangedEventArgs(KK_GivenNameFirst));
-
-
         }
 
         private void GivenNameFirstChanged(object sender, EventArgs e)

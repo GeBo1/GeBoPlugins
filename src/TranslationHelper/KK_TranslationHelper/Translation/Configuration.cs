@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ChaCustom;
 using ExtensibleSaveFormat;
+using GeBoCommon.Chara;
 using HarmonyLib;
 using KKAPI;
 using KKAPI.Studio;
 using KKAPI.Utilities;
+using TranslationHelperPlugin.Utils;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 
@@ -29,6 +32,8 @@ namespace TranslationHelperPlugin.Translation
             SceneManager.activeSceneChanged += SceneChanged;
             ExtendedSave.CardBeingSaved += CardBeingSaved;
             TranslationHelper.CardTranslationBehaviorChanged += TranslationHelperCardTranslationBehaviorChanged;
+            CharaFileInfoWrapper.RegisterWrapperType(typeof(CustomFileInfo), typeof(CustomFileInfoWrapper));
+
 
             if (KoikatuAPI.IsSteamRelease())
             {
@@ -51,7 +56,8 @@ namespace TranslationHelperPlugin.Translation
 
         internal static byte GuessSex(string club, string personality)
         {
-            return (byte)(club == "帯刀" && string.IsNullOrEmpty(personality) ? 0 : 1);
+            
+            return (byte)(club == "帯刀" && string.IsNullOrEmpty(personality) ? CharacterSex.Male: CharacterSex.Female);
         }
 
         private static void CleanTranslatedMaps(ChaFile file)

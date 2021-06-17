@@ -49,12 +49,12 @@ namespace TranslationHelperPlugin.Acceleration
 
                 GeBoAPI.Instance.AutoTranslationHelper.TranslateAsync(orig, ConfirmSceneSentenceTranslationCompleted);
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, __instance, nameof(ConfirmSceneSentenceSetterPrefix));
             }
-#pragma warning restore CA1031
+
             finally
             {
                 Logger.DebugLogDebug($"{nameof(ConfirmSceneSentenceSetterPrefix)}: {orig} => {value}");
@@ -77,12 +77,12 @@ namespace TranslationHelperPlugin.Acceleration
                     __result = translatedText;
                 }
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, __instance, nameof(ConfirmSceneSentenceGetterPostfix));
             }
-#pragma warning restore CA1031
+
             finally
             {
                 Logger.DebugLogDebug($"{nameof(ConfirmSceneSentenceGetterPostfix)}: {orig} => {__result}");
@@ -102,12 +102,11 @@ namespace TranslationHelperPlugin.Acceleration
                     new Harmony($"{nameof(CommandLabelCommandInfoOnTextSetterPrefix)}_{value.Method.Name}_Patcher"),
                     value.Method);
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(CommandLabelCommandInfoOnTextSetterPrefix));
             }
-#pragma warning restore CA1031
         }
 
 
@@ -122,12 +121,11 @@ namespace TranslationHelperPlugin.Acceleration
                 ____temperatureLabel.SafeProc(GeBoAPI.Instance.AutoTranslationHelper.IgnoreTextComponent);
                 ____timeLabel.SafeProc(GeBoAPI.Instance.AutoTranslationHelper.IgnoreTextComponent);
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(HomeMenuOnBeforeStartPrefix));
             }
-#pragma warning restore CA1031
         }
     }
 }

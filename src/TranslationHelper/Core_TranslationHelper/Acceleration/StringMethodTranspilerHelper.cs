@@ -171,14 +171,13 @@ namespace TranslationHelperPlugin.Acceleration
                         ? translatedResult
                         : orig;
                 return result;
-#pragma warning disable CA1031
             }
             catch (Exception err)
             {
                 Logger?.LogException(err, $"{nameof(Translate)}: Falling back to original string");
                 return orig;
             }
-#pragma warning restore CA1031
+
 
             finally
             {

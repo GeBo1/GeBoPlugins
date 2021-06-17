@@ -21,7 +21,7 @@ namespace TranslationHelperPlugin.Chara
 
         internal static bool TrackCharaFileControlPaths = true;
 
-        internal static Dictionary<string, string> ChaFileControlPaths =
+        internal static readonly Dictionary<string, string> ChaFileControlPaths =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         internal static ManualLogSource Logger => TranslationHelper.Logger;
@@ -54,22 +54,22 @@ namespace TranslationHelperPlugin.Chara
             {
                 result = chaFileControl.ConvertCharaFilePath(filename, chaFileControl.parameter.sex);
             }
+
             return PathUtils.NormalizePath(result);
         }
 
-        public static void TrackCharaFileControlPath(ChaFile chaFile, string filename, Action<string> normalizedPathCallback = null)
+        public static void TrackCharaFileControlPath(ChaFile chaFile, string filename,
+            Action<string> normalizedPathCallback = null)
         {
             try
             {
                 filename = GetNormalizedCharaFileControlPath(chaFile, filename);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch
             {
                 // not trackable
                 return;
             }
-#pragma warning restore CA1031 // Do not catch general exception types
 
             var key = GetTrackingKey(chaFile, filename);
             ChaFileControlPaths[key] = filename;

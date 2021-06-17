@@ -49,14 +49,12 @@ namespace TranslationHelperPlugin
                     Logger.DebugLogDebug($"canceling {coroutine}");
                     TranslationHelper.Instance.StopCoroutine(coroutine);
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception err)
                 {
                     if (TranslationHelper.IsShuttingDown) continue;
                     Logger.LogException(err,
                         $"{_trackerName}.{nameof(CancelOutstandingCoroutines)}: unable to stop {coroutine}");
                 }
-#pragma warning restore CA1031 // Do not catch general exception types
             }
 
             _outstandingCoroutines.Clear();

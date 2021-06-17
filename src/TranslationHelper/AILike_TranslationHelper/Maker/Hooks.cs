@@ -20,7 +20,7 @@ namespace TranslationHelperPlugin.Maker
 
         private static void SelectTextCallback(IComponentTranslationContext context)
         {
-            if (!_pointerCallbackRegistered ||!MakerAPI.InsideMaker) return;
+            if (!_pointerCallbackRegistered || !MakerAPI.InsideMaker) return;
             // ReSharper disable once InvertIf
             if (ComponentTranslationHelpers.TryTranslateFullName(context,
                 t => t != null && PointerCallbackActiveTexts.Contains(t),
@@ -33,14 +33,22 @@ namespace TranslationHelperPlugin.Maker
         private static void EnableSelectTextHandling()
         {
             if (!GeBoAPI.Instance.SafeProc(g =>
-                g.AutoTranslationHelper.RegisterOnTranslatingCallback(SelectTextCallback))) return;
+                g.AutoTranslationHelper.RegisterOnTranslatingCallback(SelectTextCallback)))
+            {
+                return;
+            }
+
             _pointerCallbackRegistered = true;
         }
 
         private static void DisableSelectTextHandling()
         {
             if (!GeBoAPI.Instance.SafeProc(g =>
-                g.AutoTranslationHelper.UnregisterOnTranslatingCallback(SelectTextCallback))) return;
+                g.AutoTranslationHelper.UnregisterOnTranslatingCallback(SelectTextCallback)))
+            {
+                return;
+            }
+
             _pointerCallbackRegistered = false;
         }
 
@@ -61,18 +69,21 @@ namespace TranslationHelperPlugin.Maker
         internal static void OnPointerEnterPatch(Text ___text)
         {
             if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled || ___text == null ||
-                ___text.name != "SelectText") return;
+                ___text.name != "SelectText")
+            {
+                return;
+            }
+
             try
             {
                 PointerCallbackActiveTexts.Add(___text);
                 EnableSelectTextHandling();
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(OnPointerEnterPatch));
             }
-#pragma warning restore CA1031
         }
 
 
@@ -86,12 +97,11 @@ namespace TranslationHelperPlugin.Maker
                 PointerCallbackActiveTexts.Remove(___text);
                 DisableSelectTextHandling();
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(OnPointerExitPatch));
             }
-#pragma warning restore CA1031
         }
 
 
@@ -103,12 +113,11 @@ namespace TranslationHelperPlugin.Maker
             {
                 ResetSelectTextHandling();
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(CreateListPatch));
             }
-#pragma warning restore CA1031
         }
     }
 }

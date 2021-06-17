@@ -25,13 +25,11 @@ namespace TranslationHelperPlugin.Utils
                 {
                     return (ICharaFileInfo)Activator.CreateInstance(wrapperType, target);
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception err)
                 {
                     Logger?.LogException(err,
                         $"{nameof(CreateWrapper)}: Registered wrapper {wrapperType} for {targetType} failed, falling back to default wrapper");
                 }
-#pragma warning restore CA1031 // Do not catch general exception types
             }
 
             wrapperType = typeof(CharaFileInfoWrapper<>).MakeGenericType(targetType);
@@ -96,12 +94,10 @@ namespace TranslationHelperPlugin.Utils
                 {
                     return (CharacterSex)InnerSexGetter(_target);
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch
                 {
                     return this.GuessSex();
                 }
-#pragma warning restore CA1031 // Do not catch general exception types
             }
         }
 
@@ -124,14 +120,12 @@ namespace TranslationHelperPlugin.Utils
                 {
                     return AccessTools.MethodDelegate<Action<T, TValue>>(propSetter);
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch
                 {
                     Expression<Action<T, TValue>> setter =
                         (obj, value) => propSetter.Invoke(obj, new object[] {value});
                     return setter.Compile();
                 }
-#pragma warning restore CA1031 // Do not catch general exception types
             }
 
             foreach (var name in names)
@@ -166,21 +160,19 @@ namespace TranslationHelperPlugin.Utils
 
 
                 Logger?.LogDebug(
-                    $"Found property {names[0]} for type {targetType.FullName} with name {name} (property type: {prop.PropertyType}, result type: {typeof(TResult)})");
+                    $"Found property {names[0]} for type {targetType.GetPrettyTypeName()} with name {name} (property type: {prop.PropertyType}, result type: {typeof(TResult)})");
 
 
                 try
                 {
                     return AccessTools.MethodDelegate<Func<T, TResult>>(propGetter);
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch
                 {
                     Expression<Func<T, TResult>> getter =
                         obj => (TResult)propGetter.Invoke(obj, new object[0]);
                     return getter.Compile();
                 }
-#pragma warning restore CA1031 // Do not catch general exception types
             }
 
             foreach (var name in names)

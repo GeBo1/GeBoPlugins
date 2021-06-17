@@ -82,12 +82,11 @@ namespace TranslationHelperPlugin.Chara
                 Configuration.TrackCharaFileControlPath(__instance, path,
                     fullPath => __instance.GetTranslationHelperController().SafeProc(c => c.FullPath = fullPath));
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(ChaFileLoadFilePostfix));
             }
-#pragma warning restore CA1031
         }
 
 
@@ -111,12 +110,11 @@ namespace TranslationHelperPlugin.Chara
                 Configuration.TrackCharaFileControlPath(__instance, filename,
                     fullPath => __instance.GetTranslationHelperController().SafeProc(c => c.FullPath = fullPath));
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(ChaFileControlLoadCharaFilePostfix));
             }
-#pragma warning restore CA1031
         }
 
 
@@ -133,12 +131,11 @@ namespace TranslationHelperPlugin.Chara
                 __instance.SafeProc(i => i.GetTranslationHelperController()
                     .SafeProc(c => c.OnCardSaveComplete(KoikatuAPI.GetCurrentGameMode())));
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(ChaFile_SaveFile_Postfix));
             }
-#pragma warning restore CA1031
         }
     }
 }

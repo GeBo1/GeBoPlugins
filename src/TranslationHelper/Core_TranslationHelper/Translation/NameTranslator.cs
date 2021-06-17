@@ -9,9 +9,14 @@ namespace TranslationHelperPlugin.Translation
     {
         internal static ManualLogSource Logger => TranslationHelper.Logger;
 
+        // ReSharper disable once MemberCanBeMadeStatic.Local
+#pragma warning disable CA1822 // Mark members as static
+        private IAutoTranslationHelper AutoTranslationHelper => GeBoAPI.Instance.AutoTranslationHelper;
+#pragma warning restore CA1822 // Mark members as static
+
         public bool TryTranslateName(string untranslatedText, NameScope nameScope, out string translatedText)
         {
-            return GeBoAPI.Instance.AutoTranslationHelper.TryTranslate(untranslatedText, nameScope.TranslationScope,
+            return AutoTranslationHelper.TryTranslate(untranslatedText, nameScope.TranslationScope,
                 out translatedText);
         }
 
@@ -25,7 +30,7 @@ namespace TranslationHelperPlugin.Translation
         public void TranslateNameAsync(string untranslatedText, NameScope nameScope,
             Action<ITranslationResult> onCompleted)
         {
-            GeBoAPI.Instance.AutoTranslationHelper.TranslateAsync(untranslatedText, nameScope.TranslationScope,
+            AutoTranslationHelper.TranslateAsync(untranslatedText, nameScope.TranslationScope,
                 onCompleted);
         }
 

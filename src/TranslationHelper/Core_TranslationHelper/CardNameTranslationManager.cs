@@ -506,6 +506,7 @@ namespace TranslationHelperPlugin
             [UsedImplicitly]
             internal int TranslationScope => NameScope?.TranslationScope ?? NameScope.BaseScope;
 
+            [UsedImplicitly]
             internal CharacterSex Sex => NameScope?.Sex ?? CharacterSex.Unspecified;
 
             [UsedImplicitly]

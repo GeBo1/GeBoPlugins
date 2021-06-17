@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using ChaCustom;
 using GeBoCommon.AutoTranslation;
@@ -98,9 +99,10 @@ namespace TranslationHelperPlugin.Translation
             }
         }
 
-        internal static void FileListCtrlAddListPrefix(CustomFileListCtrl __instance, ICharaFileInfo info)
+        internal static void FileListCtrlAddListPrefix(MonoBehaviour fileListCtrl, ICharaFileInfo info)
         {
-            if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
+            if (!TranslationHelper.Instance.CurrentCardLoadTranslationEnabled || fileListCtrl == null) return;
+
             // ReSharper disable once RedundantAssignment - used in DEBUG
             var start = Time.realtimeSinceStartup;
             try
@@ -108,49 +110,43 @@ namespace TranslationHelperPlugin.Translation
                 var origName = info.Name;
                 var sex = Configuration.GuessSex(info.Club, info.Personality);
                 var scope = new NameScope((CharacterSex)sex);
+                var path = info.FullPath;
 
                 void Handler(ITranslationResult result)
                 {
-                    if (__instance == null) return;
-
-                    var newName = ProcessTranslationResult(scope, origName, info.FullPath, result);
-
+                    var newName = ProcessTranslationResult(scope, origName, path, result);
+                    if (fileListCtrl == null) return;
                     if (TranslationHelper.NameStringComparer.Equals(origName, newName)) return;
+                    var lstFileInfo = Traverse.Create(fileListCtrl)?.Field<List<CustomFileInfo>>("lstFileInfo")?.Value;
+                    if (lstFileInfo == null) return;
 
-                    var lstFileInfo = __instance.lstFileInfo;
-                    
+
+                    Logger.DebugLogDebug($"{nameof(FileListCtrlAddListPrefix)}.{nameof(Handler)}: {lstFileInfo}");
+
                     var entry = lstFileInfo?.FirstOrDefault(x =>
                     {
                         int index;
                         try
                         {
-                            index = x.index;
+                            index = CharaFileInfoWrapper.CreateWrapper(x).Index;
                         }
-#pragma warning disable CA1031 // Do not catch general exception types
                         catch
                         {
                             index = -1;
                         }
-#pragma warning restore CA1031 // Do not catch general exception types
-
-                        if (index == -1)
-                        {
-                            index = Traverse.Create(x).Property<int>("index")?.Value ?? -1;
-                        }
 
                         return info.Index == index;
                     });
-
                     if (entry == null) return;
-                    entry.name = newName;
+                    entry.SafeNameUpdate(path, origName, newName);
                 }
 
-                TranslationHelper.Instance.StartCoroutine(
-                    TranslationHelper.TranslateFileInfo(info, Handler));
+                //TranslationHelper.Instance.StartCoroutine(
+                fileListCtrl.StartCoroutine(TranslationHelper.TranslateFileInfo(info, Handler));
             }
             catch (Exception err)
             {
-                Logger.LogException(err, __instance, nameof(FileListCtrlAddListPrefix));
+                Logger.LogException(err, fileListCtrl, nameof(FileListCtrlAddListPrefix));
             }
             finally
             {
@@ -193,12 +189,11 @@ namespace TranslationHelperPlugin.Translation
                         //TranslationHelper.CardNameManager.TranslateFullName(name, new NameScope((CharacterSex)sex),
                         Handler, _ => _pointerEnterCoroutine = null));
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, instance, nameof(OnPointerEnterPostfix));
             }
-#pragma warning restore CA1031
         }
 
         internal static void OnPointerExitPrefix()
@@ -208,12 +203,12 @@ namespace TranslationHelperPlugin.Translation
                 if (_pointerEnterCoroutine == null) return;
                 TranslationHelper.Instance.StopCoroutine(_pointerEnterCoroutine);
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(OnPointerExitPrefix));
             }
-#pragma warning restore CA1031
+
             _pointerEnterCoroutine = null;
         }
     }

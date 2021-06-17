@@ -45,12 +45,11 @@ namespace TranslationHelperPlugin.Studio
                 CharaListsInProgress.Add(__instance);
                 EnableCharaListHandler();
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, __instance, nameof(StudioInitCharaListPrefix));
             }
-#pragma warning restore CA1031
         }
 
         [HarmonyPostfix]
@@ -62,12 +61,11 @@ namespace TranslationHelperPlugin.Studio
                 CharaListsInProgress.Remove(__instance);
                 if (CharaListsInProgress.Count == 0) DisableCharaListHandler();
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, __instance, nameof(StudioInitCharaListPostfix));
             }
-#pragma warning restore CA1031
         }
 
         internal static void ResetTranslatingCallbacks()

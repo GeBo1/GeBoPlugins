@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using ChaCustom;
 using HarmonyLib;
-using JetBrains.Annotations;
 using KKAPI.Maker;
 using TranslationHelperPlugin.Chara;
 using UnityEngine.Assertions;
@@ -27,7 +26,7 @@ namespace TranslationHelperPlugin.Maker
         }
 
         [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
-        private static IEnumerator GameSpecificUpdateUICoroutine([NotNull] Controller controller)
+        private static IEnumerator GameSpecificUpdateUICoroutine(Controller controller)
         {
             Assert.IsNotNull(controller);
             var makerBase = MakerAPI.GetMakerBase();

@@ -38,13 +38,11 @@ namespace TranslationHelperPlugin.Translation.Party
                         harmony.Patch(onPointerExit, new HarmonyMethod(onPointerExitPrefix));
                         patched = true;
                     }
-#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception err)
                     {
                         Logger?.LogException(err,
                             $"{typeof(Hooks).GetPrettyTypeFullName()}.{nameof(Setup)}");
                     }
-#pragma warning restore CA1031 // Do not catch general exception types
                 }
             }
 
@@ -55,11 +53,20 @@ namespace TranslationHelperPlugin.Translation.Party
             }
         }
 
+        // Add only exists in party
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CustomFileListCtrl), "Add", typeof(CustomFileInfo))]
         internal static void PartyFileListCtrlAddListPrefix(CustomFileListCtrl __instance, CustomFileInfo info)
         {
-            Translation.Hooks.FileListCtrlAddListPrefix(__instance, CharaFileInfoWrapper.CreateWrapper(info));
+            try
+            {
+                Translation.Hooks.FileListCtrlAddListPrefix(__instance, CharaFileInfoWrapper.CreateWrapper(info));
+            }
+
+            catch (Exception err)
+            {
+                Logger.LogException(err, __instance, nameof(PartyFileListCtrlAddListPrefix));
+            }
         }
 
         /*
@@ -78,12 +85,11 @@ namespace TranslationHelperPlugin.Translation.Party
                 Translation.Hooks.OnPointerEnterPostfix(__instance,
                     CharaFileInfoWrapper.CreateWrapper(infoType, info));
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, fic, nameof(OnPointerEnterPostfix));
             }
-#pragma warning restore CA1031
         }
     }
 }

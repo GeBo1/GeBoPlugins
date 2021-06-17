@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using AIChara;
 using AIProject;
 using GeBoCommon.Chara;
+using GeBoCommon.Utilities;
 using HarmonyLib;
 using KKAPI.Utilities;
 using Manager;
@@ -41,9 +42,9 @@ namespace TranslationHelperPlugin.MainGame
                 {
                     TranslationHelper.Instance.SafeProc(th => th.StopCoroutine(_merchantRegistrationCoroutine));
                 }
-                catch
+                catch (Exception err)
                 {
-                    // ignored
+                    Logger.LogException(err, nameof(AIMainGameCardTranslationBehaviorChanged));
                 }
             }
 

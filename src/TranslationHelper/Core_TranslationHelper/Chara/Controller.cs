@@ -36,12 +36,8 @@ namespace TranslationHelperPlugin.Chara
         private static bool RestoreNamesOnSave =>
             !MakerAPI.InsideAndLoaded || !TranslationHelper.MakerSaveWithTranslatedNames.Value;
 
-        [SuppressMessage("Performance", "CA1819:Properties should not return arrays",
-            Justification = "Workaround to avoid constructor in controllers")]
         public string[] TranslatedNames => _translatedNames.Value;
 
-        [SuppressMessage("Performance", "CA1819:Properties should not return arrays",
-            Justification = "Workaround to avoid constructor in controllers")]
         public string[] OriginalNames => _originalNames.Value;
 
         // ReSharper disable once MergeConditionalExpression
@@ -71,14 +67,12 @@ namespace TranslationHelperPlugin.Chara
                 {
                     _fullPath = PathUtils.NormalizePath(value);
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch
                 {
                     Logger.LogDebug($"FullPath: Unable to normalize '{value}'");
                     // not trackable in main game
                     _fullPath = null;
                 }
-#pragma warning restore CA1031 // Do not catch general exception types
             }
         }
 
@@ -167,12 +161,10 @@ namespace TranslationHelperPlugin.Chara
                 {
                     StopCoroutine(routine);
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception err)
                 {
                     Logger.LogException(err, this, $"{nameof(StopMonitoredCoroutines)}: error stopping {routine}");
                 }
-#pragma warning restore CA1031 // Do not catch general exception types
             }
 
             _monitoredCoroutines.Clear();

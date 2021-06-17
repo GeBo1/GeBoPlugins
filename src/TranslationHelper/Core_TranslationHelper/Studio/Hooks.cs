@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx.Logging;
@@ -52,12 +51,11 @@ namespace TranslationHelperPlugin.Studio
                     ci.chaFile.SafeProc(cf =>
                         cf.TranslateFullName(Handler)));
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, _source, nameof(RefreshVisibleLoopPatch));
             }
-#pragma warning restore CA1031
         }
 
         /*
@@ -84,12 +82,12 @@ namespace TranslationHelperPlugin.Studio
                 TranslateDisplayList(__instance);
                 var _ = __state;
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, __instance, nameof(CharaList_InitCharaList_Postfix));
             }
-#pragma warning restore CA1031
+
             /*
             Logger.LogDebug("Enable XUA");
             (__state as AutoTranslationPlugin)?.EnableAutoTranslator();
@@ -199,14 +197,12 @@ namespace TranslationHelperPlugin.Studio
                     return;
                 }
 
-                List<CharaFileInfo> cfiList = null;
-                var sex = -1;
-                charaList.SafeProc(cl =>
-                {
-                    sex = cl.sex;
-                    cl.charaFileSort.SafeProc(cfs => cfiList = cfs.cfiList);
-                });
-                if (sex == -1 || cfiList == null || cfiList.Count == 0) return;
+
+                var cfiList = Traverse.Create(charaList)?.Field<CharaFileSort>("charaFileSort")?.Value?.cfiList;
+                if (cfiList == null || cfiList.Count == 0) return;
+
+                var sex = Traverse.Create(charaList)?.Field<int>("sex")?.Value ?? -1;
+                if (sex == -1) return;
 
                 var scope = new NameScope((CharacterSex)sex);
 

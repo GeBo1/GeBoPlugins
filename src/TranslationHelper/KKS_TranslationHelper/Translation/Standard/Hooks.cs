@@ -1,13 +1,7 @@
-﻿using System;
-using BepInEx.Logging;
+﻿using BepInEx.Logging;
 using ChaCustom;
-using FileListUI;
-using GeBoCommon.AutoTranslation;
-using GeBoCommon.Chara;
-using GeBoCommon.Utilities;
 using HarmonyLib;
 using TranslationHelperPlugin.Utils;
-using UnityEngine;
 
 namespace TranslationHelperPlugin.Translation.Standard
 {
@@ -21,8 +15,7 @@ namespace TranslationHelperPlugin.Translation.Standard
             Harmony.CreateAndPatchAll(typeof(Hooks));
         }
 
-        #if false
-
+#if false
         [HarmonyPostfix]
         [HarmonyPatch(typeof(ThreadFileListCtrl<CustomFileInfo, CustomFileInfoComponent>),
             nameof(ThreadFileListCtrl<CustomFileInfo, CustomFileInfoComponent>.OnPointerEnter))]
@@ -41,12 +34,12 @@ namespace TranslationHelperPlugin.Translation.Standard
 
                 Translation.Hooks.OnPointerEnterPostfix(__instance, wrapper);
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, __instance, nameof(OnPointerEnterPostfix));
             }
-#pragma warning restore CA1031
+
         }
 
         [HarmonyPrefix]
@@ -96,15 +89,14 @@ namespace TranslationHelperPlugin.Translation.Standard
                     TranslationHelper.CardNameManager.TranslateFullName(
                         name, new NameScope((CharacterSex)sex), Handler));
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, __instance, nameof(ChangeItemPostfix));
             }
-#pragma warning restore CA1031
+
         }
 
 #endif
     }
-
 }

@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx;
 using BepInEx.Configuration;
-using GeBoCommon;
 using JetBrains.Annotations;
 
 namespace TranslationHelperPlugin
@@ -11,6 +11,10 @@ namespace TranslationHelperPlugin
     public partial class TranslationHelper : BaseUnityPlugin
     {
         public static ConfigEntry<bool> KK_GivenNameFirst { get; private set; }
+
+
+        // ReSharper disable once MemberCanBeMadeStatic.Global
+        [SuppressMessage("Performance", "CA1822:Mark members as static")]
         internal void GameSpecificAwake()
         {
             SplitNamesBeforeTranslate = false;
@@ -25,8 +29,6 @@ namespace TranslationHelperPlugin
 
             KK_GivenNameFirst.SettingChanged += GivenNameFirstChanged;
             GivenNameFirstChanged(this, new SettingChangedEventArgs(KK_GivenNameFirst));
-
-
         }
 
         private void GivenNameFirstChanged(object sender, EventArgs e)

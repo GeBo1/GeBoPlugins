@@ -6,7 +6,7 @@ namespace TranslationHelperPlugin.Chara
     {
         internal static void KK_SetupHooks(Harmony harmony)
         {
-            var propGetter = AccessTools.PropertyGetter(typeof(ChaFileParameter), "fullname");
+            var propGetter = AccessTools.PropertyGetter(typeof(ChaFileParameter), nameof(ChaFileParameter.fullname));
             if (propGetter == null) return;
             var prefix = AccessTools.Method(typeof(Hooks), nameof(ChaFileParameterFullnamePrefix));
             if (prefix == null) return;

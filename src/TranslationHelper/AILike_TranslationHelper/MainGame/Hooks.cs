@@ -51,13 +51,12 @@ namespace TranslationHelperPlugin.MainGame
                 GeBoAPI.Instance.AutoTranslationHelper.RegisterOnTranslatingCallback(AdvTranslationCallback);
                 _advTranslationCallbackRegistered = true;
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(ADVSceneOnEnablePostfix));
                 _advTranslationCallbackRegistered = false;
             }
-#pragma warning restore CA1031
         }
 
         [HarmonyPostfix]
@@ -71,12 +70,11 @@ namespace TranslationHelperPlugin.MainGame
                 GeBoAPI.Instance.AutoTranslationHelper.UnregisterOnTranslatingCallback(AdvTranslationCallback);
                 _advTranslationCallbackRegistered = false;
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(ADVSceneOnDisablePostfix));
             }
-#pragma warning restore CA1031
         }
 
         [HarmonyPostfix]
@@ -94,12 +92,11 @@ namespace TranslationHelperPlugin.MainGame
                 __instance.currentChara.SafeProc(cc =>
                     cc.chaCtrl.GetTranslationHelperController().SafeProc(tc => tc.TranslateCardNames()));
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(TextScenarioChangeCurrentCharaPostfix));
             }
-#pragma warning restore CA1031
         }
     }
 }

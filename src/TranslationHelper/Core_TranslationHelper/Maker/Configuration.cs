@@ -13,6 +13,7 @@ using TranslationHelperPlugin.Chara;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
+
 #if AI||HS2
 using AIChara;
 
@@ -78,12 +79,11 @@ namespace TranslationHelperPlugin.Maker
                 {
                     SetupNameInputField(entry.Key, entry.Value);
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception err)
                 {
-                    Logger.LogException(err, $"{nameof(SetupNameInputFields)}: Unable to monitor {entry.Key} InputField for changes");
+                    Logger.LogException(err,
+                        $"{nameof(SetupNameInputFields)}: Unable to monitor {entry.Key} InputField for changes");
                 }
-#pragma warning restore CA1031 // Do not catch general exception types
             }
         }
 

@@ -43,7 +43,7 @@ namespace TranslationHelperPlugin.Maker
         }
 
         [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
-        private static IEnumerator GameSpecificUpdateUICoroutine([NotNull] Controller controller)
+        private static IEnumerator GameSpecificUpdateUICoroutine(Controller controller)
         {
             Assert.IsNotNull(controller);
             var makerBase = MakerAPI.GetMakerBase();

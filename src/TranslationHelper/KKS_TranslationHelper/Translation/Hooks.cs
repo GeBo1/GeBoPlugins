@@ -118,7 +118,7 @@ namespace TranslationHelperPlugin.Translation
                     if (TranslationHelper.NameStringComparer.Equals(origName, newName)) return;
 
                     var lstFileInfo = __instance.lstFileInfo;
-                    
+
                     var entry = lstFileInfo?.FirstOrDefault(x =>
                     {
                         int index;
@@ -126,12 +126,10 @@ namespace TranslationHelperPlugin.Translation
                         {
                             index = x.index;
                         }
-#pragma warning disable CA1031 // Do not catch general exception types
                         catch
                         {
                             index = -1;
                         }
-#pragma warning restore CA1031 // Do not catch general exception types
 
                         if (index == -1)
                         {
@@ -193,12 +191,11 @@ namespace TranslationHelperPlugin.Translation
                         //TranslationHelper.CardNameManager.TranslateFullName(name, new NameScope((CharacterSex)sex),
                         Handler, _ => _pointerEnterCoroutine = null));
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, instance, nameof(OnPointerEnterPostfix));
             }
-#pragma warning restore CA1031
         }
 
         internal static void OnPointerExitPrefix()
@@ -208,12 +205,12 @@ namespace TranslationHelperPlugin.Translation
                 if (_pointerEnterCoroutine == null) return;
                 TranslationHelper.Instance.StopCoroutine(_pointerEnterCoroutine);
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(OnPointerExitPrefix));
             }
-#pragma warning restore CA1031
+
             _pointerEnterCoroutine = null;
         }
     }

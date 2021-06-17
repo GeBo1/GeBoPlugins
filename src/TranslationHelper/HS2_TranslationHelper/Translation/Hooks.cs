@@ -20,12 +20,11 @@ namespace TranslationHelperPlugin.Translation
             {
                 TranslateFileInfos(_lst);
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(LobbyCharaSelectInfoScrollControllerInitPrefix));
             }
-#pragma warning restore CA1031
         }
     }
 }

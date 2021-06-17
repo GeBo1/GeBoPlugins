@@ -63,12 +63,11 @@ namespace TranslationHelperPlugin.MainGame
                     TranslationHelper.Instance.StartCoroutine(UpdateText(label, r));
                 });
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(ChaFileControl_LoadCharaFile_Postfix));
             }
-#pragma warning restore CA1031
         }
 
 
@@ -105,14 +104,12 @@ namespace TranslationHelperPlugin.MainGame
 
                 InMapSelecCursorLabels[0] = null;
                 InMapSelecCursorLabels[1] = null;
-
             }
-#pragma warning disable CA1031
+
             catch (Exception err)
             {
                 Logger.LogException(err, nameof(MapSelecCursorEnterPrefix));
             }
-#pragma warning restore CA1031
         }
 
         // ReSharper disable once StringLiteralTypo IdentifierTypo

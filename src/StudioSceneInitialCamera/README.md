@@ -23,7 +23,7 @@ TBD
 
 - [GeBoCommon](https://github.com/GeBo1/GeBoPlugins)
 - [Illusion Modding API](https://github.com/IllusionMods/IllusionModdingAPI) v1.20.3+
-- [BepInEx](https://github.com/BepInEx/BepInEx) v5.4.4+
+- [BepInEx](https://github.com/BepInEx/BepInEx) v5.4.8+
 
 [//]: # (## Latest Links)
 

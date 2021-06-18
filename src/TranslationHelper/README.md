@@ -131,10 +131,10 @@ TBD
 ### Dependencies
 
 - [GeBoCommon](https://github.com/GeBo1/GeBoPlugins)
-- [ExtensibleSaveFormat](https://github.com/IllusionMods/BepisPlugins) v16.2.1+
-- [Illusion Modding API](https://github.com/IllusionMods/IllusionModdingAPI) v1.15.0+
-- [XUnity.AutoTranslator](https://github.com/bbepis/XUnity.AutoTranslator) v4.13.0+
-- [BepInEx](https://github.com/BepInEx/BepInEx) v5.4.4+
+- [ExtensibleSaveFormat](https://github.com/IllusionMods/BepisPlugins) v16.3.1+
+- [Illusion Modding API](https://github.com/IllusionMods/IllusionModdingAPI) v1.20.3+
+- [XUnity.AutoTranslator](https://github.com/bbepis/XUnity.AutoTranslator) v4.16.0+
+- [BepInEx](https://github.com/BepInEx/BepInEx) v5.4.8+
 
 [//]: # (## Latest Links)
 

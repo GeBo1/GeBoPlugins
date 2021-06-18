@@ -16,8 +16,8 @@ Removes all entries from your translation cache file that would be translated by
 ### Dependencies
 
 - [GeBoCommon](https://github.com/GeBo1/GeBoPlugins)
-- [XUnity.AutoTranslator](https://github.com/bbepis/XUnity.AutoTranslator) v4.13.0+
-- [BepInEx](https://github.com/BepInEx/BepInEx) v5.4.4+
+- [XUnity.AutoTranslator](https://github.com/bbepis/XUnity.AutoTranslator) v4.16.0+
+- [BepInEx](https://github.com/BepInEx/BepInEx) v5.4.8+
 
 [//]: # (## Latest Links)
 

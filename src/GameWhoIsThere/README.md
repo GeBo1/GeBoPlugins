@@ -26,7 +26,7 @@ Display name of character in surprise events
 
 ### Dependencies
 
-- [BepInEx](https://github.com/BepInEx/BepInEx) v5.4.4+
+- [BepInEx](https://github.com/BepInEx/BepInEx) v5.4.8+
 
 [//]: # (## Latest Links)
 

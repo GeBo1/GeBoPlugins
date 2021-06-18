@@ -112,6 +112,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KKS_TranslationHelper", "src\TranslationHelper\KKS_TranslationHelper\KKS_TranslationHelper.csproj", "{49542496-4956-48F9-91D7-1B6E86337B8A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "StudioSceneInitialCamera", "StudioSceneInitialCamera", "{9BF34456-1ABB-44B5-870B-EC449AFD6B40}"
+	ProjectSection(SolutionItems) = preProject
+		src\StudioSceneInitialCamera\README.md = src\StudioSceneInitialCamera\README.md
+	EndProjectSection
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Core_StudioSceneInitialCamera", "src\StudioSceneInitialCamera\Core_StudioSceneInitialCamera\Core_StudioSceneInitialCamera.shproj", "{827BDF45-718F-49AA-BC22-29641AB2BA68}"
 EndProject

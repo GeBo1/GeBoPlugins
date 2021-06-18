@@ -30,4 +30,4 @@ Display name of character in surprise events
 
 [//]: # (## Latest Links)
 
-[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r22/HS2_GameWhoIsThere.v1.0.1.zip "v1.0.1"
+[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r30/HS2_GameWhoIsThere.v1.0.1.3.zip "v1.0.1.3"

@@ -33,7 +33,7 @@ Now you can quickly apply changes to all selected characters (like Replace Chara
 
 [//]: # (## Latest Links)
 
-[AI Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r20/AI_StudioMultiselectChara.v1.0.0.zip "v1.0.0"
-[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r20/HS2_StudioMultiselectChara.v1.0.0.zip "v1.0.0"
-[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r20/KK_StudioMultiselectChara.v1.0.0.zip "v1.0.0"
+[AI Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r33/AI_StudioMultiselectChara.v1.0.0.2.zip "v1.0.0.2"
+[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r33/HS2_StudioMultiselectChara.v1.0.0.2.zip "v1.0.0.2"
+[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r33/KK_StudioMultiselectChara.v1.0.0.2.zip "v1.0.0.2"
 

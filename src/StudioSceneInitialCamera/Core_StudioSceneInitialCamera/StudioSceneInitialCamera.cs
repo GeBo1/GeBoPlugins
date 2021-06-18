@@ -15,7 +15,7 @@ namespace StudioSceneInitialCameraPlugin
     {
         public const string GUID = "com.gebo.BepInEx.studioinitialcamera";
         public const string PluginName = "Studio Initial Camera";
-        public const string Version = "0.0.5";
+        public const string Version = "0.0.6.2";
         internal static new ManualLogSource Logger;
 
         public static ConfigEntry<bool> Enabled { get; private set; }

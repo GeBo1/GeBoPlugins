@@ -75,4 +75,4 @@ Set **[Plugin Mode](#plugin-mode)** to **Relationship Based** and **[Minimum Rel
 
 [//]: # (## Latest Links)
 
-[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r23/KK_GameDialogHelper.v1.0.1.zip "v1.0.1"
+[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r29/KK_GameDialogHelper.v1.0.1.2.zip "v1.0.1.2"

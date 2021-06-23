@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Linq;
 using BepInEx.Logging;
 using GeBoCommon.Utilities;
@@ -13,34 +12,39 @@ namespace StudioSceneInitialCameraPlugin
 {
     public class StudioSceneInitialCameraController : SceneCustomFunctionController
     {
-        private static readonly string InitialCameraName =
-            $"[{StudioSceneInitialCamera.PluginName}] (does not save)";
+        private const string InitialCameraName = "[Initial Camera]";
 
         internal OCICamera InitialCamera { get; private set; }
 
         private static ManualLogSource Logger => StudioSceneInitialCamera.Logger;
         public bool InitialCameraReady { get; private set; }
+        public bool InitialCameraSavePending { get; private set; }
 
-        private IEnumerator WaitUntilReadyToSave()
+        private IEnumerator RequestInitialCameraSave()
         {
+            Logger.DebugLogDebug($"{nameof(RequestInitialCameraSave)}: start {Time.frameCount}");
             while (!Studio.Studio.IsInstance() || Camera.main == null)
             {
                 yield return null;
             }
 
-            var readyFrame = Time.frameCount + 5;
+            /*
+            var readyFrame =Time.frameCount + 1;
             while (Time.frameCount < readyFrame)
             {
                 yield return null;
             }
+            */
 
             yield return CoroutineUtils.WaitForEndOfFrame;
+            if (InitialCamera == null) InitialCameraSavePending = true;
+            Logger.DebugLogDebug($"{nameof(RequestInitialCameraSave)}: done {Time.frameCount}");
         }
 
         protected override void OnSceneLoad(SceneOperationKind operation,
             ReadOnlyDictionary<int, ObjectCtrlInfo> loadedItems)
         {
-            Logger.LogDebug($"{this.GetPrettyTypeFullName()}.{nameof(OnSceneLoad)}: {operation}");
+            Logger.DebugLogDebug($"{this.GetPrettyTypeFullName()}.{nameof(OnSceneLoad)}: {operation}");
             if (!StudioSceneInitialCamera.Enabled.Value) return;
 
             if (operation == SceneOperationKind.Clear)
@@ -52,8 +56,10 @@ namespace StudioSceneInitialCameraPlugin
 
             // don't do anything on import
             if (operation != SceneOperationKind.Load) return;
+            StudioSceneInitialCamera.Hooks.EnableChangeCameraHook = false;
             InitialCamera = null;
             InitialCameraReady = false;
+            InitialCameraSavePending = false;
             AddInitialCamera();
         }
 
@@ -94,7 +100,7 @@ namespace StudioSceneInitialCameraPlugin
         private void AddInitialCamera()
         {
             if (!StudioAPI.InsideStudio || !StudioAPI.StudioLoaded || !StudioSceneInitialCamera.Enabled.Value) return;
-            StartCoroutine(ConfigureInitialCamera());
+            StartCoroutine(RequestInitialCameraSave());
         }
 
         private bool TrySaveInitialCameraToButton()
@@ -142,20 +148,22 @@ namespace StudioSceneInitialCameraPlugin
                    cameraData1.rotate == cameraData2.rotate && cameraData1.rotation == cameraData2.rotation;
         }
 
-        private IEnumerator ConfigureInitialCamera()
+        public IEnumerator ExecuteInitialCameraSave()
         {
-            yield return WaitUntilReadyToSave();
-
+            Logger.DebugLogDebug($"{nameof(ExecuteInitialCameraSave)}: starting {Time.frameCount}");
             if (Studio.Studio.Instance == null ||
                 IsInitialCameraSaved() ||
                 Utils.GetSceneSaveCamera().IsFree() ||
                 TrySaveInitialCameraToButton() ||
                 Studio.Studio.Instance.cameraCount == int.MaxValue)
             {
+                StudioSceneInitialCamera.Hooks.EnableChangeCameraHook = false;
+                Logger.DebugLogDebug(
+                    $"{nameof(ExecuteInitialCameraSave)}: no need to add alternate camera, done: {Time.frameCount}");
                 yield break;
             }
 
-
+            Logger.DebugLogDebug($"{nameof(ExecuteInitialCameraSave)}: adding alternate camera {Time.frameCount}");
             // add the camera
             Studio.Studio.Instance.cameraCount++;
             InitialCamera = AddObjectCamera.Add();
@@ -164,6 +172,7 @@ namespace StudioSceneInitialCameraPlugin
             Studio.Studio.Instance.cameraSelector.SafeProc(cs => cs.Init());
 
             InitialCameraReady = true;
+
 
             var changeAmount = InitialCamera.objectInfo.changeAmount;
             var mainCam = Camera.main;
@@ -193,10 +202,14 @@ namespace StudioSceneInitialCameraPlugin
                 changeAmount.scale = scale;
                 changeAmount.OnChange();
             }
+
+            StudioSceneInitialCamera.Hooks.EnableChangeCameraHook = true;
+            Logger.DebugLogDebug($"{nameof(ExecuteInitialCameraSave)}: all done {Time.frameCount}");
         }
 
         private void RemoveInitialCamera()
         {
+            InitialCameraSavePending = false;
             if (InitialCamera == null) return;
             InitialCameraReady = false;
             var tmp = InitialCamera;
@@ -207,6 +220,22 @@ namespace StudioSceneInitialCameraPlugin
         protected override void OnSceneSave()
         {
             RemoveInitialCamera();
+        }
+
+        public bool InputKeyProcHandler(Studio.CameraControl instance)
+        {
+            // handle adding of extra camera (if needed) inside of key handling to avoid
+            // issues with changing things out from under other plugins
+            if (InitialCameraSavePending)
+            {
+                InitialCameraSavePending = false;
+                StartCoroutine(ExecuteInitialCameraSave());
+                return false;
+            }
+
+            if (!StudioSceneInitialCamera.SelectInitialCameraShortcut.Value.IsDown()) return false;
+            instance.SelectInitialCamera();
+            return true;
         }
     }
 }

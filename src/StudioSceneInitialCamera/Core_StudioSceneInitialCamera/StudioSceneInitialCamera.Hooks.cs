@@ -12,15 +12,18 @@ namespace StudioSceneInitialCameraPlugin
         {
             private static bool _insideHook;
 
+            public static bool EnableChangeCameraHook { get; set; }
+
             [HarmonyPostfix]
             [HarmonyPatch(typeof(Studio.CameraControl), nameof(Studio.CameraControl.InputKeyProc))]
             internal static void CameraControl_InputKeyProc_Postfix(Studio.CameraControl __instance, ref bool __result)
             {
                 try
                 {
-                    if (__result || !Enabled.Value || !SelectInitialCameraShortcut.Value.IsDown()) return;
-                    __instance.SelectInitialCamera();
-                    __result = true;
+                    if (!Enabled.Value || __result) return;
+                    var newResult = __result;
+                    GetController().SafeProc(controller => newResult = controller.InputKeyProcHandler(__instance));
+                    __result = newResult;
                 }
                 catch (Exception err)
                 {
@@ -33,13 +36,12 @@ namespace StudioSceneInitialCameraPlugin
                 typeof(bool))]
             internal static void Studio_ChangeCamera_Postfix(OCICamera _ociCamera)
             {
-                Logger.LogDebug(nameof(Studio_ChangeCamera_Postfix));
-                if (_insideHook || StudioSaveLoadApi.LoadInProgress || _ociCamera == null) return;
+                if (!EnableChangeCameraHook || _insideHook || StudioSaveLoadApi.LoadInProgress ||
+                    _ociCamera == null) return;
                 try
                 {
                     _insideHook = true;
                     if (!Enabled.Value) return;
-                    Logger.LogDebug($"{nameof(Studio_ChangeCamera_Postfix)}: Running");
                     var controller = GetController();
                     if (controller == null || controller.InitialCamera == null || !controller.InitialCameraReady ||
                         _ociCamera != controller.InitialCamera)
@@ -47,7 +49,7 @@ namespace StudioSceneInitialCameraPlugin
                         return;
                     }
 
-                    Logger.LogDebug($"{nameof(Studio_ChangeCamera_Postfix)}: Initial camera selected");
+                    Logger.DebugLogDebug($"{nameof(Studio_ChangeCamera_Postfix)}: Initial camera selected");
                     controller.ActivateInitialCamera();
                 }
                 catch (Exception err)

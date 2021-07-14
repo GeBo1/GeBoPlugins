@@ -6,7 +6,7 @@ When the player is invited (or invites a girl) to swim/exercise he can automatic
 
 |                         | Game  | Studio  | Download     |
 | ----------------------: | :---: | :-----: | ------------ |
-| Koikatu/Koikatsu Party  | ✔️     | ❌      | [KK Latest]  |
+| Koikatu/Koikatsu Party  | ✔️     | ❌      | [KK_GameDressForSuccess]  |
 
 ## Configuration
 
@@ -36,4 +36,4 @@ If not set to true entire plugin is disabled.
 
 [//]: # (## Latest Links)
 
-[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r34/KK_GameDressForSuccess.v1.2.0.2.zip "v1.2.0.2"
+[KK_GameDressForSuccess]: https://github.com/GeBo1/GeBoPlugins/releases/download/r34/KK_GameDressForSuccess.v1.2.0.2.zip "v1.2.0.2"

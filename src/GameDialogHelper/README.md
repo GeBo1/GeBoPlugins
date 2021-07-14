@@ -6,7 +6,7 @@ Highlights correct dialog choice in KK main game. Can be configured to use advan
 
 |                         | Game  | Studio  | Download     |
 | ----------------------: | :---: | :-----: | ------------ |
-| Koikatu/Koikatsu Party  | ✔️     | ❌      | [KK Latest]  |
+| Koikatu/Koikatsu Party  | ✔️     | ❌      | [KK_GameDialogHelper]  |
 
 ## Configuration
 
@@ -75,4 +75,4 @@ Set **[Plugin Mode](#plugin-mode)** to **Relationship Based** and **[Minimum Rel
 
 [//]: # (## Latest Links)
 
-[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r29/KK_GameDialogHelper.v1.0.1.2.zip "v1.0.1.2"
+[KK_GameDialogHelper]: https://github.com/GeBo1/GeBoPlugins/releases/download/r29/KK_GameDialogHelper.v1.0.1.2.zip "v1.0.1.2"

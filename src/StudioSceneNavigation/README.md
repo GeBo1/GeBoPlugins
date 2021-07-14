@@ -6,9 +6,9 @@ Provides hotkeys for loading the next/previous scene from the scenes folder. Sup
 
 |                         | Game  | Studio  | Download     |
 | ----------------------: | :---: | :-----: | ------------ |
-| Koikatu/Koikatsu Party  | ❌    | ✔️       | [KK Latest]  |
-| AI-Shoujo/AI-Syoujyo    | ❌    | ✔️       | [AI Latest]  |
-| Honey Select 2          | ❌    | ✔️       | [HS2 Latest] |
+| Koikatu/Koikatsu Party  | ❌    | ✔️       | [KK_StudioSceneNavigation]  |
+| AI-Shoujo/AI-Syoujyo    | ❌    | ✔️       | [AI_StudioSceneNavigation]  |
+| Honey Select 2          | ❌    | ✔️       | [HS2_StudioSceneNavigation] |
 
 
 ## Configuration
@@ -52,6 +52,6 @@ Reload the currently loaded scene.
 
 [//]: # (## Latest Links)
 
-[AI Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r31/AI_StudioSceneNavigation.v1.0.2.2.zip "v1.0.2.2"
-[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r31/HS2_StudioSceneNavigation.v1.0.2.2.zip "v1.0.2.2"
-[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r31/KK_StudioSceneNavigation.v1.0.2.2.zip "v1.0.2.2"
+[AI_StudioSceneNavigation]: https://github.com/GeBo1/GeBoPlugins/releases/download/r31/AI_StudioSceneNavigation.v1.0.2.2.zip "v1.0.2.2"
+[HS2_StudioSceneNavigation]: https://github.com/GeBo1/GeBoPlugins/releases/download/r31/HS2_StudioSceneNavigation.v1.0.2.2.zip "v1.0.2.2"
+[KK_StudioSceneNavigation]: https://github.com/GeBo1/GeBoPlugins/releases/download/r31/KK_StudioSceneNavigation.v1.0.2.2.zip "v1.0.2.2"

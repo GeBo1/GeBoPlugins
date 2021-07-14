@@ -6,9 +6,9 @@ If you select a character in studio and press the hotkey, all other instances of
 
 |                         | Game  | Studio  | Download     |
 | ----------------------: | :---: | :-----: | ------------ |
-| Koikatu/Koikatsu Party  | ❌    | ✔️      | [KK Latest]  |
-| AI-Shoujo/AI-Syoujyo    | ❌    | ✔️      | [AI Latest]  |
-| Honey Select 2          | ❌    | ✔️      | [HS2 Latest] |
+| Koikatu/Koikatsu Party  | ❌    | ✔️      | [KK_StudioMultiselectChara]  |
+| AI-Shoujo/AI-Syoujyo    | ❌    | ✔️      | [AI_StudioMultiselectChara]  |
+| Honey Select 2          | ❌    | ✔️      | [HS2_StudioMultiselectChara] |
 
 
 ## Technical Info
@@ -33,7 +33,7 @@ Now you can quickly apply changes to all selected characters (like Replace Chara
 
 [//]: # (## Latest Links)
 
-[AI Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r33/AI_StudioMultiselectChara.v1.0.0.2.zip "v1.0.0.2"
-[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r33/HS2_StudioMultiselectChara.v1.0.0.2.zip "v1.0.0.2"
-[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r33/KK_StudioMultiselectChara.v1.0.0.2.zip "v1.0.0.2"
+[AI_StudioMultiselectChara]: https://github.com/GeBo1/GeBoPlugins/releases/download/r33/AI_StudioMultiselectChara.v1.0.0.2.zip "v1.0.0.2"
+[HS2_StudioMultiselectChara]: https://github.com/GeBo1/GeBoPlugins/releases/download/r33/HS2_StudioMultiselectChara.v1.0.0.2.zip "v1.0.0.2"
+[KK_StudioMultiselectChara]: https://github.com/GeBo1/GeBoPlugins/releases/download/r33/KK_StudioMultiselectChara.v1.0.0.2.zip "v1.0.0.2"
 

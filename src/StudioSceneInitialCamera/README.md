@@ -6,9 +6,9 @@ Provides methods for returning to camera position when scene was initially loade
 
 |                         | Game  | Studio  | Download     |
 | ----------------------: | :---: | :-----: | ------------ |
-| Koikatu/Koikatsu Party  | ❌    | ✔️       | [KK Latest]  |
-| AI-Shoujo/AI-Syoujyo    | ❌    | ✔️       | [AI Latest]  |
-| Honey Select 2          | ❌    | ✔️       | [HS2 Latest] |
+| Koikatu/Koikatsu Party  | ❌    | ✔️       | [KK_StudioSceneInitalCamera]  |
+| AI-Shoujo/AI-Syoujyo    | ❌    | ✔️       | [AI_StudioSceneInitalCamera]  |
+| Honey Select 2          | ❌    | ✔️       | [HS2_StudioSceneInitalCamera] |
 
 
 ## Configuration
@@ -27,6 +27,6 @@ TBD
 
 [//]: # (## Latest Links)
 
-[AI Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r35/AI_StudioSceneInitialCamera.v0.6.0.2.zip "v0.6.0.2"
-[HS2 Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r35/HS2_StudioSceneInitialCamera.v0.6.0.2.zip "v0.6.0.2"
-[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r35/KK_StudioSceneInitialCamera.v0.6.0.2.zip "v0.6.0.2"
+[AI_StudioSceneInitalCamera]: https://github.com/GeBo1/GeBoPlugins/releases/download/r35/AI_StudioSceneInitialCamera.v0.6.0.2.zip "v0.6.0.2"
+[HS2_StudioSceneInitalCamera]: https://github.com/GeBo1/GeBoPlugins/releases/download/r35/HS2_StudioSceneInitialCamera.v0.6.0.2.zip "v0.6.0.2"
+[KK_StudioSceneInitalCamera]: https://github.com/GeBo1/GeBoPlugins/releases/download/r35/KK_StudioSceneInitialCamera.v0.6.0.2.zip "v0.6.0.2"

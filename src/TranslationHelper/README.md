@@ -7,9 +7,9 @@ Improves the experience of using XUnity.AutoTranslator in numerous ways, mostly 
 
 |                         | Game  | Studio  | Download     |
 | ----------------------: | :---: | :-----: | ------------ |
-| Koikatu/Koikatsu Party  | ✔️     | ✔️       | [KK Latest]  |
-| AI-Shoujo/AI-Syoujyo    | ✔️     | ✔️       | [AI Latest]  |
-| Honey Select 2          | ✔️     | ✔️       | [HS2 Latest] |
+| Koikatu/Koikatsu Party  | ✔️     | ✔️       | [KK_TranslationHelper]  |
+| AI-Shoujo/AI-Syoujyo    | ✔️     | ✔️       | [AI_TranslationHelper]  |
+| Honey Select 2          | ✔️     | ✔️       | [HS2_TranslationHelper] |
 
 ## Features
 
@@ -138,6 +138,6 @@ TBD
 
 [//]: # (## Latest Links)
 
-[AI Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r28/AI_TranslationHelper.v1.1.0.8.zip "v1.1.0.8"
-[HS2 Latest]:https://github.com/GeBo1/GeBoPlugins/releases/download/r28/HS2_TranslationHelper.v1.1.0.8.zip "v1.1.0.8"
-[KK Latest]: https://github.com/GeBo1/GeBoPlugins/releases/download/r28/KK_TranslationHelper.v1.1.0.8.zip "v1.1.0.8"
+[AI_TranslationHelper]: https://github.com/GeBo1/GeBoPlugins/releases/download/r28/AI_TranslationHelper.v1.1.0.8.zip "v1.1.0.8"
+[HS2_TranslationHelper]: https://github.com/GeBo1/GeBoPlugins/releases/download/r28/HS2_TranslationHelper.v1.1.0.8.zip "v1.1.0.8"
+[KK_TranslationHelper]: https://github.com/GeBo1/GeBoPlugins/releases/download/r28/KK_TranslationHelper.v1.1.0.8.zip "v1.1.0.8"

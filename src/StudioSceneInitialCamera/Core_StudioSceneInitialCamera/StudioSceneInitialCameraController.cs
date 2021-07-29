@@ -22,23 +22,24 @@ namespace StudioSceneInitialCameraPlugin
 
         private IEnumerator RequestInitialCameraSave()
         {
-            Logger.DebugLogDebug($"{nameof(RequestInitialCameraSave)}: start {Time.frameCount}");
+            Logger.LogDebug($"{nameof(RequestInitialCameraSave)}: start {Time.frameCount}/{Time.realtimeSinceStartup}");
             while (!Studio.Studio.IsInstance() || Camera.main == null)
             {
                 yield return null;
             }
 
-            /*
-            var readyFrame =Time.frameCount + 1;
-            while (Time.frameCount < readyFrame)
+            // give TimeLine some time to do it's thing
+            var readyFrame = Time.frameCount + 5;
+            var readyTime = Time.realtimeSinceStartup + 3f;
+            while (Time.frameCount < readyFrame || Time.realtimeSinceStartup < readyTime)
             {
                 yield return null;
             }
-            */
+
 
             yield return CoroutineUtils.WaitForEndOfFrame;
             if (InitialCamera == null) InitialCameraSavePending = true;
-            Logger.DebugLogDebug($"{nameof(RequestInitialCameraSave)}: done {Time.frameCount}");
+            Logger.LogDebug($"{nameof(RequestInitialCameraSave)}: done {Time.frameCount}/{Time.realtimeSinceStartup}");
         }
 
         protected override void OnSceneLoad(SceneOperationKind operation,
@@ -99,7 +100,12 @@ namespace StudioSceneInitialCameraPlugin
 
         private void AddInitialCamera()
         {
-            if (!StudioAPI.InsideStudio || !StudioAPI.StudioLoaded || !StudioSceneInitialCamera.Enabled.Value) return;
+            if (!StudioAPI.InsideStudio || !StudioAPI.StudioLoaded || !StudioSceneInitialCamera.Enabled.Value ||
+                !StudioSceneInitialCamera.SaveInitialCamera.Value)
+            {
+                return;
+            }
+
             StartCoroutine(RequestInitialCameraSave());
         }
 
@@ -141,20 +147,15 @@ namespace StudioSceneInitialCameraPlugin
             return numFree > 1;
         }
 
-        private static bool AreCameraDataEqual(Studio.CameraControl.CameraData cameraData1,
-            Studio.CameraControl.CameraData cameraData2)
-        {
-            return cameraData1.distance == cameraData2.distance && cameraData1.pos == cameraData2.pos &&
-                   cameraData1.rotate == cameraData2.rotate && cameraData1.rotation == cameraData2.rotation;
-        }
-
         public IEnumerator ExecuteInitialCameraSave()
         {
             Logger.DebugLogDebug($"{nameof(ExecuteInitialCameraSave)}: starting {Time.frameCount}");
             if (Studio.Studio.Instance == null ||
+                !StudioSceneInitialCamera.SaveInitialCamera.Value ||
                 IsInitialCameraSaved() ||
                 Utils.GetSceneSaveCamera().IsFree() ||
                 TrySaveInitialCameraToButton() ||
+                !StudioSceneInitialCamera.CreateStudioCameraObject.Value ||
                 Studio.Studio.Instance.cameraCount == int.MaxValue)
             {
                 StudioSceneInitialCamera.Hooks.EnableChangeCameraHook = false;

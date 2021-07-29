@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using GeBoCommon.Utilities;
 using HarmonyLib;
 using KKAPI.Studio.SaveLoad;
@@ -11,7 +12,6 @@ namespace StudioSceneInitialCameraPlugin
         internal static class Hooks
         {
             private static bool _insideHook;
-
             public static bool EnableChangeCameraHook { get; set; }
 
             [HarmonyPostfix]
@@ -31,13 +31,19 @@ namespace StudioSceneInitialCameraPlugin
                 }
             }
 
+
             [HarmonyPostfix]
             [HarmonyPatch(typeof(Studio.Studio), nameof(Studio.Studio.ChangeCamera), typeof(OCICamera), typeof(bool),
                 typeof(bool))]
+            [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "inherited naming")]
             internal static void Studio_ChangeCamera_Postfix(OCICamera _ociCamera)
             {
                 if (!EnableChangeCameraHook || _insideHook || StudioSaveLoadApi.LoadInProgress ||
-                    _ociCamera == null) return;
+                    _ociCamera == null)
+                {
+                    return;
+                }
+
                 try
                 {
                     _insideHook = true;

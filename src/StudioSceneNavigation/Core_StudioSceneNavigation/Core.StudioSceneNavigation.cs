@@ -33,7 +33,7 @@ namespace StudioSceneNavigationPlugin
     {
         public const string GUID = "com.gebo.bepinex.studioscenenavigation";
         public const string PluginName = "Studio Scene Navigation";
-        public const string Version = "1.0.2.2";
+        public const string Version = "1.0.2.5";
 
         private const float SaveDelay = 5f;
 
@@ -616,32 +616,11 @@ namespace StudioSceneNavigationPlugin
             if (sceneLoadScene == null) yield break;
             var lastLoadedScene = GetLastLoadedScene();
             var page = Math.Max(0, GetLoaderPageForImage(lastLoadedScene));
-
             SetPage(page, sceneLoadScene);
-
-            if (sceneLoadScene == null || page == 0) yield break;
-
 
             sceneLoadScene.SafeProc(sls => sls.GetComponentsInChildren<ScrollRect>().SafeProc(0, r =>
             {
-                var buttonHeight = -1f;
-                var scrollBarHeight = -1f;
-
-
-                r.GetComponentsInChildren<Button>().SafeProc(0,
-                    b => b.GetComponent<RectTransform>().SafeProc(rt => buttonHeight = rt.rect.height));
-                r.verticalScrollbar.SafeProc(
-                    sb => sb.GetComponent<RectTransform>().SafeProc(rt => scrollBarHeight = rt.rect.height));
-                float scrollPos;
-                if (buttonHeight > 0f && scrollBarHeight > 0f)
-                {
-                    scrollPos = 1.0f - Mathf.Max(0f, (buttonHeight * (page - 1)) - scrollBarHeight);
-                }
-                else
-                {
-                    scrollPos = 1.0f - ((GetPage() + 1f) / GetNumPages(sls));
-                }
-
+                var scrollPos = 1.0f - Mathf.Clamp(Mathf.Lerp(-0.01f, 1.01f, GetPage() / (GetNumPages(sls) - 1f)), 0f, 1f);
                 r.verticalScrollbar.SafeProc(sb => sb.value = scrollPos);
             }));
         }

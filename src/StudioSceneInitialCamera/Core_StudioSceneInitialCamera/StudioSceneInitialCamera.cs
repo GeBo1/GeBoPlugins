@@ -3,6 +3,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using GeBoCommon;
 using HarmonyLib;
+using JetBrains.Annotations;
 using KKAPI.Studio.SaveLoad;
 using KKAPI.Utilities;
 using UnityEngine;
@@ -14,7 +15,9 @@ namespace StudioSceneInitialCameraPlugin
     [BepInProcess(Constants.StudioProcessName)]
     public partial class StudioSceneInitialCamera : BaseUnityPlugin
     {
+        [PublicAPI]
         public const string GUID = "com.gebo.BepInEx.studioinitialcamera";
+
         public const string PluginName = "Studio Scene Initial Camera";
         public const string Version = "0.7.0.0";
         internal static new ManualLogSource Logger;
@@ -48,6 +51,7 @@ namespace StudioSceneInitialCameraPlugin
             Harmony.CreateAndPatchAll(typeof(Hooks));
         }
 
+        [PublicAPI]
         public static StudioSceneInitialCameraController GetController()
         {
             var container = Traverse.Create(typeof(StudioSaveLoadApi))

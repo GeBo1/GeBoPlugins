@@ -14,6 +14,7 @@ using GeBoCommon.Studio;
 using GeBoCommon.Utilities;
 using HarmonyLib;
 using Illusion.Extensions;
+using JetBrains.Annotations;
 using KKAPI;
 using KKAPI.Studio.SaveLoad;
 using KKAPI.Utilities;
@@ -31,7 +32,9 @@ namespace StudioSceneNavigationPlugin
     [BepInPlugin(GUID, PluginName, Version)]
     public partial class StudioSceneNavigation : BaseUnityPlugin
     {
+        [PublicAPI]
         public const string GUID = "com.gebo.bepinex.studioscenenavigation";
+
         public const string PluginName = "Studio Scene Navigation";
         public const string Version = "1.0.2.5";
 
@@ -620,7 +623,10 @@ namespace StudioSceneNavigationPlugin
 
             sceneLoadScene.SafeProc(sls => sls.GetComponentsInChildren<ScrollRect>().SafeProc(0, r =>
             {
-                var scrollPos = 1.0f - Mathf.Clamp(Mathf.Lerp(-0.01f, 1.01f, GetPage() / (GetNumPages(sls) - 1f)), 0f, 1f);
+                var scrollPos = 1.0f - Mathf.Clamp(
+                    Mathf.Lerp(-0.01f, 1.01f, GetPage() / (GetNumPages(sls) - 1f)),
+                    0f,
+                    1f);
                 r.verticalScrollbar.SafeProc(sb => sb.value = scrollPos);
             }));
         }

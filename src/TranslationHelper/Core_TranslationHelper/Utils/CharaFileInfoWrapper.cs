@@ -65,7 +65,10 @@ namespace TranslationHelperPlugin.Utils
         private static readonly Func<T, string> FullPathGetter =
             CreateGetter<string>("FullPath", "fullpath", "fullPath");
 
-        private static readonly Func<T, byte> InnerSexGetter = CreateGetter<byte>("sex");
+
+        private static readonly Func<T, byte> ByteSexGetter = CreateGetter<byte>("sex");
+        private static readonly Func<T, int> IntSexGetter = CreateGetter<int>("sex");
+
         private readonly T _target;
 
         public CharaFileInfoWrapper(T target)
@@ -92,12 +95,40 @@ namespace TranslationHelperPlugin.Utils
             {
                 try
                 {
-                    return (CharacterSex)InnerSexGetter(_target);
+                    return (CharacterSex)ByteSexGetter(_target);
                 }
                 catch
                 {
-                    return this.GuessSex();
+                    // fall through
                 }
+
+                try
+                {
+                    var intSex = IntSexGetter(_target);
+                    return (CharacterSex)intSex;
+                }
+                catch
+                {
+                    // fall through
+                }
+
+
+                Logger.LogDebug($"{this.GetPrettyTypeName()}.get_{nameof(Sex)} using workaround");
+                return this.GuessSex();
+            }
+        }
+
+        private static bool CheckCast<TDest>(Type sourceType)
+        {
+            if (sourceType == typeof(TDest)) return true;
+            try
+            {
+                _ = (TDest)Activator.CreateInstance(sourceType);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -112,6 +143,8 @@ namespace TranslationHelperPlugin.Utils
                 //var propGetter = targetType.GetProperty(name).AccessTools.PropertySetter(targetType, name);
                 var propSetter = prop?.GetSetMethod(false) ?? prop?.GetSetMethod(true);
                 if (propSetter == null) continue;
+
+                if (!CheckCast<TValue>(propSetter.ReturnType)) continue;
 
                 Logger?.LogDebug(
                     $"Found {names[0]} property for type {targetType.FullName} with name {name} (property type: {prop.PropertyType}, value type: {typeof(TValue)})");
@@ -132,6 +165,7 @@ namespace TranslationHelperPlugin.Utils
             {
                 var field = targetType.GetField(name, AccessTools.all);
                 if (field == null) continue;
+                if (!CheckCast<TValue>(field.FieldType)) continue;
                 Expression<Action<T, TValue>> setter = (obj, value) => field.SetValue(obj, value);
                 // log if found as field because AccessTools will have warned of missing property
                 Logger?.LogDebug(
@@ -158,9 +192,10 @@ namespace TranslationHelperPlugin.Utils
 
                 if (propGetter == null) continue;
 
+                if (!CheckCast<TResult>(propGetter.ReturnType)) continue;
 
                 Logger?.LogDebug(
-                    $"Found property {names[0]} for type {targetType.GetPrettyTypeName()} with name {name} (property type: {prop.PropertyType}, result type: {typeof(TResult)})");
+                    $"Found property {names[0]} for type {targetType} with name {name} (property type: {prop.PropertyType}, result type: {typeof(TResult)})");
 
 
                 try
@@ -169,8 +204,7 @@ namespace TranslationHelperPlugin.Utils
                 }
                 catch
                 {
-                    Expression<Func<T, TResult>> getter =
-                        obj => (TResult)propGetter.Invoke(obj, new object[0]);
+                    Expression<Func<T, TResult>> getter = obj => (TResult)propGetter.Invoke(obj, new object[0]);
                     return getter.Compile();
                 }
             }
@@ -180,13 +214,16 @@ namespace TranslationHelperPlugin.Utils
                 //var field = AccessTools.Field(targetType, name);
                 var field = targetType.GetField(name, AccessTools.all);
                 if (field == null) continue;
+                if (!CheckCast<TResult>(field.FieldType)) continue;
+
                 Expression<Func<T, TResult>> getter = obj => (TResult)field.GetValue(obj);
                 Logger?.LogDebug(
-                    $"Found field {names[0]} for type {targetType.FullName} with name {name} (field type: {field.FieldType}, result type: {typeof(TResult)})");
+                    $"Found field {names[0]} for type {targetType} with name {name} (field type: {field.FieldType}, result type: {typeof(TResult)})");
                 return getter.Compile();
             }
 
-            var msg = $"unable to expose getter for {names[0]} on {targetType.FullName}";
+            var msg =
+                $"unable to expose getter for {names[0]} on {targetType} of type {typeof(TResult)}";
             Logger?.LogWarning(msg);
             return obj => throw new NotSupportedException(msg);
         }

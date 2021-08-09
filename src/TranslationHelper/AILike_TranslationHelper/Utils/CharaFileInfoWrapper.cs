@@ -12,9 +12,11 @@ namespace TranslationHelperPlugin.Utils
 
         private static readonly string
             FemalePathKey = PathUtils.CombinePaths(string.Empty, "chara", "female", string.Empty).ToLowerInvariant();
+
         internal static CharacterSex GuessSex(this ICharaFileInfo fileInfo)
         {
             var filename = Path.GetFileName(fileInfo.FullPath);
+
             if (filename.StartsWith("AISChaM_", StringComparison.OrdinalIgnoreCase) ||
                 filename.StartsWith("ais_m_", StringComparison.OrdinalIgnoreCase) ||
                 filename.StartsWith("HS2ChaM_", StringComparison.OrdinalIgnoreCase) ||
@@ -32,8 +34,12 @@ namespace TranslationHelperPlugin.Utils
             }
 
             var path = PathUtils.NormalizePath(fileInfo.FullPath).ToLowerInvariant();
-            if (path.Contains(MalePathKey)) return CharacterSex.Male;
-            return path.Contains(FemalePathKey) ? CharacterSex.Female : CharacterSex.Unspecified;
+            Logger.LogDebug($"{nameof(GuessSex)}: {fileInfo}: {path}");
+            return path.Contains(MalePathKey)
+                ? CharacterSex.Male
+                : path.Contains(FemalePathKey)
+                    ? CharacterSex.Female
+                    : CharacterSex.Unspecified;
         }
     }
 }

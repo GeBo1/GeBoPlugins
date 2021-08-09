@@ -35,7 +35,7 @@ namespace TranslationHelperPlugin
     {
         public const string GUID = "com.gebo.bepinex.translationhelper";
         public const string PluginName = "Translation Helper";
-        public const string Version = "1.1.0.8";
+        public const string Version = "1.1.0.9";
 
         internal static new ManualLogSource Logger;
         private static TranslationHelper _instance;
@@ -351,6 +351,7 @@ namespace TranslationHelperPlugin
         internal void Start()
         {
             _instance = this;
+            Logger = Logger ?? base.Logger;
             IsShuttingDown = false;
             GameSpecificStart();
         }

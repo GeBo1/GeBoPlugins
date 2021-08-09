@@ -176,6 +176,8 @@ namespace TranslationHelperPlugin.Studio
         private static IEnumerator TranslateDisplayListEntryCoroutine(CharaFileInfo entry, NameScope scope,
             Action callback = null)
         {
+            // yield null immediately to avoid blocking 
+            yield return null;
             Logger.DebugLogDebug(
                 $"{nameof(TranslateDisplayListEntryCoroutine)}: entry={entry}, scope={scope}, callback={callback}");
             var limitCoroutine = TranslationHelper.Instance.StartCoroutine(TreeNodeLimiter.Start());

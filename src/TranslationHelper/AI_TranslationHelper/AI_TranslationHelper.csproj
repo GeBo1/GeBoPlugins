@@ -108,9 +108,11 @@
     <Compile Include="Acceleration\Configuration.cs" />
     <Compile Include="Acceleration\Hooks.cs" />
     <Compile Include="AI.TranslationHelper.cs" />
+    <Compile Include="Configuration\Configuration.cs" />
     <Compile Include="MainGame\Configuration.cs" />
     <Compile Include="MainGame\Hooks.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\GameCharaFileInfoWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

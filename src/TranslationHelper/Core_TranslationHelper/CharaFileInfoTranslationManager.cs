@@ -266,6 +266,13 @@ namespace TranslationHelperPlugin
             var scope = new NameScope(fileInfo.Sex);
             var path = fileInfo.FullPath;
             var originalName = fileInfo.Name;
+
+            if (path.IsNullOrWhiteSpace() || originalName.IsNullOrWhiteSpace())
+            {
+                callbacks.CallHandlers(new TranslationResult(false, originalName, "odd fileInfo"));
+                yield break;
+            }
+
             var done = false;
             var tmpCallbacks = callbacks.ToList();
 

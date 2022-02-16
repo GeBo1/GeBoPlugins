@@ -28,4 +28,4 @@ using static StudioSceneInitialCameraPlugin.StudioSceneInitialCamera;
 [assembly: AssemblyDescription(PluginName + " for " + Constants.GameName)]
 [assembly: AssemblyTitle(Constants.Prefix + "_" + nameof(StudioSceneInitialCamera))]
 [assembly: AssemblyProduct(Constants.Prefix + "_" + nameof(StudioSceneInitialCamera))]
-[assembly: AssemblyCompany(GeBoCommon.Constants.RepoUrl)]
+[assembly: AssemblyCompany(Constants.RepoUrl)]

@@ -2,9 +2,28 @@
 {
     public static class Extensions
     {
-        public static void SelectInitialCamera(this Studio.CameraControl cameraControl)
+        public static void SelectInitialCamera(this Studio.CameraControl cameraControl, bool storeInSave = false)
         {
-            cameraControl.SafeProc(cc => Utils.GetSceneInfo().SafeProc(si => cc.Import(si.cameraSaveData)));
+            if (cameraControl == null) return;
+
+            var controller = StudioSceneInitialCamera.GetController();
+
+            if (controller != null && !controller.InitialCameraSavePending)
+            {
+                var backupData = controller.CurrentInitialCameraDataBackup;
+                if (backupData != null)
+                {
+                    cameraControl.Import(backupData);
+                    if (storeInSave) Utils.GetSceneInfo().SafeProc(si => si.cameraSaveData = backupData);
+                    return;
+                }
+            }
+
+            var sceneInfo = Utils.GetSceneInfo();
+            if (sceneInfo != null && sceneInfo.cameraSaveData != null)
+            {
+                cameraControl.Import(sceneInfo.cameraSaveData);
+            }
         }
 
         public static bool IsSame(this Studio.CameraControl.CameraData cameraData1,

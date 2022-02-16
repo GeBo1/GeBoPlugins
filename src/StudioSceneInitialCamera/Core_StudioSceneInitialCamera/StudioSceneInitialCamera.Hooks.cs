@@ -20,7 +20,7 @@ namespace StudioSceneInitialCameraPlugin
             {
                 try
                 {
-                    if (!Enabled.Value || __result) return;
+                    if (__result || !Enabled.Value) return;
                     var newResult = __result;
                     GetController().SafeProc(controller => newResult = controller.InputKeyProcHandler(__instance));
                     __result = newResult;
@@ -66,6 +66,49 @@ namespace StudioSceneInitialCameraPlugin
                 finally
                 {
                     _insideHook = false;
+                }
+            }
+
+            [HarmonyPrefix]
+            [HarmonyPatch(typeof(SceneInfo), nameof(SceneInfo.Save), typeof(string))]
+            internal static void Studio_SceneInfo_Save_Prefix(SceneInfo __instance, out bool __state)
+            {
+                __state = false;
+                try
+                {
+                    if (!PreserveCameraDuringAutosave || !IsAutosaving) return;
+                    Logger.LogInfo(
+                        $"{nameof(Studio_SceneInfo_Save_Prefix)}: Autosave detected, preserving initial camera");
+                    GetController().SafeProc(c => c.TryRestoreInitialCameraData(__instance));
+                    __state = true;
+                }
+                catch (Exception err)
+                {
+                    Logger.LogException(err, nameof(Studio_ChangeCamera_Postfix));
+                }
+            }
+
+            [HarmonyPostfix]
+            [HarmonyPatch(typeof(SceneInfo), nameof(SceneInfo.Save), typeof(string))]
+            internal static void Studio_SceneInfo_Save_Postfix(SceneInfo __instance, bool __state)
+            {
+                try
+                {
+                    if (!Enabled.Value) return;
+                    var controller = GetController();
+                    if (controller == null) return;
+                    if (__state) // preserving camera
+                    {
+                        controller.TryRestoreInitialCameraData(__instance);
+                    }
+                    else
+                    {
+                        controller.StartCoroutine(controller.UpdateBackupInitialCameraData());
+                    }
+                }
+                catch (Exception err)
+                {
+                    Logger.LogException(err, nameof(Studio_ChangeCamera_Postfix));
                 }
             }
         }

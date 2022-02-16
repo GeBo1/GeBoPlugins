@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
@@ -13,7 +14,6 @@ using GeBoCommon;
 using GeBoCommon.Studio;
 using GeBoCommon.Utilities;
 using HarmonyLib;
-using Illusion.Extensions;
 using JetBrains.Annotations;
 using KKAPI;
 using KKAPI.Studio.SaveLoad;
@@ -33,44 +33,45 @@ namespace StudioSceneNavigationPlugin
     public partial class StudioSceneNavigation : BaseUnityPlugin
     {
         [PublicAPI]
-        public const string GUID = "com.gebo.bepinex.studioscenenavigation";
+        public const string GUID = Constants.PluginGUIDPrefix + "." + nameof(StudioSceneNavigation);
 
         public const string PluginName = "Studio Scene Navigation";
-        public const string Version = "1.0.2.5";
+        public const string Version = "1.0.3.0";
 
         private const float SaveDelay = 5f;
+        private static readonly object SaveFileLock = new object();
 
-        internal static readonly char[] TrackingFileEntrySplit = {'\0'};
+        internal static readonly char[] TrackingFileEntrySplit = { '\0' };
         internal static new ManualLogSource Logger;
         private static List<string> _normalizedScenePaths;
         private static string _currentSceneFolder = string.Empty;
         private static readonly object SavePendingLock = new object();
         private static bool _setPage;
+        private static KeyValuePair<int, string>? LastPageSet;
 
         private static SceneLoadScene _sceneLoadScene;
 
+        private static bool _externalLoadInProgress;
+
+
         private static readonly ExpiringSimpleCache<string, string> SceneRelativePathCache =
-            new ExpiringSimpleCache<string, string>(CalculateSceneRelativePath, 360);
+            new ExpiringSimpleCache<string, string>(CalculateSceneRelativePath, TimeSpan.FromMinutes(15),
+                $"{typeof(StudioSceneNavigation).PrettyTypeFullName()}.{nameof(SceneRelativePathCache)}");
 
-        private static readonly SimpleLazy<Action<int>> SceneLoadScenePageSetter = new SimpleLazy<Action<int>>(() =>
-            Delegates.LazyReflectionSetter<SceneLoadScene, int>("page"));
-
-        private static readonly SimpleLazy<Func<int>> SceneLoadScenePageGetter = new SimpleLazy<Func<int>>(() =>
-            Delegates.LazyReflectionGetter<SceneLoadScene, int>("page"));
-
-        private static readonly SimpleLazy<Func<SceneLoadScene, int>> SceneLoadScenePageNumGetter =
-            new SimpleLazy<Func<SceneLoadScene, int>>(() =>
-                Delegates.LazyReflectionInstanceGetter<SceneLoadScene, int>("pageNum"));
-
-
-        private static readonly string TrackLastLoadedSceneFile = PathUtils.CombinePaths(
-            "BepInEx", "config", StringUtils.JoinStrings(".", GUID, "LastLoadedScene", "data"));
+        private static readonly string[] TrackLastLoadedSceneFiles =
+        {
+            PathUtils.NormalizePath(PathUtils.CombinePaths(UserData.Path, "Studio",
+                StringUtils.JoinStrings(".", nameof(StudioSceneNavigation), "LastLoadedScene", "data"))),
+            PathUtils.NormalizePath(PathUtils.CombinePaths(
+                Paths.ConfigPath, StringUtils.JoinStrings(".", GUID, "LastLoadedScene", "data")))
+        };
 
         private static StudioSceneNavigation _instance;
 
         private readonly SimpleLazy<Func<string, bool>> _isSceneValid;
+
         private readonly SimpleLazy<Dictionary<string, string>> _lastLoadedScenes;
-        private readonly IEnumerator _saveTrackingFileDelay;
+        //private readonly IEnumerator _saveTrackingFileDelay;
 
         private string _currentScenePath = string.Empty;
         private string _currentScenePathCandidate = string.Empty;
@@ -78,12 +79,16 @@ namespace StudioSceneNavigationPlugin
         private bool _navigationInProgress;
         private bool _savePending;
         private float _saveReady;
+        private bool _scrollPending;
+
         private Coroutine _scrollToLastLoadedScene;
 
         public StudioSceneNavigation()
         {
             _lastLoadedScenes = new SimpleLazy<Dictionary<string, string>>(() =>
-                TrackLastLoadedSceneEnabled.Value ? LoadTrackingFile() : new Dictionary<string, string>());
+                TrackLastLoadedSceneEnabled.Value
+                    ? LoadTrackingFile()
+                    : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
 
             _isSceneValid = new SimpleLazy<Func<string, bool>>(() =>
             {
@@ -100,8 +105,10 @@ namespace StudioSceneNavigationPlugin
                 return (Func<string, bool>)Delegate.CreateDelegate(typeof(Func<string, bool>), method);
             });
 
-            _saveTrackingFileDelay = new WaitUntil(IsSaveReady);
+            //_saveTrackingFileDelay = new WaitUntil(IsSaveReady);
         }
+
+        private static string TrackLastLoadedSceneFile => TrackLastLoadedSceneFiles[0];
 
         public static StudioSceneNavigation Instance
         {
@@ -118,6 +125,7 @@ namespace StudioSceneNavigationPlugin
 
         private static List<string> ScenePaths { get; set; } = new List<string>(0);
 
+        [Obsolete("This is slow, used ScenePaths and NormalizedPathComparer")]
         private static List<string> NormalizedScenePaths => _normalizedScenePaths ??
                                                             (_normalizedScenePaths =
                                                                 new List<string>(
@@ -155,6 +163,7 @@ namespace StudioSceneNavigationPlugin
             Harmony.CreateAndPatchAll(typeof(Hooks));
             ExtendedSave.SceneBeingLoaded += ExtendedSave_SceneBeingLoaded;
             StudioSaveLoadApi.SceneLoad += StudioSaveLoadApi_SceneLoad;
+            KoikatuAPI.Quitting += KoikatuAPI_Quitting;
         }
 
         internal void Update()
@@ -182,6 +191,21 @@ namespace StudioSceneNavigationPlugin
             {
                 SaveTrackingFile();
             }
+        }
+
+        private void KoikatuAPI_Quitting(object sender, EventArgs args)
+        {
+            StopAllCoroutines();
+            if (TrackLastLoadedSceneEnabled.Value && SavePending)
+            {
+                SaveTrackingFile();
+            }
+        }
+
+        private static string FastCombineNormalizedPaths(params string[] parts)
+        {
+            return PathUtils.NormalizePath(StringUtils.JoinStrings(
+                Path.DirectorySeparatorChar, parts));
         }
 
 
@@ -221,10 +245,21 @@ namespace StudioSceneNavigationPlugin
 
         private void StudioSaveLoadApi_SceneLoad(object sender, SceneLoadEventArgs e)
         {
+            // don't update navigation history on external load/import/clear
+            if (_externalLoadInProgress) return;
+
             UpdateSaveReady();
+
             if (e.Operation == SceneOperationKind.Clear)
             {
                 _currentScenePath = _currentScenePathCandidate = string.Empty;
+                return;
+            }
+
+            if (e.Operation == SceneOperationKind.Import)
+            {
+                _currentScenePathCandidate = string.Empty;
+                return;
             }
 
             var coroutines = GeBoCommon.Utilities.ListPool<IEnumerator>.Get();
@@ -256,6 +291,7 @@ namespace StudioSceneNavigationPlugin
             }
         }
 
+
         private void UpdateSaveReady()
         {
             _saveReady = Time.realtimeSinceStartup + SaveDelay;
@@ -263,12 +299,9 @@ namespace StudioSceneNavigationPlugin
 
         private void ExtendedSave_SceneBeingLoaded(string path)
         {
-#if DEBUG
-            //Logger.LogDebug( $"ExtendedSave_SceneBeingLoaded({path})");
-#endif
+            if (_externalLoadInProgress) return;
             _currentScenePathCandidate = PathUtils.NormalizePath(path);
         }
-
 
         private void SaveTrackingFile()
         {
@@ -279,7 +312,7 @@ namespace StudioSceneNavigationPlugin
                 throw new NullReferenceException($"{nameof(TrackLastLoadedSceneFile)} should not be null");
             }
 
-            var prefix = Path.Combine(Paths.CachePath, Path.GetFileName(TrackLastLoadedSceneFile));
+            var prefix = PathUtils.CombinePaths(Paths.CachePath, Path.GetFileName(TrackLastLoadedSceneFile));
             var newFile = string.Concat(prefix, Path.GetRandomFileName());
             var oldFile = string.Concat(prefix, Path.GetRandomFileName());
 
@@ -380,10 +413,21 @@ namespace StudioSceneNavigationPlugin
             return true;
         }
 
+        private void MigrateTrackingFile()
+        {
+            var trackingFile = TrackLastLoadedSceneFiles.Where(File.Exists).FirstOrDefault();
+            if (trackingFile == null || trackingFile == TrackLastLoadedSceneFile) return;
+            Logger.LogInfoMessage(
+                $"Tracking file in outdated location '{trackingFile}', new version will be saved to '{TrackLastLoadedSceneFile}'");
+            File.Copy(trackingFile, TrackLastLoadedSceneFile);
+        }
+
         private Dictionary<string, string> LoadTrackingFile()
         {
-            var lastLoadedScenes = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            var lastLoadedScenes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             var count = 0;
+
+            MigrateTrackingFile();
             using (var fileStream = new FileStream(TrackLastLoadedSceneFile, FileMode.OpenOrCreate))
             {
                 int expectedCount;
@@ -409,18 +453,21 @@ namespace StudioSceneNavigationPlugin
                             count++;
                             var entry = line.Split(TrackingFileEntrySplit, 2);
                             // Normalize on load to take care of any changes between versions
+
                             if (!Path.IsPathRooted(entry[0]))
                             {
                                 if (entry[0] == ".")
                                 {
-                                    entry[0] = PathUtils.NormalizePath(SceneUtils.StudioSceneRootFolder);
+                                    // already normalized
+                                    entry[0] = SceneUtils.StudioSceneRootFolder;
                                 }
                                 else
                                 {
-                                    entry[0] = PathUtils.NormalizePath(Path.Combine(SceneUtils.StudioSceneRootFolder,
-                                        entry[0]));
+                                    entry[0] = FastCombineNormalizedPaths(SceneUtils.StudioSceneRootFolder,
+                                        entry[0]);
                                 }
                             }
+
 
                             if (lastLoadedScenes.ContainsKey(entry[0]))
                             {
@@ -445,24 +492,27 @@ namespace StudioSceneNavigationPlugin
                 }
             }
 
+            Logger.DebugLogDebug($"{nameof(LoadTrackingFile)}: {TrackLastLoadedSceneFile} loaded ({count} entries)");
             return lastLoadedScenes;
+        }
+
+        private int GetCurrentPathIndex()
+        {
+            if (_currentScenePath.IsNullOrEmpty() || ScenePaths.IsNullOrEmpty()) return -1;
+            return ScenePaths.FindPathIndex(_currentScenePath);
         }
 
         private void NavigateScene(int offset)
         {
-            var navigated = false;
             if (_navigationInProgress) return;
-
             _navigationInProgress = true;
+            var navigated = false;
             Logger.LogDebug($"Attempting navigate to scene: {offset:+#;-#;0}");
             try
             {
-                var paths = NormalizedScenePaths;
-                var index = -1;
-                if (!_currentScenePath.IsNullOrEmpty() && !paths.IsNullOrEmpty())
-                {
-                    index = paths.IndexOf(_currentScenePath);
-                }
+                var paths = ScenePaths;
+                var index = GetCurrentPathIndex();
+                string nextImage = null;
 
                 if (index == -1)
                 {
@@ -470,15 +520,15 @@ namespace StudioSceneNavigationPlugin
                     {
                         Logger.LogDebug(
                             $"Folder changed, resuming navigation for: {PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, _currentSceneFolder)}");
-                        if (LoadLastLoadedScene())
+                        if (TryGetLastLoadedScene(out nextImage))
                         {
-                            navigated = true;
+                            _currentScenePath = nextImage;
+                            index = GetCurrentPathIndex();
                         }
                     }
                 }
                 else
                 {
-                    string nextImage = null;
                     while (nextImage is null)
                     {
                         index -= offset;
@@ -494,7 +544,10 @@ namespace StudioSceneNavigationPlugin
                         Logger.LogWarningMessage($"Skipping invalid scene file: {nextImage}");
                         nextImage = null;
                     }
+                }
 
+                if (index >= 0 && !nextImage.IsNullOrEmpty())
+                {
                     var coroutines = GeBoCommon.Utilities.ListPool<IEnumerator>.Get();
                     try
                     {
@@ -502,7 +555,7 @@ namespace StudioSceneNavigationPlugin
                             () => Logger.LogInfoMessage(
                                 $"Loading scene {paths.Count - index}/{paths.Count} ('{PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, nextImage)}')")));
                         coroutines.Add(LoadScene(nextImage));
-
+                        coroutines.Add(CleanupAfterLoad());
                         StartCoroutine(CoroutineUtils.ComposeCoroutine(coroutines.ToArray()));
                     }
                     finally
@@ -530,6 +583,16 @@ namespace StudioSceneNavigationPlugin
             if (navigated) _setPage = true;
         }
 
+        private static IEnumerator CleanupAfterLoad()
+        {
+            // wait 2 frames
+            yield return null;
+            yield return null;
+            Resources.UnloadUnusedAssets();
+            GC.Collect();
+        }
+
+
         private IEnumerator LoadScene(string nextImage)
         {
             if (_sceneLoadScene != null)
@@ -549,137 +612,158 @@ namespace StudioSceneNavigationPlugin
             return Singleton<Studio.Studio>.Instance.LoadSceneCoroutine(nextImage);
         }
 
-        private static void SetPage(int pageNum, SceneLoadScene sceneLoadScene = null)
-        {
-            if (sceneLoadScene != null)
-            {
-                try
-                {
-                    sceneLoadScene.GetType().GetMethod("SetPage", AccessTools.all)
-                        ?.Invoke(sceneLoadScene, new object[] {pageNum});
-                    return;
-                }
-                catch
-                {
-                    // fall through
-                }
-            }
-
-            SceneLoadScenePageSetter.Value(pageNum);
-        }
-
-        private static int GetPage()
-        {
-            return SceneLoadScenePageGetter.Value();
-        }
-
-        private static int GetNumPages(SceneLoadScene obj)
-        {
-            return SceneLoadScenePageNumGetter.Value(obj);
-        }
-
         private static IEnumerator SetPageCoroutine(string scenePath)
         {
-            if (!_setPage) yield break;
+            if (_externalLoadInProgress || !_setPage) yield break;
 
             _setPage = false;
             yield return null;
             var page = GetLoaderPageForImage(scenePath);
-            if (page < 0) yield break;
-            SetPage(page);
+            if (page < 0) page = 0;
+            SceneLoadScene.page = page;
         }
 
-        public IEnumerator SaveTrackingFileCouroutine()
+        private Action SaveTrackingFileWorker()
         {
+            while (SavePending && TrackLastLoadedSceneEnabled.Value && !IsSaveReady())
+            {
+                Thread.Sleep(100);
+            }
+
+            if (SavePending && TrackLastLoadedSceneEnabled.Value) SaveTrackingFile();
+            return null;
+        }
+
+        private IEnumerator SaveTrackingFileCouroutine()
+        {
+            yield return null;
+            ThreadingHelper.Instance.StartAsyncInvoke(SaveTrackingFileWorker);
+            /*
             if (!SavePending || !TrackLastLoadedSceneEnabled.Value) yield break;
             yield return _saveTrackingFileDelay;
             if (SavePending && TrackLastLoadedSceneEnabled.Value) SaveTrackingFile();
+            */
         }
 
-        internal void ScrollToLastLoadedScene(SceneLoadScene sceneLoadScene)
+        private void OnInitInfo(SceneLoadScene sceneLoadScene)
         {
-            if (!RestoreLoaderPage.Value || sceneLoadScene == null) return;
-            if (_scrollToLastLoadedScene != null) StopCoroutine(_scrollToLastLoadedScene);
-            _scrollToLastLoadedScene = StartCoroutine(ScrollToLastLoadedSceneCoroutine(sceneLoadScene)
-                .AppendCo(() => _scrollToLastLoadedScene = null));
+            _sceneLoadScene = sceneLoadScene;
+            _currentSceneFolder = string.Empty;
+            ScenePaths = SceneUtils.GetSceneLoaderPaths(sceneLoadScene);
+            _normalizedScenePaths = null;
+            ScenePaths.SafeProc(0,
+                p => _currentSceneFolder = PathUtils.NormalizePath(Path.GetDirectoryName(p)));
+
+            if (!RestoreLoaderPage.Value) return;
+            // any time InitInfo fires force scroll (bar will jump to top otherwise)
+            _scrollPending = true;
+            if (!LastPageSet.HasValue ||
+                !PathUtils.NormalizedPathComparer.Equals(LastPageSet.Value.Value, _currentSceneFolder))
+            {
+                // if folder changed restore page of last loaded image,
+                // otherwise keep current page when loader is dismissed and re-opened
+                var lastLoadedScene = GetLastLoadedScene();
+                var page = Math.Max(0, GetLoaderPageForImage(lastLoadedScene));
+                SceneLoadScene.page = page;
+                // _sceneLoadScene.SetPage(SceneLoadScene.page) should fire after OnInit
+                // if not it'll be caught when trying to scroll and handled
+            }
         }
+
 
         public static int GetLoaderPageForImage(string sceneFile)
         {
-            if (sceneFile.IsNullOrEmpty() || NormalizedScenePaths.Count < 1) return -2;
-            var index = NormalizedScenePaths.IndexOf(sceneFile);
+            if (sceneFile.IsNullOrEmpty() || ScenePaths.Count < 1) return -2;
+            var index = ScenePaths.FindPathIndex(sceneFile);
             if (index < 0) return index;
 
             return index / ImagesPerPage;
         }
 
-        internal IEnumerator ScrollToLastLoadedSceneCoroutine(SceneLoadScene sceneLoadScene)
+
+        private void OnSetPage(SceneLoadScene sceneLoadScene, int page)
+        {
+            try
+            {
+                LastPageSet = new KeyValuePair<int, string>(page, _currentSceneFolder);
+            }
+            catch
+            {
+                LastPageSet = null;
+            }
+
+            ScrollToCurrentPage(sceneLoadScene);
+        }
+
+        internal void ScrollToCurrentPage(SceneLoadScene sceneLoadScene)
+        {
+            if (!RestoreLoaderPage.Value || sceneLoadScene == null) return;
+            if (_scrollToLastLoadedScene != null) StopCoroutine(_scrollToLastLoadedScene);
+            _scrollToLastLoadedScene = StartCoroutine(ScrollToCurrentPageCoroutine(sceneLoadScene)
+                .AppendCo(() => _scrollToLastLoadedScene = null));
+        }
+
+        internal IEnumerator ScrollToCurrentPageCoroutine(SceneLoadScene sceneLoadScene)
         {
             yield return null;
-            if (sceneLoadScene == null) yield break;
-            var lastLoadedScene = GetLastLoadedScene();
-            var page = Math.Max(0, GetLoaderPageForImage(lastLoadedScene));
-            SetPage(page, sceneLoadScene);
+            if (sceneLoadScene == null || sceneLoadScene != _sceneLoadScene) yield break;
 
-            sceneLoadScene.SafeProc(sls => sls.GetComponentsInChildren<ScrollRect>().SafeProc(0, r =>
+            // check if page selection is out of sync
+            if (!LastPageSet.HasValue || SceneLoadScene.page != LastPageSet.Value.Key ||
+                !PathUtils.NormalizedPathComparer.Equals(_currentSceneFolder, LastPageSet?.Value))
+            {
+                sceneLoadScene.SetPage(SceneLoadScene.page);
+                yield return null;
+                if (sceneLoadScene == null || sceneLoadScene != _sceneLoadScene) yield break;
+                _scrollPending = true;
+            }
+
+            if (!_scrollPending) yield break;
+            _scrollPending = false;
+
+            sceneLoadScene.GetComponentsInChildren<ScrollRect>().SafeProc(0, r =>
             {
                 var scrollPos = 1.0f - Mathf.Clamp(
-                    Mathf.Lerp(-0.01f, 1.01f, GetPage() / (GetNumPages(sls) - 1f)),
+                    Mathf.Lerp(-0.01f, 1.01f, SceneLoadScene.page / (sceneLoadScene.pageNum - 1f)),
                     0f,
                     1f);
                 r.verticalScrollbar.SafeProc(sb => sb.value = scrollPos);
-            }));
+            });
         }
 
         private void TrackLastLoadedScene()
         {
-            if (_currentScenePath.IsNullOrEmpty()) return;
+            if (_currentScenePath.IsNullOrEmpty() || _externalLoadInProgress) return;
+
             var key = PathUtils.NormalizePath(Path.GetDirectoryName(_currentScenePath));
             if (!LastLoadedScenes.TryGetValue(key, out var current)) current = string.Empty;
             var currentValue = Path.GetFileName(_currentScenePath);
-            if (currentValue.Compare(current, StringComparison.InvariantCultureIgnoreCase)) return;
+            // these are raw paths, so just simple compare
+            if (StringComparer.OrdinalIgnoreCase.Equals(currentValue, current)) return;
             LastLoadedScenes[key] = currentValue;
             SavePending = true;
             UpdateSaveReady();
         }
 
-        /// <summary>Loads the last loaded scene from the currently active folder</summary>
-        /// <returns>`true` if scene was loaded, otherwise `false`</returns>
-        private bool LoadLastLoadedScene()
+        /// <summary>Gets the last loaded scene for the current folder</summary>
+        /// <returns>`true` if scene found, otherwise `false`</returns>
+        private bool TryGetLastLoadedScene(out string lastLoadedScenePath)
         {
-            var navigated = false;
-            var clearNavigation = !_navigationInProgress;
-            _navigationInProgress = true;
-            try
-            {
-                var nextImage = GetLastLoadedScene(ScenePaths.LastOrDefault());
+            lastLoadedScenePath = GetLastLoadedScene(ScenePaths.LastOrDefault());
 
-                if (nextImage != default)
-                {
-                    nextImage = PathUtils.NormalizePath(Path.Combine(_currentSceneFolder, nextImage));
-
-                    if (File.Exists(nextImage))
-                    {
-                        _currentScenePathCandidate = nextImage;
-                        StartCoroutine(Singleton<Studio.Studio>.Instance.LoadSceneCoroutine(nextImage));
-                        navigated = true;
-                    }
-                }
-            }
-            finally
+            if (lastLoadedScenePath != default)
             {
-                if (!navigated)
+                lastLoadedScenePath = PathUtils.NormalizePath(Path.IsPathRooted(lastLoadedScenePath)
+                    ? lastLoadedScenePath
+                    : PathUtils.CombinePaths(_currentSceneFolder, Path.GetFileName(lastLoadedScenePath)));
+
+                if (File.Exists(lastLoadedScenePath))
                 {
-                    Logger.LogErrorMessage(
-                        $"Error loading last scene from {_currentSceneFolder}");
-                    if (clearNavigation)
-                    {
-                        _navigationInProgress = false;
-                    }
+                    return true;
                 }
             }
 
-            return navigated;
+            return false;
         }
 
         private string GetLastLoadedScene(string defaultImage = null)
@@ -691,7 +775,7 @@ namespace StudioSceneNavigationPlugin
 
             return string.IsNullOrEmpty(nextImage)
                 ? nextImage
-                : PathUtils.NormalizePath(Path.Combine(_currentSceneFolder, nextImage));
+                : PathUtils.NormalizePath(FastCombineNormalizedPaths(_currentSceneFolder, nextImage));
         }
     }
 }

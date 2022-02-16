@@ -11,5 +11,6 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Core.StudioSceneNavigation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Core.StudioSceneNavigation.Hooks.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core.StudioSceneNavigation.Public.cs" />
   </ItemGroup>
 </Project>

@@ -59,7 +59,5 @@ namespace GeBoCommon
 
             Singleton<Resources>.Instance.SoundPack.Play(sound);
         }
-
-
     }
 }

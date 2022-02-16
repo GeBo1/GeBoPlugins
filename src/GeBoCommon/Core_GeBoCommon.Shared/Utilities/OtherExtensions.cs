@@ -4,55 +4,62 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BepInEx.Logging;
-using HarmonyLib;
 using JetBrains.Annotations;
+using UnityEngine;
 using BepInLogLevel = BepInEx.Logging.LogLevel;
 using UnityEngineObject = UnityEngine.Object;
 
 namespace GeBoCommon.Utilities
 {
-    [PublicAPI]
     [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     public static partial class OtherExtensions
     {
         private static ManualLogSource Logger => Common.CurrentLogger;
 
+        [PublicAPI]
         public static IEnumerable<KeyValuePair<int, T>> Enumerate<T>(this IEnumerable<T> array)
         {
             return array.Select((item, index) => new KeyValuePair<int, T>(index, item));
         }
 
+        [PublicAPI]
         [Conditional("DEBUG")]
         public static void DebugLogDebug(this ManualLogSource logger, object obj)
         {
             logger.LogDebug(obj);
         }
 
+        [PublicAPI]
         public static void LogErrorMessage(this ManualLogSource logger, object obj)
         {
             logger.Log(BepInLogLevel.Message | BepInLogLevel.Error, obj);
         }
 
+        [PublicAPI]
         public static void LogFatalMessage(this ManualLogSource logger, object obj)
         {
             logger.Log(BepInLogLevel.Message | BepInLogLevel.Fatal, obj);
         }
 
+        [PublicAPI]
         public static void LogInfoMessage(this ManualLogSource logger, object obj)
         {
             logger.Log(BepInLogLevel.Message | BepInLogLevel.Info, obj);
         }
 
+        [PublicAPI]
         public static void LogWarningMessage(this ManualLogSource logger, object obj)
         {
             logger.Log(BepInLogLevel.Message | BepInLogLevel.Warning, obj);
         }
 
+        [PublicAPI]
         public static void LogException(this ManualLogSource logger, Exception exception, string message = null)
         {
             LogException(logger, exception, null, message);
         }
 
+        [PublicAPI]
         public static void LogException(this ManualLogSource logger, Exception exception, UnityEngineObject context,
             string message = null)
         {
@@ -127,11 +134,13 @@ namespace GeBoCommon.Utilities
             }
         }
 
+        [PublicAPI]
         public static ulong Sum(this IEnumerable<ulong> source)
         {
             return source.Aggregate((a, c) => a + c);
         }
 
+        [PublicAPI]
         public static string PrettyTypeName(this Type type)
         {
             var typeName = type.Name;
@@ -142,6 +151,7 @@ namespace GeBoCommon.Utilities
                 StringUtils.JoinStrings(",", args.Select(PrettyTypeName).ToArray()), ">");
         }
 
+        [PublicAPI]
         public static string PrettyTypeFullName(this Type type)
         {
             var typeName = type.FullName ?? type.Name;
@@ -152,11 +162,13 @@ namespace GeBoCommon.Utilities
                 StringUtils.JoinStrings(",", args.Select(PrettyTypeFullName).ToArray()), ">");
         }
 
+        [PublicAPI]
         public static string GetPrettyTypeName(this object obj)
         {
             return obj.GetType().PrettyTypeName();
         }
 
+        [PublicAPI]
         public static string GetPrettyTypeFullName(this object obj)
         {
             return obj.GetType().PrettyTypeFullName();
@@ -170,7 +182,7 @@ namespace GeBoCommon.Utilities
             {
                 try
                 {
-                    Logger.DebugLogDebug($"{nameof(SafeInvoke)}: {handler.Method.FullDescription()}");
+                    //Logger.DebugLogDebug($"{nameof(SafeInvoke)}: {handler.Method.FullDescription()}");
                     handler.DynamicInvoke(sender, args);
                 }
                 catch (Exception err)
@@ -188,6 +200,7 @@ namespace GeBoCommon.Utilities
             }
         }
 
+        [PublicAPI]
         public static void SafeInvoke<TEventArgs>(this EventHandler<TEventArgs> eventHandler, object sender,
             TEventArgs args) where TEventArgs : EventArgs
         {
@@ -195,10 +208,53 @@ namespace GeBoCommon.Utilities
             SafeInvoke(eventHandler.GetInvocationList(), sender, args);
         }
 
+        [PublicAPI]
         public static void SafeInvoke(this EventHandler eventHandler, object sender, EventArgs args)
         {
             if (eventHandler == null) return;
             SafeInvoke(eventHandler.GetInvocationList(), sender, args);
         }
+
+        [PublicAPI]
+        public static T GetOrAddComponent<T>(this Component component, Action<T> initializer)
+            where T : Component
+        {
+            return component == null ? null : component.gameObject.GetOrAddComponent(initializer);
+        }
+
+        [PublicAPI]
+        public static T GetOrAddComponent<T>(this GameObject gameObject, Action<T> initializer)
+            where T : Component
+        {
+            if (gameObject == null) return null;
+            if (gameObject.TryGetComponent<T>(out var component)) return component;
+
+            component = gameObject.AddComponent<T>();
+            initializer?.Invoke(component);
+            return component;
+        }
+
+#if !KKS
+        [PublicAPI]
+        public static bool TryGetComponent<T>(this Component component, out T result) where T : Component
+        {
+            if (component != null) return component.gameObject.TryGetComponent(out result);
+            result = null;
+            return false;
+        }
+
+        [PublicAPI]
+        public static bool TryGetComponent<T>(this GameObject gameObject, out T result) where T : Component
+        {
+            if (gameObject == null)
+            {
+                result = null;
+                return false;
+            }
+
+            result = gameObject.GetComponent<T>();
+            return result != null;
+        }
+#endif
     }
 }

@@ -5,6 +5,7 @@ using Illusion.Game;
 
 namespace GeBoCommon
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     public partial class GeBoAPI
     {
         private static readonly IList<KeyValuePair<string, NameType>> ChaFileNamesInternal =

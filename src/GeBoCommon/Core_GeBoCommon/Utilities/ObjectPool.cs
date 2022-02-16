@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading;
 using BepInEx.Logging;
 using JetBrains.Annotations;
+using KKAPI;
+using KKAPI.Utilities;
 using UnityEngine;
 
 namespace GeBoCommon.Utilities
@@ -28,6 +30,7 @@ namespace GeBoCommon.Utilities
         {
             Logger?.DebugLogDebug($"{this.GetPrettyTypeName()}: new pool");
             KnownPools.Add(new WeakReference(this));
+            KoikatuAPI.Quitting += Quitting;
         }
 
         protected static ManualLogSource Logger => Common.CurrentLogger;
@@ -37,8 +40,14 @@ namespace GeBoCommon.Utilities
         public abstract int InUseCount { get; }
         public abstract int IdleCount { get; }
 
+        private void Quitting(object sender, EventArgs e)
+        {
+            StopCleaner();
+        }
+
         protected void StartIdle()
         {
+            if (KoikatuAPI.IsQuitting) return;
             _lastWentIdle = Time.realtimeSinceStartup;
             StartCleaner();
         }
@@ -50,11 +59,11 @@ namespace GeBoCommon.Utilities
 
         private void StartCleaner()
         {
-            if (_cleanerHandler != null) return;
+            if (KoikatuAPI.IsQuitting || _cleanerHandler != null) return;
             GeBoAPI.Instance.SafeProc(api =>
             {
                 if (Interlocked.CompareExchange(ref _cleanerRunning, 1, 0) != 0) return;
-                _cleanerHandler = api.StartCoroutine(Cleaner());
+                _cleanerHandler = api.StartCoroutine(Cleaner().StopCoOnQuit());
             });
         }
 
@@ -65,24 +74,34 @@ namespace GeBoCommon.Utilities
                 GeBoAPI.Instance.SafeProc(api => api.StopCoroutine(_cleanerHandler));
                 _cleanerHandler = null;
             }
+
             Interlocked.Exchange(ref _cleanerRunning, 0);
         }
 
 
         private IEnumerator Cleaner()
         {
+            yield return null;
             var startTime = Time.realtimeSinceStartup;
             var nextCleanTime = _lastWentIdle + CleanIdleSeconds;
+            var delayedForLoad = 0;
             while (_lastWentIdle < startTime && Interlocked.Read(ref _cleanerRunning) > 0 &&
                    InUseCount == 0 && Count > CleanIdleMinCount)
             {
+                if (KoikatuAPI.IsQuitting) break;
+
                 var delay = nextCleanTime - Time.realtimeSinceStartup;
-                if (delay > 0)
+                if (delay > 0 || (GeBoAPI.Instance.IsHeavyLoad && ++delayedForLoad <= 10))
                 {
-                    delay = Mathf.Max(delay, 1f);
-                    yield return new WaitForSecondsRealtime(delay);
+                    //delay = Mathf.Max(delay, 1f);
+                    yield return new WaitForSecondsRealtime(delay).StopCoOnQuit();
                     continue;
                 }
+
+                if (KoikatuAPI.IsQuitting) break;
+
+                delayedForLoad = 0;
+
 
                 var toKeep = Math.Max(Count * CleanIdleKeepPercent / 100, CleanIdleMinCount);
                 if (toKeep <= CleanIdleMinCount) break;
@@ -180,11 +199,12 @@ namespace GeBoCommon.Utilities
             if (!GeBoAPI.EnableObjectPools) return;
             _queue.Enqueue(obj);
             _onRelease?.Invoke(obj);
-            if (InUseCount == 0) StartIdle();
+            if (InUseCount == 0 && Count > CleanIdleMinCount) StartIdle();
         }
 
         public override void ClearIdle(int keep = -1)
         {
+            if (KoikatuAPI.IsQuitting) return;
             Interlocked.Add(ref _count, -1 * _queue.ReleaseObjects(keep));
         }
     }

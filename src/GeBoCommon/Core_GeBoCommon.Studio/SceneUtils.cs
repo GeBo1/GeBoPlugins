@@ -16,20 +16,22 @@ namespace GeBoCommon.Studio
             new SimpleLazy<Func<SceneLoadScene, List<string>>>(() =>
                 Delegates.LazyReflectionInstanceGetter<SceneLoadScene, List<string>>("listPath"));
 
+        [PublicAPI]
         public static readonly string StudioSceneRootFolder =
             PathUtils.NormalizePath(Path.Combine(UserData.Path, @"studio\scene")).ToLowerInvariant();
 
+        [PublicAPI]
         public static List<string> GetSceneLoaderPaths(SceneLoadScene loader)
         {
-            var result = new List<string>();
-            loader.SafeProc(l => result.AddRange(SceneLoadSceneListPathGetter.Value(loader)));
-            return result;
+            List<string> result = null;
+            loader.SafeProc(l => result = SceneLoadSceneListPathGetter.Value(l));
+            return result ?? new List<string>();
         }
 
         [UsedImplicitly]
         public static OCIChar GetMainChara(object instance)
         {
-            return Traverse.Create(instance).Property("ociChar").GetValue<OCIChar>();
+            return Traverse.Create(instance)?.Property("ociChar")?.GetValue<OCIChar>();
         }
     }
 }

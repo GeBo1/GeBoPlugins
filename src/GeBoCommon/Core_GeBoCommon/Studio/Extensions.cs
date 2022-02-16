@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using GeBoCommon.Utilities;
 using HarmonyLib;
+using JetBrains.Annotations;
 using Studio;
 
 namespace GeBoCommon.Studio
@@ -57,33 +58,32 @@ namespace GeBoCommon.Studio
 
         public static void UnselectInWorkarea(this ObjectCtrlInfo objectCtrlInfo)
         {
-            var treeNodeObject = objectCtrlInfo?.treeNodeObject;
-            if (treeNodeObject == null) return;
-            var treeNodeCtrl = treeNodeObject.GetTreeNodeCtrl();
-            // DeselectNode is slow, even when it does nothing, check first
-            if (!treeNodeCtrl.CheckSelect(treeNodeObject)) return;
-            DeselectNode(treeNodeCtrl, treeNodeObject);
+            objectCtrlInfo.SafeProc(oci => oci.treeNodeObject.SafeProc(tno =>
+            {
+                var tnc = tno.GetTreeNodeCtrl();
+                // DeselectNode is slow, even when it does nothing, check first
+                if (!tnc.CheckSelect(tno)) return;
+                DeselectNode(tnc, tno);
+            }));
         }
 
         public static void MultiSelectInWorkarea(this ObjectCtrlInfo objectCtrlInfo)
         {
-            var treeNodeObject = objectCtrlInfo?.treeNodeObject;
-            if (treeNodeObject == null) return;
-            var treeNodeCtrl = treeNodeObject.GetTreeNodeCtrl();
-            // AddSelectNode with multi=true on selected object clears it's selected status, don't want that
-            if (treeNodeCtrl.CheckSelect(treeNodeObject)) return;
-            AddSelectNode(treeNodeCtrl, treeNodeObject, true);
+            objectCtrlInfo.SafeProc(oci => oci.treeNodeObject.SafeProc(tno =>
+            {
+                var tnc = tno.GetTreeNodeCtrl();
+                // AddSelectNode with multi=true on selected object clears it's selected status, don't want that
+                if (tnc.CheckSelect(tno)) return;
+                AddSelectNode(tnc, tno, true);
+            }));
         }
 
+        [PublicAPI]
         public static void SelectInWorkarea(this ObjectCtrlInfo objectCtrlInfo)
         {
-            var treeNodeObject = objectCtrlInfo?.treeNodeObject;
-            if (treeNodeObject != null)
-            {
-                AddSelectNode(treeNodeObject.GetTreeNodeCtrl(), treeNodeObject);
-            }
+            objectCtrlInfo.SafeProc(oci =>
+                oci.treeNodeObject.SafeProc(tno => AddSelectNode(tno.GetTreeNodeCtrl(), tno)));
         }
-
 
         public static List<TreeNodeObject> GetTreeNodeObjects(this TreeNodeCtrl treeNodeCtrl)
         {

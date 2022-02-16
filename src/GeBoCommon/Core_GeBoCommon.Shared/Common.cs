@@ -4,8 +4,8 @@ using BepInEx.Logging;
 using JetBrains.Annotations;
 #if GEBO_COMMON_FULL
 using GeBoCommon.Utilities;
-
 #endif
+
 
 namespace GeBoCommon
 {
@@ -32,6 +32,7 @@ namespace GeBoCommon
         }
 
         [Conditional("GEBO_COMMON_FULL")]
+        // ReSharper disable once UnusedParameter.Global
         internal static void ReleaseStringBuilder(StringBuilder stringBuilder)
         {
 #if GEBO_COMMON_FULL

@@ -16,13 +16,13 @@ namespace GeBoCommon.Utilities
         private readonly HookConverter _convertTargetToKey;
 
         public HookedSimpleCache(CacheDataLoader loader, HookConverter converter, bool useDefaultRemovalHook = false,
-            bool emptyCacheOnSceneChange = false) : base(loader)
+            bool emptyCacheOnSceneChange = false, string cacheName = null) : base(loader, cacheName)
         {
             _convertTargetToKey = converter;
             EmptyCacheOnSceneChange = emptyCacheOnSceneChange;
             UseDefaultRemovalHook = useDefaultRemovalHook;
 
-            var hookTarget = AccessTools.Method(typeof(THookTarget), "OnDestroy", new Type[0]);
+            var hookTarget = AccessTools.Method(typeof(THookTarget), "OnDestroy", ObjectUtils.GetEmptyArray<Type>());
             if (hookTarget is null)
             {
                 throw new ArgumentException($"unable to hook OnDestroy for {typeof(THookTarget)})");
@@ -77,6 +77,7 @@ namespace GeBoCommon.Utilities
 
         [PublicAPI]
         public event EventHandler<HookedSimpleCacheEventArgs<TKey>> HookPrefix;
+
         [PublicAPI]
         public event EventHandler<HookedSimpleCacheEventArgs<TKey>> HookPostfix;
 
@@ -92,7 +93,7 @@ namespace GeBoCommon.Utilities
         private void SceneManager_activeSceneChanged(Scene arg0, Scene arg1)
         {
             if (!EmptyCacheOnSceneChange || Count == 0) return;
-            Logger?.DebugLogDebug($"{this.GetPrettyTypeName()}: Clearing {Count} entries on activeSceneChanged");
+            Logger?.DebugLogDebug($"{this}: Clearing {Count} entries on activeSceneChanged");
             Clear();
         }
 

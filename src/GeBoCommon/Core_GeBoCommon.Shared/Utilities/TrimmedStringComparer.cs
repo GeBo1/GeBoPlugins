@@ -24,7 +24,7 @@ namespace GeBoCommon.Utilities
 
         public TrimmedStringComparer(params char[] extraTrimChars) : this(extraTrimChars, null) { }
 
-        public TrimmedStringComparer() : this(new char[0]) { }
+        public TrimmedStringComparer() : this(ObjectUtils.GetEmptyArray<char>()) { }
 
         public TrimmedStringComparer(IEnumerable<char> extraTrimChars, StringComparer stringComparer = null) :
             this(extraTrimChars.ToArray(), stringComparer) { }

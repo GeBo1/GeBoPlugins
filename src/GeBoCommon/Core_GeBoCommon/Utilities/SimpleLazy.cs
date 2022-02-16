@@ -1,10 +1,8 @@
 ﻿using System;
 using JetBrains.Annotations;
-
 #if (HS || PH || KK)
 using System.Runtime.CompilerServices;
 using System.Threading;
-
 #endif
 
 namespace GeBoCommon.Utilities
@@ -40,15 +38,11 @@ namespace GeBoCommon.Utilities
 
                 try
                 {
-                    if (!IsValueCreated)
+                    if (_value is StrongBox<T> box1) return box1.Value;
+                    lock (_basicLock)
                     {
-                        lock (_basicLock)
-                        {
-                            if (!IsValueCreated)
-                            {
-                                Interlocked.CompareExchange(ref _value, new StrongBox<T>(_valueFactory()), null);
-                            }
-                        }
+                        if (_value is StrongBox<T> box2) return box2.Value;
+                        Interlocked.CompareExchange(ref _value, new StrongBox<T>(_valueFactory()), null);
                     }
 
                     realBox = _value as StrongBox<T>;

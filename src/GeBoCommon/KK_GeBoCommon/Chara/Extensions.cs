@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using KKAPI.MainGame;
 
 namespace GeBoCommon.Chara
@@ -35,6 +36,12 @@ namespace GeBoCommon.Chara
                 default:
                     return null;
             }
+        }
+
+        [PublicAPI]
+        public static CharacterSex GetSex(this SaveData.CharaData charaData)
+        {
+            return (CharacterSex)Manager.Game.CharaDataToSex(charaData);
         }
     }
 }

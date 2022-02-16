@@ -13,6 +13,8 @@ namespace GeBoCommon.Studio
         public static IEnumerable<TreeNodeObject> EnumerateTreeNodeObjects(TreeNodeObject root = null)
         {
             var roots = ListPool<TreeNodeObject>.Get();
+
+#if deadcode
             if (root != null)
             {
                 roots.Add(root);
@@ -25,7 +27,14 @@ namespace GeBoCommon.Studio
                     roots.AddRange(root.GetTreeNodeCtrl().GetTreeNodeObjects());
                 }
             }
+#else
+            if (!root.SafeProc(roots.Add))
+            {
+                root = StudioAPI.GetSelectedObjects().FirstOrDefault()?.treeNodeObject;
+                root.SafeProc(r => roots.AddRange(r.GetTreeNodeCtrl().GetTreeNodeObjects()));
+            }
 
+#endif
             foreach (var entry in roots)
             {
                 yield return entry;

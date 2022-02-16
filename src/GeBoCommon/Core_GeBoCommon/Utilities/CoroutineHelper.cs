@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using JetBrains.Annotations;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace GeBoCommon.Utilities
 {
@@ -10,6 +12,15 @@ namespace GeBoCommon.Utilities
         private const string CoroutineStubHolderName = "GeBoCommon_Utilities_CoroutineHelper_Holder";
         private readonly SimpleLazy<GameObject> _coroutineStubHolderLoader;
         private readonly SimpleLazy<CoroutineStub> _coroutineStubLoader;
+
+        [PublicAPI]
+        public EventHandler ApplicationQuit;
+        [PublicAPI]
+        public EventHandler FixedUpdate;
+        [PublicAPI]
+        public EventHandler LateUpdate;
+        [PublicAPI]
+        public EventHandler Update;
 
         public CoroutineHelper()
         {
@@ -30,10 +41,7 @@ namespace GeBoCommon.Utilities
 
         private CoroutineStub InitStub()
         {
-            var obj = Holder.GetComponent<CoroutineStub>();
-            if (obj != null) return obj;
-            obj = Holder.AddComponent<CoroutineStub>();
-            return obj;
+            return Holder.GetOrAddComponent<CoroutineStub>(o => o.Helper = this);
         }
 
         public Coroutine Start(IEnumerator routine)
@@ -63,9 +71,29 @@ namespace GeBoCommon.Utilities
 
         public void StopAll()
         {
+            if (!_coroutineStubLoader.IsValueCreated) return;
             Launcher.SafeProc(l => l.StopAllCoroutines());
         }
 
-        private class CoroutineStub : MonoBehaviour { }
+        // ReSharper disable once ClassNeverInstantiated.Global
+        internal class CoroutineStub : MonoBehaviour
+        {
+            internal CoroutineHelper Helper;
+
+            private void Update()
+            {
+                Helper?.Update?.SafeInvoke(this, EventArgs.Empty);
+            }
+
+            private void FixedUpdate()
+            {
+                Helper?.FixedUpdate?.SafeInvoke(this, EventArgs.Empty);
+            }
+
+            private void LateUpdate()
+            {
+                Helper?.LateUpdate?.SafeInvoke(this, EventArgs.Empty);
+            }
+        }
     }
 }

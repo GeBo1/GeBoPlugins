@@ -1,11 +1,14 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 
 namespace GeBoCommon
 {
     [PublicAPI]
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class Constants
     {
+        public const string PluginGUIDPrefix = "com.gebo." + nameof(BepInEx);
 #if AI
         public const string GameName = "AI Girl";
         public const string MainGameProcessName = "AI-Syoujyo";
@@ -45,6 +48,7 @@ namespace GeBoCommon
 #elif KKS
         public const string GameName = "Koikatsu Sunshine";
         public const string MainGameProcessName = "KoikatsuSunshine";
+        public const string MainGameProcessNameVR = "KoikatsuSunshine_VR";
         public const string TrialProcessName = "KoikatsuSunshineTrial";
         public const string StudioProcessName = "CharaStudio";
         public const string Prefix = "KKS";

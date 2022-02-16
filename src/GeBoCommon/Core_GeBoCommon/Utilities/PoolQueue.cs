@@ -1,10 +1,12 @@
-﻿using BepInEx.Logging;
+﻿#if (HS || PH || KK)
+#define NO_CONCURRENT
+#endif
+using BepInEx.Logging;
 using JetBrains.Annotations;
-#if HS2||AI
-using System.Collections.Concurrent;
-
-#else
+#if NO_CONCURRENT
 using System.Collections.Generic;
+#else
+using System.Collections.Concurrent;
 #endif
 
 namespace GeBoCommon.Utilities
@@ -28,7 +30,7 @@ namespace GeBoCommon.Utilities
             return count;
         }
     }
-#if HS2||AI
+#if !NO_CONCURRENT
     internal class PoolQueue<T> : BasePoolQueue<T>
     {
         private ConcurrentQueue<T> _queue = new ConcurrentQueue<T>();

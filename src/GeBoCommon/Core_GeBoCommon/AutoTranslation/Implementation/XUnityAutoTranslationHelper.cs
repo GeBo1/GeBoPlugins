@@ -174,7 +174,7 @@ namespace GeBoCommon.AutoTranslation.Implementation
                     Expression<AddTranslationToCacheDelegate> workaround =
                         (key, value, persistToDisk, translationType, scope) =>
                             method.Invoke(DefaultCache,
-                                new object[] {key, value, persistToDisk, translationType, scope});
+                                new object[] { key, value, persistToDisk, translationType, scope });
 
                     addTranslationToCache = workaround.Compile();
                 }
@@ -188,7 +188,7 @@ namespace GeBoCommon.AutoTranslation.Implementation
             return addTranslationToCache;
         }
 
-        private ReloadTranslationsDelegate ReloadTranslationsDelegateLoader()
+        private static ReloadTranslationsDelegate ReloadTranslationsDelegateLoader()
         {
             var method = AccessTools.Method(DefaultTranslator.GetType(), "ReloadTranslations");
             return (ReloadTranslationsDelegate)Delegate.CreateDelegate(typeof(ReloadTranslationsDelegate),

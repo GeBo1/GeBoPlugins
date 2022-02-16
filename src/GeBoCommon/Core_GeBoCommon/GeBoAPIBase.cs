@@ -10,11 +10,10 @@ using GeBoCommon.AutoTranslation;
 using GeBoCommon.AutoTranslation.Implementation;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
+using HarmonyLib;
 using KKAPI;
-using KKAPI.Maker;
 using UnityEngine;
 using XUAPluginData = XUnity.AutoTranslator.Plugin.Core.Constants.PluginData;
-
 
 namespace GeBoCommon
 {
@@ -27,7 +26,7 @@ namespace GeBoCommon
 #if KK || AI
     [BepInProcess(Constants.MainGameProcessNameSteam)]
 #endif
-#if KK || HS2
+#if KK || HS2 || KKS
     [BepInProcess(Constants.MainGameProcessNameVR)]
 #endif
 #if KK
@@ -41,11 +40,17 @@ namespace GeBoCommon
 #endif
     public partial class GeBoAPI : BaseUnityPlugin, IGeBoAPI
     {
-        public const string GUID = "com.gebo.BepInEx.GeBoAPI";
+        public const string GUID = Constants.PluginGUIDPrefix + "." + nameof(GeBoAPI);
         public const string PluginName = "GeBo Modding API";
-        public const string Version = "1.1.2.1";
+        public const string Version = "1.2.0.1";
 
         private static readonly Dictionary<string, bool> NotificationSoundsEnabled = new Dictionary<string, bool>();
+
+        private const float LoadTrackerHeavyAverage = 0.75f;
+        private const float LoadTrackerHeavyLatest = 1f;
+        private const int LoadTrackerCount = 5;
+        private readonly float[] _loadTracker = new float[LoadTrackerCount];
+        private float _currentLoad = -1f;
 
         /// <summary>
         ///     Gets the instance of GeBoAPI for the current execution.
@@ -75,13 +80,12 @@ namespace GeBoCommon
 
         private static ConfigEntry<bool> EnableObjectPoolsConfig { get; set; }
 
+        [Obsolete("use KKAPI.KoikatuAPI.IsQuitting")]
+        public static bool IsQuitting => KoikatuAPI.IsQuitting;
+
 
         public static bool EnableObjectPools { get; private set; }
 
-#if TIMERS
-        private static ConfigEntry<bool> TimersEnabledConfig { get; set; }
-        public static bool TimersEnabled { get; private set; }
-#endif
         public static event EventHandler<EventArgs> TranslationsLoaded;
 
         internal static void OnTranslationLoaded(EventArgs eventArgs)
@@ -100,37 +104,31 @@ namespace GeBoCommon
 
             Common.SetCurrentLogger(Logger);
 
-#if TIMERS
-            TimersEnabledConfig = Config.Bind("Developer Settings", "Enable Timer Messages", false,
-                new ConfigDescription("Adds log messages for how long certain events take.", null, "Advanced"));
-            TimersEnabledConfig.SettingChanged += TimersEnabledConfig_SettingChanged;
-            TimersEnabledConfig_SettingChanged(this, EventArgs.Empty);
-#endif
+            const float initialTrackerValue = LoadTrackerCount * 1f;
+            for (var i = 0; i < LoadTrackerCount; i++) _loadTracker[i] = initialTrackerValue;
+
+            Harmony.CreateAndPatchAll(typeof(Hooks));
         }
 
-        private void MakerStartupTimerStart(object sender, RegisterCustomControlsEvent e)
+
+        private void LateUpdate()
         {
-            var startTime = Time.realtimeSinceStartup;
-            MakerAPI.MakerFinishedLoading += MakerAPI_MakerFinishedLoading;
+            _loadTracker[Time.frameCount % LoadTrackerCount] = Time.unscaledDeltaTime;
+            _currentLoad = -1f;
         }
 
-        private void MakerAPI_MakerFinishedLoading(object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
-        }
+        public float CurrentLoad => _currentLoad < 0f
+            ? _currentLoad = (_loadTracker.Average() + _loadTracker.Max()) / 2f
+            : _currentLoad;
 
-        private void EnableObjectPoolsConfig_SettingChanged(object sender, EventArgs e)
+        public bool IsHeavyLoad => Time.unscaledDeltaTime >= LoadTrackerHeavyLatest ||
+                                   _loadTracker[Time.frameCount % LoadTrackerCount] > LoadTrackerHeavyLatest ||
+                                   CurrentLoad >= LoadTrackerHeavyAverage;
+
+        private static void EnableObjectPoolsConfig_SettingChanged(object sender, EventArgs e)
         {
             EnableObjectPools = EnableObjectPoolsConfig.Value;
         }
-
-#if Timers
-        private void TimersEnabledConfig_SettingChanged(object sender, EventArgs e)
-        {
-            TimersEnabled = TimersEnabledConfig.Value;
-            Timers.Setup();
-        }
-#endif
 
         private static IAutoTranslationHelper AutoTranslationHelperLoader()
         {

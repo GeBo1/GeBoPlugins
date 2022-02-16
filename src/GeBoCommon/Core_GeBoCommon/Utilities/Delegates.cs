@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Linq.Expressions;
-using System.Reflection;
 using BepInEx.Logging;
 using HarmonyLib;
 using JetBrains.Annotations;
-using KKAPI.Utilities;
 
 namespace GeBoCommon.Utilities
 {
     [PublicAPI]
     public static class Delegates
     {
+        private static readonly object[] NoArgs = ObjectUtils.GetEmptyArray<object>();
         private static ManualLogSource Logger => Common.CurrentLogger;
-        private static readonly object[] NoArgs = new object[0];
 
         public static Func<T> LazyReflectionGetter<T>(SimpleLazy<object> instLoader, string fieldName)
         {
@@ -146,11 +144,11 @@ namespace GeBoCommon.Utilities
             return setter.Compile();
         }
 
-        private static Func<object, T> FieldOrPropertyGetter<T>(Type type, string fieldName)
+        public static Func<object, T> FieldOrPropertyGetter<T>(Type type, string fieldName)
         {
             Func<object, T> Searcher(Type innerType)
             {
-                Expression<Func<object, T>> getter = null;
+                Expression<Func<object, T>> getter;
 
                 var fieldInfo = innerType.GetField(fieldName, AccessTools.all);
 
@@ -162,6 +160,7 @@ namespace GeBoCommon.Utilities
 
                 var propertyInfo = innerType.GetProperty(fieldName, AccessTools.all);
 
+                // ReSharper disable once InvertIf
                 if (propertyInfo != null)
                 {
                     getter = obj => (T)propertyInfo.GetValue(obj, NoArgs);
@@ -178,10 +177,8 @@ namespace GeBoCommon.Utilities
                 $"Unable to find a field or property getter named {fieldName} on {type.GetPrettyTypeName()}");
         }
 
-        private static Action<object, T> FieldOrPropertySetter<T>(Type type, string fieldName)
+        public static Action<object, T> FieldOrPropertySetter<T>(Type type, string fieldName)
         {
-    
-
             Action<object, T> Searcher(Type innerType)
             {
                 Expression<Action<object, T>> setter;
@@ -195,6 +192,7 @@ namespace GeBoCommon.Utilities
 
                 var propertyInfo = innerType.GetProperty(fieldName, AccessTools.all);
 
+                // ReSharper disable once InvertIf
                 if (propertyInfo != null)
                 {
                     setter = (obj, val) => propertyInfo.SetValue(obj, val, NoArgs);

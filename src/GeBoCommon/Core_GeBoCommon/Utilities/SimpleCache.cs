@@ -1,8 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using BepInEx.Logging;
+using JetBrains.Annotations;
+using KKAPI;
+using UnityEngine;
+#if DEBUG
+using System.Collections;
+#endif
 
 namespace GeBoCommon.Utilities
 {
@@ -10,41 +15,98 @@ namespace GeBoCommon.Utilities
     {
         public delegate TValue CacheDataLoader(TKey key);
 
-        private readonly Dictionary<TKey, TValue> _cache;
-        private readonly CacheDataLoader _loader;
-        protected readonly ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
+        protected const int BlockingOperationTimeout = 250;
+        private readonly CacheDictionary<TKey, TValue> _cache = new CacheDictionary<TKey, TValue>(true);
 
-        public SimpleCache(CacheDataLoader loader)
+        private readonly string _cacheName;
+
+        private readonly SimpleLazy<CoroutineHelper> _coroutineHelperLoader;
+        private readonly CacheDataLoader _loader;
+
+        protected readonly HitMissCounter Stats;
+
+        public SimpleCache(CacheDataLoader loader, string cacheName = null)
         {
-            _cache = new Dictionary<TKey, TValue>();
+            _coroutineHelperLoader = new SimpleLazy<CoroutineHelper>(InitCoroutineHelper);
+            _cacheName = cacheName;
+            if (_cacheName.IsNullOrEmpty())
+            {
+                try
+                {
+                    _cacheName = $"[{loader.Method.Name}]";
+                }
+                catch
+                {
+                    _cacheName = $"[{loader}]";
+                }
+            }
+
+            Stats = new HitMissCounter(_cacheName);
+
             _loader = loader;
+
+            KoikatuAPI.Quitting += ApplicationQuitting;
+#if DEBUG
+            CoroutineHelper.Start(DumpCacheStats());
+#endif
         }
+        //private readonly Dictionary<TKey, TValue> _cache = new Dictionary<TKey, TValue>();
+
+        public int Count => _cache.Count;
+
+        protected ReaderWriterLockSlim Lock => _cache.Lock;
+
+        protected CoroutineHelper CoroutineHelper => _coroutineHelperLoader.Value;
+
+        protected bool Exiting => KoikatuAPI.IsQuitting;
 
         protected bool Disposed { get; private set; }
 
         protected ManualLogSource Logger => Common.CurrentLogger;
-        public int Count => _cache.Count;
+
 
         public TValue this[TKey key] => Get(key);
 
-        public void Dispose()
+        private CoroutineHelper InitCoroutineHelper()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            return new CoroutineHelper();
         }
 
-        [SuppressMessage("ReSharper", "VirtualMemberNeverOverridden.Global")]
-        protected virtual void Dispose(bool disposing)
+#if DEBUG
+        private IEnumerator DumpCacheStats()
         {
-            Logger?.DebugLogDebug($"Dispose({disposing}): {this.GetPrettyTypeFullName()}");
-            if (Disposed) return;
-            Disposed = true;
-            if (!disposing) return;
-            Clear();
-            Lock.Dispose();
+            var nextNotify = 0f;
+            while (!Disposed && !Exiting)
+            {
+                if (Time.realtimeSinceStartup > nextNotify)
+                {
+                    LogCacheStats(nameof(DumpCacheStats));
+                    nextNotify = Time.realtimeSinceStartup + 15f;
+                }
+
+                yield return null;
+            }
+        }
+#endif
+
+        private void ApplicationQuitting(object sender, EventArgs e)
+        {
+            OnApplicationQuitting();
         }
 
-        // ReSharper disable Unity.PerformanceAnalysis
+        protected virtual void OnApplicationQuitting()
+        {
+            LogCacheStats(nameof(ApplicationQuitting));
+            _cache.Clear();
+        }
+
+        protected void LogCacheStats(string prefix)
+        {
+            Logger?.LogDebug(Stats.GetCounts(prefix, Count));
+        }
+
+
+
         public TValue Get(TKey key)
         {
             try
@@ -53,68 +115,137 @@ namespace GeBoCommon.Utilities
             }
             catch (Exception err)
             {
-                // Any non-cache related exception should be hit again when _loader is called below
-                Logger.LogException(err, $"Unexpected error, bypassing {this.GetPrettyTypeName()} caching");
+                // Any non-cache related exception should be hit/thrown again when _loader is called below
+                Logger.LogException(err, $"{this}: Unexpected error, bypassing caching");
             }
 
             return _loader(key);
         }
 
-        protected virtual TValue DoGet(TKey key)
+        /// <summary>
+        ///     Called when value added to cache, after lock released
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        protected virtual void OnAddedToCache(TKey key, TValue value)
         {
-            if (Disposed) return _loader(key);
-            var readTaken = !Lock.IsUpgradeableReadLockHeld;
-            if (readTaken) Lock.EnterUpgradeableReadLock();
+            Stats.RecordMiss();
+        }
+
+
+        /// <summary>
+        ///     Called when value read from cache, lock released if taken
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        protected virtual void OnReadFromCache(TKey key, TValue value)
+        {
+            Stats.RecordHit();
+        }
+
+        /// <summary>
+        ///     Called when cache cleared (after lock released)
+        /// </summary>
+        protected virtual void OnCacheCleared() { }
+
+        /// <summary>
+        ///     Called when key removed from cache.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="removed">if set to <c>true</c> key was removed.</param>
+        protected virtual void OnRemovedFromCache(TKey key, bool removed) { }
+
+        [PublicAPI]
+        public void Clear()
+        {
+            _cache.Clear();
+            OnCacheCleared();
+        }
+
+        public override string ToString()
+        {
+            return $"{_cacheName} ({this.GetPrettyTypeName()})";
+        }
+
+
+        protected TValue DoGet(TKey key)
+        {
+            if (Disposed || Exiting) return _loader(key);
+            var loaderFired = false;
+            var start = Time.realtimeSinceStartup;
             try
             {
-                if (_cache.TryGetValue(key, out var cachedResult)) return cachedResult;
-
-                var writeTaken = !Lock.IsWriteLockHeld;
-                if (writeTaken) Lock.EnterWriteLock();
-                try
+                var result = _cache.GetOrAdd(key, LoaderHelper);
+                if (loaderFired)
                 {
-                    return _cache[key] = _loader(key);
+                    OnAddedToCache(key, result);
                 }
-                finally
+                else
                 {
-                    if (writeTaken) Lock.ExitWriteLock();
+                    OnReadFromCache(key, result);
+                }
+
+                return result;
+
+                TValue LoaderHelper(TKey innerKey)
+                {
+                    loaderFired = true;
+                    return _loader(innerKey);
                 }
             }
             finally
             {
-                if (readTaken) Lock.ExitUpgradeableReadLock();
+                var elapsed = Time.realtimeSinceStartup - start;
+                if (loaderFired)
+                {
+                    Stats.RecordMissTime(start);
+                }
+                else
+                {
+                    Stats.RecordHitTime(start);
+                }
             }
         }
 
         [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
-        public virtual bool Remove(TKey key)
+        public bool Remove(TKey key)
         {
-            if (Disposed) return false;
-            var writeTaken = !Lock.IsWriteLockHeld;
-            if (writeTaken) Lock.EnterWriteLock();
-
-            try
-            {
-                return _cache.Remove(key);
-            }
-            finally
-            {
-                if (writeTaken) Lock.ExitWriteLock();
-            }
+            if (Disposed || Exiting) return false;
+            var result = _cache.Remove(key);
+            OnRemovedFromCache(key, result);
+            return result;
         }
 
-        public virtual void Clear()
+        protected bool ContainsKey(TKey key)
         {
-            var writeTaken = !Lock.IsWriteLockHeld;
-            if (writeTaken) Lock.EnterWriteLock();
-            try
+            return _cache.ContainsKey(key);
+        }
+
+        [SuppressMessage("ReSharper", "VirtualMemberNeverOverridden.Global")]
+        protected virtual void Dispose(bool disposing)
+        {
+            if (Disposed) return;
+            Logger?.DebugLogDebug($"{this}: Dispose({disposing})");
+            if (disposing)
             {
-                _cache.Clear();
+                _cache.Dispose();
             }
-            finally
-            {
-                if (writeTaken) Lock.ExitWriteLock();
-            }
+
+            Clear();
+            Disposed = true;
+        }
+
+        ~SimpleCache()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose( false);
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose( true);
+            GC.SuppressFinalize(this);
         }
     }
 }

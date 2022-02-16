@@ -21,14 +21,21 @@
     <Compile Include="$(MSBuildThisFileDirectory)Chara\Extensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GeBoAPIBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GeBoAPI.Hooks.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IGeBoAPI.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AutoTranslation\SimpleTranslationResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Studio\Extensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Studio\StudioUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Timers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\AsyncWorker.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\HitMissCounter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\CacheDictionary.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\DictionaryPool.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\LockUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\LockWrappers\LockWrapper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\NormalizedPathDictionary.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\PoolQueue.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Utilities\CoroutineUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\CoroutineHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\Delegates.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\EnumerableUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\ExpiringSimpleCache.cs" />
@@ -40,9 +47,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\NormalizedPathComparer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\ObjectPool.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\PathUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleCache.Implementation.Locks.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleCache.Implementation.Concurrent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleLazy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\StringBuilderPool.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\TransferList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\WeakCache.cs" />
   </ItemGroup>
 </Project>

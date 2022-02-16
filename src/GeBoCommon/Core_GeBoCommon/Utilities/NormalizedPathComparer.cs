@@ -5,11 +5,12 @@ namespace GeBoCommon.Utilities
     public class NormalizedPathComparer : StringComparer
     {
         private static readonly ExpiringSimpleCache<string, int> HashCodeCache =
-            new ExpiringSimpleCache<string, int>(CalculateHashCode, 180);
+            new ExpiringSimpleCache<string, int>(CalculateHashCode, TimeSpan.FromMinutes(10),
+                $"{typeof(NormalizedPathComparer).PrettyTypeFullName()}.{nameof(HashCodeCache)}");
 
         internal NormalizedPathComparer() { }
 
-        public static string NormalizePathString(string input)
+        private static string NormalizePathString(string input)
         {
             try
             {
@@ -25,6 +26,8 @@ namespace GeBoCommon.Utilities
         {
             if (x == y) return true;
             if (x == null || y == null) return false;
+            if (OrdinalIgnoreCase.Equals(x, y)) return true;
+
             return GetHashCode(x) == GetHashCode(y);
         }
 

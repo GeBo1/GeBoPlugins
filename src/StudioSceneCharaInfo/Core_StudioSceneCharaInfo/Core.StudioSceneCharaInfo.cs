@@ -1,36 +1,55 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using GeBoCommon;
-using GeBoCommon.Studio;
+using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
 using HarmonyLib;
 using JetBrains.Annotations;
+using KKAPI.Utilities;
+using Manager;
 using Studio;
-using TranslationHelperPlugin;
+using StudioSceneNavigationPlugin;
+using TranslationHelperPlugin.Chara;
 using UnityEngine;
+using BepInLogLevel = BepInEx.Logging.LogLevel;
+#if AI || HS2
+using AIChara;
+#endif
+
+using StudioCheckScene = Studio.CheckScene;
+using TranslationHelper = TranslationHelperPlugin.TranslationHelper;
+using UnityEngineResources = UnityEngine.Resources;
 
 namespace StudioSceneCharaInfoPlugin
 {
     [BepInDependency(TranslationHelper.GUID)]
+    [BepInDependency(StudioSceneNavigation.GUID, StudioSceneNavigation.Version)]
     [BepInDependency(GeBoAPI.GUID, GeBoAPI.Version)]
     [BepInDependency(HspeGuid, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(GUID, PluginName, Version)]
     [BepInProcess(Constants.StudioProcessName)]
     public partial class StudioSceneCharaInfo : BaseUnityPlugin
     {
-        public const string GUID = "com.gebo.BepInEx.studioscenecharainfo";
+        [PublicAPI]
+        public const string GUID = Constants.PluginGUIDPrefix + "." + nameof(StudioSceneCharaInfo);
+
         public const string PluginName = "Studio Scene Chara Info";
         public const string Version = "0.2.0.1";
 
         // ReSharper disable once InconsistentNaming
         private const char DQ = '"';
+
+        private static readonly Regex CsvSplitter =
+            new Regex("(?:^|,)(\"(?:[^\"])*\"|[^,]*)", Constants.SupportedRegexCompilationOption);
 
         private static Action _resetHspeWrapper;
 
@@ -40,13 +59,13 @@ namespace StudioSceneCharaInfoPlugin
 
         private readonly HashSet<string> _processedScenes = new HashSet<string>();
 
-        public StudioSceneCharaInfo()
-        {
-            _resetHspeWrapper = LazyResetHspe;
-        }
+        private static readonly string StudioSceneRootPath = PathUtils.CombinePaths(UserData.Path, "Studio", "scene");
 
+        private static readonly string[] DumpTags = { "TranslatedNames", "OriginalNames" };
+
+#if deadcode
         public static SceneLoadScene StudioInitObject { get; private set; }
-
+#endif
         public static ConfigEntry<KeyboardShortcut> SceneCharaInfoDumpHotkey { get; private set; }
 
         internal void Awake()
@@ -67,28 +86,41 @@ namespace StudioSceneCharaInfoPlugin
         {
             if (_dumping || !SceneCharaInfoDumpHotkey.Value.IsDown()) return;
             _dumping = true;
-            try
+
+            var scenes = GetListPath();
+            if (scenes.Count < 1)
             {
-                ExecuteDump();
-            }
-            finally
-            {
+                Logger.LogWarningMessage("No scenes present for the last folder viewed in the loader");
                 _dumping = false;
-                Singleton<Studio.Studio>.Instance.colorPalette.visible = true;
+                return;
             }
+
+            var systemButtonCtrl = Singleton<Studio.Studio>.Instance.systemButtonCtrl;
+            Singleton<Studio.Studio>.Instance.colorPalette.visible = false;
+            StudioCheckScene.sprite = systemButtonCtrl.spriteInit;
+            StudioCheckScene.unityActionYes = OnDumpYes;
+            StudioCheckScene.unityActionNo = OnDumpNo;
+            var datum = new Scene.Data { levelName = "StudioCheck", isAdd = true };
+            Singleton<Scene>.Instance.LoadReserve(datum, false);
+        }
+
+        private void OnDumpNo()
+        {
+            _dumping = false;
+            Singleton<Studio.Studio>.Instance.systemButtonCtrl.OnSelectIniteNo();
+        }
+
+        private void OnDumpYes()
+        {
+            Singleton<Studio.Studio>.Instance.systemButtonCtrl.OnSelectInitYes();
+            ExecuteDump();
         }
 
         public static List<string> GetListPath()
         {
-            return SceneUtils.GetSceneLoaderPaths(StudioInitObject);
+            return StudioSceneNavigation.Public.GetScenePaths().ToList();
         }
 
-        [HarmonyPatch(typeof(SceneLoadScene), "InitInfo")]
-        [HarmonyPostfix]
-        internal static void StudioInitInfoPost(SceneLoadScene __instance)
-        {
-            StudioInitObject = __instance;
-        }
 
         [UsedImplicitly]
         private void CollectCharInfos(ObjectInfo oICharInfo, ref List<ObjectInfo> charInfos)
@@ -126,6 +158,7 @@ namespace StudioSceneCharaInfoPlugin
             ListPool<ObjectInfo>.Release(children);
         }
 
+#if deadcode
         private void CollectNames(ObjectInfo oICharInfo, ref List<string> names)
         {
             var children = ListPool<ObjectInfo>.Get();
@@ -133,7 +166,15 @@ namespace StudioSceneCharaInfoPlugin
             {
                 var info = charInfo.charFile.parameter;
 
-                names.Add(info.fullname);
+                if (TranslationHelper.TryFastTranslateFullName(TranslationHelperPlugin.Utils.CharaFileInfoWrapper.CreateWrapper(charInfo.charFile), out var translatedName))
+                {
+                    names.Add(translatedName);
+                }
+                else
+                {
+                    StartCoroutine(TranslationHelper.TranslateCardNames(charInfo.charFile));
+                    names.Add(info.fullname);
+                }
 
                 foreach (var kids in charInfo.child.Values)
                 {
@@ -161,6 +202,7 @@ namespace StudioSceneCharaInfoPlugin
 
             ListPool<ObjectInfo>.Release(children);
         }
+#endif
 
         public static string PrepPath(string path)
         {
@@ -188,7 +230,8 @@ namespace StudioSceneCharaInfoPlugin
                 var sceneInfoImportPatches = assembly.GetType("SceneInfo_Import_Patches");
                 if (sceneInfoImportPatches != null)
                 {
-                    var method = AccessTools.Method(sceneInfoImportPatches, "Prefix", new Type[0]);
+                    var method = AccessTools.Method(sceneInfoImportPatches, "Prefix",
+                        ObjectUtils.GetEmptyArray<Type>());
                     if (method != null)
                     {
                         Logger.LogInfo(
@@ -209,38 +252,64 @@ namespace StudioSceneCharaInfoPlugin
 
         private void ExecuteDump()
         {
-            if (StudioInitObject == null) return;
+            //if (StudioInitObject == null) return;
             var scenes = GetListPath();
 
-            if (scenes.Count < 1) return;
+            var coroutines = ListPool<IEnumerator>.Get();
+            try
+            {
+                if (scenes.Count > 0)
+                {
+                    var dirName = Path.GetDirectoryName(scenes[0]);
+                    if (!string.IsNullOrEmpty(dirName))
+                    {
+                        scenes.Reverse();
+                        Logger.LogInfoMessage($"Start dump for {dirName}");
 
-            var dirName = Path.GetDirectoryName(scenes[0]);
-            if (string.IsNullOrEmpty(dirName)) return;
-            Logger.LogInfo("Start dump.");
 
+                        coroutines.Add(ProcessScenes(dirName, scenes));
+                    }
+                }
+
+                coroutines.Add(PostDump());
+                StartCoroutine(CoroutineUtils.ComposeCoroutine(coroutines.ToArray()));
+            }
+            finally
+            {
+                ListPool<IEnumerator>.Release(coroutines);
+            }
+#if deadcode
             var outputFile = Path.GetFullPath(Path.Combine(dirName, "SceneCharaInfo.csv"));
 
             var append = false;
             _processedScenes.Clear();
-            if (File.Exists(outputFile))
+            try
             {
-                append = true;
-                using (var reader = new StreamReader(outputFile, Encoding.UTF8))
+                if (File.Exists(outputFile))
                 {
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
+                    append = true;
+                    using (var reader = new StreamReader(outputFile, Encoding.UTF8))
                     {
-                        var fPath = line.Split(',').FirstOrDefault()?.Trim();
-                        if (string.IsNullOrEmpty(fPath)) continue;
-                        if (fPath.StartsWith($"{DQ}", StringComparison.InvariantCulture) &&
-                            fPath.EndsWith($"{DQ}", StringComparison.InvariantCulture))
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
                         {
-                            fPath = fPath.Substring(1, fPath.Length - 2);
-                        }
+                            var fPath = line.Split(',').FirstOrDefault()?.Trim();
+                            if (string.IsNullOrEmpty(fPath)) continue;
+                            if (fPath.StartsWith($"{DQ}", StringComparison.InvariantCulture) &&
+                                fPath.EndsWith($"{DQ}", StringComparison.InvariantCulture))
+                            {
+                                fPath = fPath.Substring(1, fPath.Length - 2);
+                            }
 
-                        _processedScenes.Add(fPath);
+                            _processedScenes.Add(fPath);
+                        }
                     }
                 }
+            }
+            catch (Exception err)
+            {
+                Logger.LogException(err, this, $"Unable to load existing csv file");
+                _processedScenes.Clear();
             }
 
             Logger.LogDebug($"ProcessedScenes: \n\t{string.Join("\n\t", _processedScenes.ToArray())}");
@@ -267,7 +336,7 @@ namespace StudioSceneCharaInfoPlugin
                     try
                     {
                         var names = ProcessScene(pth);
-                        line.AddRange(names);
+                        line.AddRange(names.Distinct().OrderBy(a => a));
                         /*
                             foreach (string name in names.Distinct().OrderBy(a => a))
                             {
@@ -281,7 +350,7 @@ namespace StudioSceneCharaInfoPlugin
                         //writer.Write($",{q}ERROR PROCESSING FILE{q}");
                         line.Add("ERROR PROCESSING FILE");
                         line.Add($"{err}".Replace(DQ, '\''));
-                        Logger.LogException(err, $"${nameof(ExecuteDump)}: error processing {displayPath}");
+                        Logger.LogException(err, $"{nameof(ExecuteDump)}: error processing {displayPath}");
                     }
 
                     writer.Write(DQ);
@@ -305,8 +374,296 @@ namespace StudioSceneCharaInfoPlugin
             }
 
             GeBoAPI.Instance.PlayNotificationSound(NotificationSound.Success);
+#endif
         }
 
+        private IEnumerator PostDump()
+        {
+            yield return null;
+            ResetStudio();
+            yield return null;
+            _dumping = false;
+        }
+
+        private static void ResetStudio()
+        {
+            Singleton<Studio.Studio>.Instance.InitScene();
+            ResetHspe();
+        }
+
+        public static string[] SplitProcessedSceneLine(string line)
+        {
+            var list = ListPool<string>.Get();
+            try
+            {
+                foreach (Match match in CsvSplitter.Matches(line))
+                {
+                    var entry = match.Value;
+                    if (0 == entry.Length)
+                    {
+                        list.Add("");
+                    }
+
+                    list.Add(TrimQuotes(entry.TrimStart(',')));
+                }
+
+                return list.ToArray();
+            }
+            finally
+            {
+                ListPool<string>.Release(list);
+            }
+
+            string TrimQuotes(string val)
+            {
+                return val[0] == '"' && val[val.Length - 1] == '"' ? val.Substring(1, val.Length - 2) : val;
+            }
+        }
+
+        private Dictionary<string, HashSet<string>> LoadProcessedScenes(string resultFile)
+        {
+            var result = new Dictionary<string, HashSet<string>>();
+            if (!File.Exists(resultFile)) return result;
+
+            using (var reader = new StreamReader(resultFile, Encoding.UTF8))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    var entry = SplitProcessedSceneLine(line);
+                    if (entry.Length < 2) continue;
+                    var key = entry[1].Trim();
+                    if (!result.TryGetValue(key, out var hashSet))
+                    {
+                        result[key] = hashSet = new HashSet<string>();
+                    }
+
+                    hashSet.Add(entry[0].Trim());
+                    Logger.LogWarning($"{nameof(LoadProcessedScenes)}: added {entry[1]} {entry[0]}");
+                }
+            }
+
+            return result;
+        }
+
+        private IEnumerator ProcessScenes(string dirName, List<string> scenes)
+        {
+            var start = Time.realtimeSinceStartup;
+            var sceneNum = 0;
+            var sceneTotal = scenes.Count;
+            var numFmt = "".PadLeft(sceneTotal.ToString().Length, '0');
+            var msgFormat = "[{0:" + numFmt + "}/{1}] (ETA: {4}) {2}: {3}";
+            string relativeScenePath;
+            var scenesSkipped = 0;
+            var resultTmp = new List<string>(25);
+
+            var outputFile = Path.GetFullPath(Path.Combine(dirName, $"{nameof(StudioSceneCharaInfo)}.csv"));
+            var tmpFile = PathUtils.GetTempFile(nameof(StudioSceneCharaInfo), "csv");
+            Dictionary<string, HashSet<string>> processedScenes = null;
+
+            var needsBackup = true;
+
+            if (File.Exists(outputFile))
+            {
+                File.Copy(outputFile, tmpFile);
+                processedScenes = LoadProcessedScenes(tmpFile);
+            }
+
+            Logger.LogFatal(
+                $"processed scene loaded from {outputFile}: {processedScenes?.Values.Select(v => v.Count).Sum() / 2}");
+
+            bool SceneHandled()
+            {
+                if (processedScenes == null) return false;
+                var result = DumpTags.All(t =>
+                    processedScenes.TryGetValue(t, out var h) && h.Contains(relativeScenePath));
+                Logger.LogFatal($"{nameof(SceneHandled)}: {relativeScenePath} => {result}");
+                return result;
+            }
+
+            void LogProgress(BepInLogLevel logLevel, string message, bool displayMessage = true)
+            {
+                var eta = "-";
+                var scenesProcessed = sceneNum - scenesSkipped;
+                if (scenesProcessed > 1)
+                {
+                    var tmpTotal = sceneTotal - scenesSkipped;
+                    var elapsedMilliseconds = (Time.realtimeSinceStartup - start) * 1000f;
+                    var avgMilliseconds = elapsedMilliseconds / scenesProcessed;
+                    var estimatedRemainingMilliseconds = (tmpTotal + 1 - scenesProcessed) * avgMilliseconds;
+                    if (estimatedRemainingMilliseconds > 0)
+                    {
+                        eta = TimeSpan.FromMilliseconds(estimatedRemainingMilliseconds).ToString();
+                    }
+                }
+
+                if (displayMessage) logLevel |= BepInLogLevel.Message;
+                Logger.Log(logLevel,
+                    string.Format(msgFormat, sceneNum, sceneTotal, message,
+                        relativeScenePath.IsNullOrEmpty() ? "-" : Path.GetFileName(relativeScenePath), eta));
+            }
+
+            try
+            {
+                ResetHspe();
+                var append = File.Exists(tmpFile) && processedScenes != null && processedScenes.Count > 0 &&
+                             processedScenes.Values.Any(h => h.Count > 0);
+                using (var writer = new StreamWriter(tmpFile, append, Encoding.UTF8))
+                {
+                    var nextBackupTime = Time.realtimeSinceStartup + (60f * 3);
+                    var nextNotifyTime = Time.realtimeSinceStartup + 60f;
+                    foreach (var scene in scenes)
+                    {
+                        relativeScenePath = PathUtils.GetRelativePath(StudioSceneRootPath, scene);
+                        sceneNum++;
+
+                        if (SceneHandled())
+                        {
+                            scenesSkipped++;
+                            continue;
+                        }
+
+                        if (!StudioSceneNavigation.Public.IsSceneMaybeValid(scene))
+                        {
+                            LogProgress(BepInLogLevel.Warning, "skipping invalid scene");
+                            scenesSkipped++;
+                            continue;
+                        }
+
+                        yield return StudioSceneNavigation.Public.LoadSceneExternal(scene);
+
+                        if (StudioSceneNavigation.Public.LastLoadFailed)
+                        {
+                            LogProgress(BepInLogLevel.Error, "error loading scene");
+                            yield return StartCoroutine(ResetStudioCoroutine());
+                        }
+
+                        // wait a frame or sometimes character list is empty
+                        ChaControl[] chaControls;
+                        var lastCount = -1;
+                        var stable = 0;
+                        while (true)
+                        {
+                            chaControls = FindObjectsOfType<ChaControl>();
+                            if (chaControls.Length == lastCount)
+                            {
+                                stable++;
+                                if ((lastCount == 0 && stable > 5) || stable >= 2) break;
+                            }
+                            else
+                            {
+                                lastCount = chaControls.Length;
+                                stable = 0;
+                            }
+
+                            yield return null;
+                        }
+
+                        Logger.LogDebug($"{scene} contains {lastCount} characters");
+
+
+                        yield return TranslationHelper.WaitOnCardTranslations();
+
+                        AddResult(true, CollectNames(chaControls, true));
+
+                        // should already be handled, in which case this will be pretty much a no-op
+                        yield return TranslateCards(chaControls);
+
+                        AddResult(false, CollectNames(chaControls));
+                        var logMessage = Time.realtimeSinceStartup > nextNotifyTime;
+                        LogProgress(BepInLogLevel.Info, "processed scene", logMessage);
+                        if (logMessage) nextNotifyTime = Time.realtimeSinceStartup + 60f;
+                        yield return StartCoroutine(ResetStudioCoroutine());
+                        if (!(Time.realtimeSinceStartup > nextBackupTime)) continue;
+
+                        // periodically update destination file
+                        writer.Flush();
+                        PathUtils.ReplaceFile(tmpFile, outputFile, needsBackup, true);
+                        needsBackup = false;
+                        nextBackupTime = Time.realtimeSinceStartup + (60f * 3);
+                    }
+
+                    void AddResult(bool originalNames, IEnumerable<string> names)
+                    {
+                        resultTmp.Clear();
+                        resultTmp.Add(relativeScenePath);
+                        resultTmp.Add(DumpTags[originalNames ? 1 : 0]);
+                        resultTmp.AddRange(names);
+
+                        writer.Write(DQ);
+                        try
+                        {
+                            writer.Write(string.Join($"{DQ},{DQ}", resultTmp.ToArray()));
+                        }
+                        finally
+                        {
+                            writer.WriteLine(DQ);
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                PathUtils.ReplaceFile(tmpFile, outputFile, needsBackup);
+            }
+
+
+            Logger.LogInfoMessage(
+                $"Processed {sceneNum} scenes in {TimeSpan.FromMilliseconds((Time.realtimeSinceStartup - start) * 1000f)}");
+            yield return null;
+            Logger.LogInfoMessage($"Results saved to {outputFile}");
+        }
+
+
+        private static IEnumerator ResetStudioCoroutine()
+        {
+            ResetStudio();
+            yield return null;
+            ResetHspe();
+            UnityEngineResources.UnloadUnusedAssets();
+            GC.Collect();
+            yield return null;
+        }
+
+        private IEnumerator TranslateCards(ChaControl[] chaControls)
+        {
+            var jobs = ListPool<Coroutine>.Get();
+            try
+            {
+                foreach (var chara in chaControls)
+                {
+                    jobs.Add(StartCoroutine(chara.chaFile.TranslateCardNamesCoroutine()));
+                }
+
+                foreach (var job in jobs) yield return job;
+            }
+            finally
+            {
+                ListPool<Coroutine>.Release(jobs);
+            }
+        }
+
+        private IEnumerable<string> CollectNames(ChaControl[] chaControls, bool originalNames = false)
+        {
+            var names = HashSetPool<string>.Get();
+            try
+            {
+                foreach (var chara in chaControls)
+                {
+                    names.Add(originalNames ? chara.chaFile.GetOriginalFullName() : chara.chaFile.GetFullName());
+                }
+
+                // yielding entries so results can be ordered and HashSet can be released when exhausted
+                foreach (var chaName in names.OrderBy(a => a)) yield return chaName;
+            }
+            finally
+            {
+                HashSetPool<string>.Release(names);
+            }
+        }
+
+
+#if deadcode
         private List<string> ProcessScene(string pth)
         {
             var names = new List<string>();
@@ -362,9 +719,16 @@ namespace StudioSceneCharaInfoPlugin
                         }
 
                         ResetHspe();
-                        oICharInfo.Load(reader, version, true);
-                        infos.Add(oICharInfo);
-                        CollectNames(oICharInfo, ref names);
+                        try
+                        {
+                            oICharInfo.Load(reader, version, true);
+                            infos.Add(oICharInfo);
+                            CollectNames(oICharInfo, ref names);
+                        }
+                        catch (Exception err)
+                        {
+                            Logger.LogException(err, $"{nameof(ProcessScene)}: error loading {oICharInfo} from {pth}");
+                        }
                     }
 
                     while (infos.Count > 0)
@@ -380,5 +744,6 @@ namespace StudioSceneCharaInfoPlugin
 
             return names;
         }
+#endif
     }
 }

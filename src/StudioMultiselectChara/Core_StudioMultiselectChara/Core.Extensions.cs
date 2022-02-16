@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using GeBoCommon.Utilities;
-using HarmonyLib;
 using JetBrains.Annotations;
 using KKAPI.Chara;
 using Studio;
-using GeBoCommon.Studio;
-
 #if AI||HS2
 using AIChara;
 #endif
@@ -16,7 +13,6 @@ namespace StudioMultiSelectCharaPlugin
     [PublicAPI]
     public static class Extensions
     {
-
         public static CharaId GetMatchId(this ChaFile chaFile)
         {
             return CharaIdCache.Get(chaFile);
@@ -32,14 +28,21 @@ namespace StudioMultiSelectCharaPlugin
         private static readonly SimpleLazy<HookedSimpleCache<ChaFile, CharaId, ChaControl>> LazyCharaIdCache =
             new SimpleLazy<HookedSimpleCache<ChaFile, CharaId, ChaControl>>(() =>
             {
-                var cache = new HookedSimpleCache<ChaFile, CharaId, ChaControl>(IdLoader, CacheConverter, true, true);
-                CharacterApi.CharacterReloaded += (sender, e) =>
-                {
-                    e.ReloadedCharacter.SafeProc(rc => cache.Remove(rc.chaFile));
-                };
+                var cache = new HookedSimpleCache<ChaFile, CharaId, ChaControl>(IdLoader, CacheConverter, true, true,
+                    $"{typeof(Extensions).PrettyTypeFullName()}.{nameof(CharaIdCache)}");
+                CharacterApi.CharacterReloaded += CachedCharacterReloaded;
                 return cache;
-            });
 
+                void RemoveCachedEntry(ChaControl chaControl)
+                {
+                    cache.Remove(chaControl.chaFile);
+                }
+
+                void CachedCharacterReloaded(object sender, CharaReloadEventArgs e)
+                {
+                    e.ReloadedCharacter.SafeProc(RemoveCachedEntry);
+                }
+            });
 
         internal static HookedSimpleCache<ChaFile, CharaId, ChaControl> CharaIdCache => LazyCharaIdCache.Value;
 

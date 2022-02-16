@@ -7,6 +7,7 @@ using BepInEx.Logging;
 using GeBoCommon;
 using GeBoCommon.Studio;
 using GeBoCommon.Utilities;
+using JetBrains.Annotations;
 using KKAPI.Studio;
 using KKAPI.Utilities;
 using Studio;
@@ -19,7 +20,8 @@ namespace StudioMultiSelectCharaPlugin
     [BepInProcess(Constants.StudioProcessName)]
     public partial class StudioMultiSelectChara : BaseUnityPlugin
     {
-        public const string GUID = "com.gebo.BepInEx.studiomultiselectchara";
+        [PublicAPI]
+        public const string GUID = Constants.PluginGUIDPrefix + "." + nameof(StudioMultiSelectChara);
         public const string PluginName = "Studio MultiSelect Chara";
         public const string Version = "1.0.0.2";
         internal static new ManualLogSource Logger;

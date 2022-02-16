@@ -4,6 +4,9 @@ using AIChara;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using GeBoCommon;
+using GeBoCommon.Utilities;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -13,31 +16,22 @@ namespace GameWhoIsTherePlugin
     [BepInPlugin(GUID, PluginName, Version)]
     public class GameWhoIsThere : BaseUnityPlugin
     {
-        public const string GUID = "com.gebo.bepinex.whoisthere";
+        [PublicAPI]
+        public const string GUID = Constants.PluginGUIDPrefix + "." + nameof(GameWhoIsThere);
+
         public const string PluginName = "Who Is There?";
         public const string Version = "1.0.1.3";
 
         private static GameWhoIsThere _instance;
 
         internal static new ManualLogSource Logger;
-        private readonly ChaFileControl[] _chaFileControls = {null, null};
+        private readonly ChaFileControl[] _chaFileControls = { null, null };
 
-        private readonly Text[] _labels = {null, null};
+        private readonly Text[] _labels = { null, null };
         private bool _busy;
         private bool _keyIdle = true;
 
-        public static GameWhoIsThere Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = FindObjectOfType<GameWhoIsThere>();
-                }
-
-                return _instance;
-            }
-        }
+        public static GameWhoIsThere Instance => PluginUtils.InstanceGetter(ref _instance);
 
         public static ConfigEntry<bool> Enabled { get; private set; }
         public static ConfigEntry<KeyboardShortcut> ShowWhoIsThereShortcut { get; private set; }

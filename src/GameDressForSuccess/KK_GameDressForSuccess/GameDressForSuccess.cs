@@ -20,7 +20,7 @@ namespace GameDressForSuccessPlugin
     [BepInProcess(Constants.MainGameProcessNameVRSteam)]
     public partial class GameDressForSuccess : BaseUnityPlugin
     {
-        public const string GUID = "com.gebo.BepInEx.GameDressForSuccess";
+        public const string GUID = Constants.PluginGUIDPrefix + "." + nameof(GameDressForSuccess);
         public const string PluginName = "Dress for Success";
         public const string Version = "1.2.0.2";
 
@@ -35,6 +35,14 @@ namespace GameDressForSuccessPlugin
 
         public static ConfigEntry<ResetToAutomaticMode> ResetToAutomatic { get; private set; }
 
+        internal void Awake()
+        {
+            Instance = this;
+            Logger = base.Logger;
+            Harmony.CreateAndPatchAll(typeof(Hooks));
+            GameAPI.RegisterExtraBehaviour<DressForSuccessController>(GUID);
+        }
+
         internal void Main()
         {
             Instance = this;
@@ -44,14 +52,6 @@ namespace GameDressForSuccessPlugin
                 "When to apply change when traveling with a girl");
             ResetToAutomatic = Config.Bind("Settings", "Reset to Automatic", ResetToAutomaticMode.PeriodChange,
                 "When to reset the players dress state to 'Automatic'");
-        }
-
-        internal void Awake()
-        {
-            Instance = this;
-            Logger = base.Logger;
-            Harmony.CreateAndPatchAll(typeof(Hooks));
-            GameAPI.RegisterExtraBehaviour<DressForSuccessController>(GUID);
         }
 
         internal void DressPlayer(ChaFileDefine.CoordinateType newCoordinateType)

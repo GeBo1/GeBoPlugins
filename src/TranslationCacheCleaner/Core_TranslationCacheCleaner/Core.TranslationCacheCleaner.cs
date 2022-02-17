@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -19,9 +20,10 @@ namespace TranslationCacheCleanerPlugin
     [BepInDependency(GeBoAPI.GUID, GeBoAPI.Version)]
     [BepInDependency(PluginData.Identifier)]
     [BepInPlugin(GUID, PluginName, Version)]
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
     public partial class TranslationCacheCleaner : BaseUnityPlugin
     {
-        public const string GUID = "com.gebo.bepinex.translationcachecleaner";
+        public const string GUID = Constants.PluginGUIDPrefix + "." + nameof(TranslationCacheCleaner);
         public const string PluginName = "Translation Cache Cleaner";
         public const string Version = "0.6.0.2";
 
@@ -35,7 +37,8 @@ namespace TranslationCacheCleanerPlugin
 
         public static ConfigEntry<KeyboardShortcut> CleanCacheHotkey { get; private set; }
 
-        private static string AutoTranslationsFilePath => GeBoAPI.Instance.AutoTranslationHelper.GetAutoTranslationsFilePath();
+        private static string AutoTranslationsFilePath =>
+            GeBoAPI.Instance.AutoTranslationHelper.GetAutoTranslationsFilePath();
 
         internal void Awake()
         {
@@ -136,7 +139,7 @@ namespace TranslationCacheCleanerPlugin
             yield return StartCoroutine(reloadCoroutine);
             Logger.LogInfo("Reloading done");
 
-            char[] splitter = {'='};
+            char[] splitter = { '=' };
             var changed = 0;
             using (var outStream = File.Open(newFile, FileMode.CreateNew, FileAccess.Write))
             using (var writer = new StreamWriter(outStream, Encoding.UTF8))

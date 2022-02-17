@@ -1,4 +1,6 @@
-﻿namespace GameDialogHelperPlugin
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace GameDialogHelperPlugin
 {
     internal static class PluginDataInfo
     {
@@ -21,6 +23,7 @@
         public const int MaxCharaGuidVersion = CurrentCharaGuidVersion;
         public const int MinimumSupportedCharaGuidVersion = 5;
 
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal static class Keys
         {
             public const string SaveGuid = nameof(SaveGuid);

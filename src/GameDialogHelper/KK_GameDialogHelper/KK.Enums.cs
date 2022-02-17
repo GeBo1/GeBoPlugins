@@ -135,8 +135,10 @@ namespace GameDialogHelperPlugin
     {
         [UsedImplicitly]
         None = 0,
+
         [UsedImplicitly]
         Correct = 1,
+
         [UsedImplicitly]
         Incorrect = 2
     }

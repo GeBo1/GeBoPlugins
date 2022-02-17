@@ -7,15 +7,6 @@ namespace GameDialogHelperPlugin
     [PublicAPI]
     public class DialogInfo
     {
-        private static ManualLogSource Logger => GameDialogHelper.Logger;
-        public int SelectedAnswerId { get; private set; }
-        public int QuestionId { get; }
-        public int CorrectAnswerId { get; }
-
-        public int NumAnswers { get;  }
-
-        public QuestionInfo QuestionInfo { get; }
-
         public DialogInfo(int questionId, int correctAnswerId, int numAnswers)
         {
             QuestionId = questionId;
@@ -28,6 +19,15 @@ namespace GameDialogHelperPlugin
             Logger?.LogWarning($"Unable to find QuestionInfo for Id={questionId}");
             QuestionInfo = QuestionInfo.Default;
         }
+
+        private static ManualLogSource Logger => GameDialogHelper.Logger;
+        public int SelectedAnswerId { get; private set; }
+        public int QuestionId { get; }
+        public int CorrectAnswerId { get; }
+
+        public int NumAnswers { get; }
+
+        public QuestionInfo QuestionInfo { get; }
 
         public bool HasBeenAnswered => SelectedAnswerId != -1;
         public bool WasAnsweredCorrectly => SelectedAnswerId == CorrectAnswerId;

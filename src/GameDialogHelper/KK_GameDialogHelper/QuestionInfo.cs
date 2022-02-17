@@ -9,11 +9,17 @@ namespace GameDialogHelperPlugin
 {
     public class QuestionInfo
     {
-        private static readonly SimpleLazy<QuestionInfo> DefaultLoader = new SimpleLazy<QuestionInfo>(() => new QuestionInfo
-        {
-            Id = -1, Description = string.Empty, QuestionType = QuestionType.Unknown, InvitationTarget = InvitationTarget.None, 
-            LikeTarget = LikeTarget.None, PhysicalAttributeTarget = PhysicalAttribute.None, RelationshipLevel = RelationshipLevel.Anyone
-        });
+        private static readonly SimpleLazy<QuestionInfo> DefaultLoader = new SimpleLazy<QuestionInfo>(() =>
+            new QuestionInfo
+            {
+                Id = -1,
+                Description = string.Empty,
+                QuestionType = QuestionType.Unknown,
+                InvitationTarget = InvitationTarget.None,
+                LikeTarget = LikeTarget.None,
+                PhysicalAttributeTarget = PhysicalAttribute.None,
+                RelationshipLevel = RelationshipLevel.Anyone
+            });
 
         private static readonly SimpleLazy<Dictionary<int, QuestionInfo>> QuestionInfos =
             new SimpleLazy<Dictionary<int, QuestionInfo>>(() =>
@@ -40,7 +46,7 @@ namespace GameDialogHelperPlugin
             get
             {
                 if (!string.IsNullOrEmpty(_description)) return _description;
-                
+
                 // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
                 switch (QuestionType)
                 {
@@ -93,14 +99,14 @@ namespace GameDialogHelperPlugin
             var serializer = new XmlSerializer(typeof(List<QuestionInfo>),
                 new XmlRootAttribute($"{nameof(QuestionInfo)}s"));
             using (var stream = Assembly.GetExecutingAssembly()
-                .GetManifestResourceStream(typeof(QuestionInfo), "Resources.QuestionInfos.xml"))
+                       .GetManifestResourceStream(typeof(QuestionInfo), "Resources.QuestionInfos.xml"))
             {
-                if (stream == null) return new QuestionInfo[0];
+                if (stream == null) return ObjectUtils.GetEmptyArray<QuestionInfo>();
 
                 if (serializer.Deserialize(stream) is List<QuestionInfo> result) return result;
             }
 
-            return new QuestionInfo[0];
+            return ObjectUtils.GetEmptyArray<QuestionInfo>();
         }
 
         public static QuestionInfo GetById(int questionId)

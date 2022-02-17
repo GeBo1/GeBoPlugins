@@ -14,9 +14,15 @@ namespace GameDialogHelperPlugin.PluginModeLogic
             return heroine != null && heroine.relation >= (int)GameDialogHelper.MinimumRelationshipLevel.Value;
         }
 
-        public bool EnabledForQuestion(SaveData.Heroine heroine, DialogInfo dialogInfo) => EnabledForHeroine(heroine);
+        public bool EnabledForQuestion(SaveData.Heroine heroine, DialogInfo dialogInfo)
+        {
+            return EnabledForHeroine(heroine);
+        }
 
-        public bool EnableForAnswer(SaveData.Heroine heroine, DialogInfo dialogInfo, int answer) => EnabledForQuestion(heroine, dialogInfo) && answer == dialogInfo.CorrectAnswerId;
+        public bool EnableForAnswer(SaveData.Heroine heroine, DialogInfo dialogInfo, int answer)
+        {
+            return EnabledForQuestion(heroine, dialogInfo) && answer == dialogInfo.CorrectAnswerId;
+        }
 
         public void ProcessDialogAnswered(SaveData.Heroine heroine, DialogInfo dialogInfo, bool isCorrect) { }
 

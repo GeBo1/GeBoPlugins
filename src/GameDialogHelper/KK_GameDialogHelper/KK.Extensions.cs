@@ -17,6 +17,7 @@ namespace GameDialogHelperPlugin
     {
         private static ManualLogSource Logger => GameDialogHelper.Logger;
 
+        [UsedImplicitly]
         private static byte[] GetKey(object[] items)
         {
             return items.Select(MessagePackSerializer.Serialize).SelectMany(x => x).ToArray();
@@ -43,6 +44,7 @@ namespace GameDialogHelperPlugin
 
         #endregion SelectInfo
 
+        [PublicAPI]
         public static float Average(this List<float> values)
         {
             return values.Count > 0 ? values.Sum() / values.Count : 0f;
@@ -77,7 +79,7 @@ namespace GameDialogHelperPlugin
             }
 
             var guidKeyBuilder = StringBuilderPool.Get();
-            var intFmt = "{0:04}";
+            const string intFmt = "{0:04}";
             try
             {
                 switch (guidVersion)
@@ -215,7 +217,7 @@ namespace GameDialogHelperPlugin
 
         private static readonly ExpiringSimpleCache<string, Guid> GuidCache =
             new ExpiringSimpleCache<string, Guid>(
-                GenerateGuid, 600);
+                GenerateGuid, TimeSpan.FromHours(1), $"{typeof(Extensions).PrettyTypeFullName()}.{nameof(GuidCache)}");
 
         private static Guid GenerateGuid(string key)
         {

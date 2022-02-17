@@ -443,8 +443,8 @@ namespace GameDialogHelperPlugin
                 var previousGuid = Guid.Empty;
 
                 for (var ver = PluginDataInfo.MinimumSupportedCharaGuidVersion;
-                    ver <= PluginDataInfo.MaxCharaGuidVersion;
-                    ver++)
+                     ver <= PluginDataInfo.MaxCharaGuidVersion;
+                     ver++)
                 {
                     var nextGuid = cd.GetCharaGuid(ver);
                     if (previousGuid != Guid.Empty)
@@ -599,7 +599,7 @@ namespace GameDialogHelperPlugin
             var charaGuid = charaData.GetCharaGuid();
             Logger?.DebugLogDebug($"{nameof(PersistToCard)}: {GetLogId()}: {charaData}: {charaGuid}");
 
-            var pluginData = new PluginData {version = PluginDataInfo.DataVersion};
+            var pluginData = new PluginData { version = PluginDataInfo.DataVersion };
             pluginData.data.Add(PluginDataInfo.Keys.SaveGuid, GameDialogHelper.Instance.CurrentSaveGuid.ToByteArray());
             pluginData.data.Add(PluginDataInfo.Keys.SaveGuidVersion, PluginDataInfo.CurrentSaveGuidVersion);
 

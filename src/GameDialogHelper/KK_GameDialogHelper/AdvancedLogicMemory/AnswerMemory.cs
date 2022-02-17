@@ -15,8 +15,6 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
         private const float DefaultRecallScale = 0.01f;
         private const ulong DefaultTimesAnsweredForFullRecall = 10;
 
-        private static ManualLogSource Logger => GameDialogHelper.Logger;
-
         private static float _recallScale = DefaultRecallScale;
 
         private static ulong _timesAnsweredForFullRecall = DefaultTimesAnsweredForFullRecall;
@@ -45,6 +43,8 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
             TimesAnswered = timesAnswered;
             Recall = recall;
         }
+
+        private static ManualLogSource Logger => GameDialogHelper.Logger;
 
         [Key("timesAnswered")]
         [field: IgnoreMember]

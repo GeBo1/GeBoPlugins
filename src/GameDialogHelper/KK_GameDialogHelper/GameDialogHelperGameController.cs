@@ -25,7 +25,7 @@ namespace GameDialogHelperPlugin
 
         public void PersistToGame()
         {
-            var pluginData = new PluginData {version = PluginDataInfo.DataVersion};
+            var pluginData = new PluginData { version = PluginDataInfo.DataVersion };
             pluginData.data.Add(PluginDataInfo.Keys.SaveGuid, GameDialogHelper.Instance.CurrentSaveGuid.ToByteArray());
             pluginData.data.Add(PluginDataInfo.Keys.SaveGuidVersion, PluginDataInfo.CurrentSaveGuidVersion);
             pluginData.data.Add(PluginDataInfo.Keys.CharaGuidVersion, PluginDataInfo.CurrentCharaGuidVersion);
@@ -260,22 +260,26 @@ namespace GameDialogHelperPlugin
         protected override void OnDayChange(Cycle.Week day)
         {
             PersistAllToCards();
+            base.OnDayChange(day);
         }
 
         protected override void OnPeriodChange(Cycle.Type period)
         {
             PersistAllToCards();
+            base.OnPeriodChange(period);
         }
 
-        protected override void OnStartH(HSceneProc proc, bool freeH)
+        protected override void OnStartH(BaseLoader proc, HFlag hFlag, bool vr)
         {
             PersistAllToCards();
+            base.OnStartH(proc, hFlag, vr);
         }
 
         protected override void OnGameSave(GameSaveLoadEventArgs args)
         {
             PersistToGame();
             PersistAllToCards(true);
+            base.OnGameSave(args);
         }
 
         private static void PersistAllToCards(bool isSaving = false)

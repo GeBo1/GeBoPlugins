@@ -34,7 +34,8 @@ namespace GameDialogHelperPlugin
     public partial class GameDialogHelper : BaseUnityPlugin
     {
         [PublicAPI]
-        public const string GUID = "com.gebo.BepInEx.GameDialogHelper";
+        public const string GUID = Constants.PluginGUIDPrefix + "." + nameof(GameDialogHelper);
+
         public const string PluginName = "Game Dialog Helper";
         public const string Version = "1.0.1.2";
 
@@ -43,19 +44,7 @@ namespace GameDialogHelperPlugin
         internal static new ManualLogSource Logger;
         private static GameDialogHelper _instance;
 
-        public static GameDialogHelper Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = FindObjectOfType<GameDialogHelper>();
-                }
-
-                return _instance;
-            }
-        }
-
+        public static GameDialogHelper Instance => PluginUtils.InstanceGetter(ref _instance);
 
         private static readonly SimpleLazy<InfoCheckSelectConditionsDelegate> InfoCheckSelectConditionsLoader =
             new SimpleLazy<InfoCheckSelectConditionsDelegate>(() =>
@@ -65,7 +54,7 @@ namespace GameDialogHelperPlugin
                     typeof(InfoCheckSelectConditionsDelegate), csc);
             });
 
-        private static readonly string[] Splitter = {",tag"};
+        private static readonly string[] Splitter = { ",tag" };
         private static SaveData.Heroine _targetHeroine;
 
         private static IPluginModeLogic _logic;
@@ -77,7 +66,7 @@ namespace GameDialogHelperPlugin
         internal static Color DefaultCorrectColor = new Color(ColorDelta, 1f, ColorDelta);
         internal static Color DefaultIncorrectColor = new Color(1f, ColorDelta, ColorDelta);
 
-        private readonly HashSet<string> _supportedSceneNames = new HashSet<string>(new[] {"Talk"});
+        private readonly HashSet<string> _supportedSceneNames = new HashSet<string>(new[] { "Talk" });
 
         internal readonly HashSet<SaveData.Heroine> LoadedFromCard = new HashSet<SaveData.Heroine>();
 

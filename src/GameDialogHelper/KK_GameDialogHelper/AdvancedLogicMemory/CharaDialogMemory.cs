@@ -222,7 +222,7 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
         {
             bool GuidMatch(string name, Guid currentGuid, Guid memoryGuid, out string errMsg)
             {
-                var fmt = "{0}: expected '{1}', got '{2}'";
+                const string fmt = "{0}: expected '{1}', got '{2}'";
                 errMsg = null;
                 if (currentGuid == Guid.Empty) return true;
                 if (currentGuid == memoryGuid) return true;
@@ -243,27 +243,27 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
             try
             {
                 if (SaveGuid != Guid.Empty && !GuidMatch(nameof(SaveGuid), GameDialogHelper.Instance.CurrentSaveGuid,
-                    SaveGuid, out var msg1))
+                        SaveGuid, out var msg1))
                 {
                     invalid.Add(msg1);
                 }
 
 
                 if (!GuidMatch(nameof(SessionGuid), GameDialogHelper.Instance.CurrentSessionGuid, SessionGuid,
-                    out var msg2))
+                        out var msg2))
                 {
                     invalid.Add(msg2);
                 }
 
                 if (!CharaGuidMatch(nameof(PlayerGuid), GameDialogHelper.Instance.CurrentPlayerGuid, PlayerGuid,
-                    out var msg3))
+                        out var msg3))
                 {
                     invalid.Add(msg3);
                 }
 
                 if (invalid.Count <= 0) return true;
 
-                var msgBuilder = GeBoCommon.Utilities.StringBuilderPool.Get();
+                var msgBuilder = StringBuilderPool.Get();
                 try
                 {
                     msgBuilder.Append(nameof(IsValidForCurrentSession))

@@ -55,6 +55,9 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
         }
 
         [IgnoreMember]
+        public ulong TimesAnswered => _answerMap.Values.Select(a => a.TimesAnswered).Sum();
+
+        [IgnoreMember]
         public ICollection<int> Keys => _answerMap.Keys;
 
         [IgnoreMember]
@@ -150,11 +153,8 @@ namespace GameDialogHelperPlugin.AdvancedLogicMemory
         {
             Sync();
             InternalAnswers.Clear();
-            InternalAnswers.AddRange(_answerMap.Values.Where(a=>a.TimesAnswered > 0));
+            InternalAnswers.AddRange(_answerMap.Values.Where(a => a.TimesAnswered > 0));
         }
-
-        [IgnoreMember]
-        public ulong TimesAnswered => _answerMap.Values.Select(a => a.TimesAnswered).Sum();
 
         public void OnAfterDeserialize()
         {

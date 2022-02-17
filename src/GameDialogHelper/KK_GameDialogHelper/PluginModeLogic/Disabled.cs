@@ -8,11 +8,20 @@ namespace GameDialogHelperPlugin.PluginModeLogic
 
         public string IncorrectHighlight => string.Empty;
 
-        public bool EnabledForHeroine(SaveData.Heroine heroine) => false;
+        public bool EnabledForHeroine(SaveData.Heroine heroine)
+        {
+            return false;
+        }
 
-        public bool EnabledForQuestion(SaveData.Heroine heroine, DialogInfo dialogInfo) => false;
+        public bool EnabledForQuestion(SaveData.Heroine heroine, DialogInfo dialogInfo)
+        {
+            return false;
+        }
 
-        public bool EnableForAnswer(SaveData.Heroine heroine, DialogInfo dialogInfo, int answer) => false;
+        public bool EnableForAnswer(SaveData.Heroine heroine, DialogInfo dialogInfo, int answer)
+        {
+            return false;
+        }
 
         public void ProcessDialogAnswered(SaveData.Heroine heroine, DialogInfo dialogInfo, bool isCorrect) { }
 

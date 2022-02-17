@@ -23,7 +23,7 @@ namespace TranslationHelperPlugin
             Assert.IsNotNull(this);
         }
 
-        private void AILike_SplitNamesBeforeTranslate_SettingChanged(object sender, EventArgs e)
+        private static void AILike_SplitNamesBeforeTranslate_SettingChanged(object sender, EventArgs e)
         {
             SplitNamesBeforeTranslate = AILike_SplitNamesBeforeTranslate.Value;
         }

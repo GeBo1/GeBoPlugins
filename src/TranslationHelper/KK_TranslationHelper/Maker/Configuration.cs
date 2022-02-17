@@ -21,9 +21,9 @@ namespace TranslationHelperPlugin.Maker
         {
             // ReSharper disable once StringLiteralTypo - inherited
             const string top = "CharactorTop";
-            yield return new KeyValuePair<string, string[]>("firstname", new[] {top, "InputName", "InpFirstName"});
-            yield return new KeyValuePair<string, string[]>("lastname", new[] {top, "InputName", "InpLastName"});
-            yield return new KeyValuePair<string, string[]>("nickname", new[] {top, "InputNickName", "InpNickName"});
+            yield return new KeyValuePair<string, string[]>("firstname", new[] { top, "InputName", "InpFirstName" });
+            yield return new KeyValuePair<string, string[]>("lastname", new[] { top, "InputName", "InpLastName" });
+            yield return new KeyValuePair<string, string[]>("nickname", new[] { top, "InputNickName", "InpNickName" });
         }
 
         [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]

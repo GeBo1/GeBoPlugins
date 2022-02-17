@@ -1,4 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
+
 <!-- ReSharper disable MarkupTextTypo -->
 <NamePresets>
     <NamePreset>
@@ -6,7 +7,7 @@
         <GivenNames>
             <Name>ツボミ</Name>
         </GivenNames>
-       <Translations>
+        <Translations>
             <Translation>
                 <TargetLanguages>
                     <Language>en</Language>
@@ -25,7 +26,7 @@
         <FamilyNames>
             <Name>永島</Name>
         </FamilyNames>
-       <Translations>
+        <Translations>
             <Translation>
                 <TargetLanguages>
                     <Language>en</Language>

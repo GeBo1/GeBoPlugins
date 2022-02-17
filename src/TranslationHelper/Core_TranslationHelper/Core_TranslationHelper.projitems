@@ -21,6 +21,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)ComponentTranslationHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MainGame\Controller.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Presets\Data\NamePresets.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Presets\Data\NameTranslations.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Presets\Data\NameTranslation.cs" />
@@ -61,6 +62,7 @@
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\NamePresets\AI\StockMale.xml" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\NamePresets\HS2\NPCs.xml" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\NamePresets\HS2\StockFemale.xml" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\NamePresets\KKS\NPCs.xml" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\NamePresets\KKS\StockFemale.xml" />
   </ItemGroup>
   <ItemGroup>

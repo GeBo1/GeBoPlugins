@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using GeBoCommon.Utilities;
+using HarmonyLib;
 
 namespace TranslationHelperPlugin.Chara
 {
@@ -16,8 +17,8 @@ namespace TranslationHelperPlugin.Chara
         private static bool ChaFileParameterFullnamePrefix(ChaFileParameter __instance, ref string __result)
         {
             if (!TranslationHelper.ShowGivenNameFirst) return true;
-            __result = string.Join(TranslationHelper.SpaceJoiner,
-                new[] {__instance.firstname, __instance.lastname});
+            __result = StringUtils.JoinStrings(TranslationHelper.SpaceJoiner, __instance.firstname,
+                __instance.lastname);
             return false;
         }
     }

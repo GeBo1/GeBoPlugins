@@ -43,7 +43,7 @@ namespace TranslationHelperPlugin.Studio
 
         private static void StudioSaveLoadApi_SceneLoad(object sender, SceneLoadEventArgs e)
         {
-           if (e.Operation == SceneOperationKind.Clear) TranslationHelper.NotifyBehaviorChanged(e);
+            if (e.Operation == SceneOperationKind.Clear) TranslationHelper.NotifyBehaviorChanged(e);
         }
 
         private static void CharacterApi_CharacterReloaded(object sender, CharaReloadEventArgs e)
@@ -58,7 +58,7 @@ namespace TranslationHelperPlugin.Studio
 
         internal static void UpdateTreeForChar(ChaControl chaControl, Action<string> callback)
         {
-            chaControl.SafeProcObject(c=>UpdateTreeForChar(c.chaFile, callback));
+            chaControl.SafeProcObject(c => UpdateTreeForChar(c.chaFile, callback));
         }
 
         [UsedImplicitly]
@@ -70,6 +70,7 @@ namespace TranslationHelperPlugin.Studio
         internal static void UpdateTreeForChar(ChaFile chaFile, Action<string> callback)
         {
             if (chaFile == null) return;
+
             void Handler(string fullName)
             {
                 if (string.IsNullOrEmpty(fullName)) return;

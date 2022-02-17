@@ -1,8 +1,7 @@
-﻿
-using JetBrains.Annotations;
-#if KK||KKS
+﻿#if KK||KKS
 using GeBoCommon.Chara;
 #endif
+using JetBrains.Annotations;
 #if AI||HS2
 using AIChara;
 using TranslationHelperPlugin.Chara;

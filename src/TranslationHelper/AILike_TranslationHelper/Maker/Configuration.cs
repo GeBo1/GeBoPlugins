@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using CharaCustom;
 using HarmonyLib;
-using JetBrains.Annotations;
 using KKAPI.Maker;
 using TranslationHelperPlugin.Chara;
 using UnityEngine.Assertions;
@@ -39,7 +38,7 @@ namespace TranslationHelperPlugin.Maker
 
         private static IEnumerable<KeyValuePair<string, string[]>> GetNameInputFieldInfos()
         {
-            yield return new KeyValuePair<string, string[]>("fullname", new[] {"O_Chara", "Setting", "InputField"});
+            yield return new KeyValuePair<string, string[]>("fullname", new[] { "O_Chara", "Setting", "InputField" });
         }
 
         [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]

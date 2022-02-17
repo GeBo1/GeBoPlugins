@@ -7,7 +7,6 @@ using HarmonyLib;
 using JetBrains.Annotations;
 using KKAPI;
 using KKAPI.Maker;
-
 #if AI||HS2
 using AIChara;
 #endif
@@ -65,7 +64,8 @@ namespace TranslationHelperPlugin.Chara
 #if KK || KKS
         [HarmonyPatch(typeof(ChaFile), nameof(ChaFile.LoadFile), typeof(string), typeof(bool), typeof(bool))]
 #else
-        [HarmonyPatch(typeof(ChaFile), nameof(ChaFile.LoadFile), typeof(string), typeof(int), typeof(bool), typeof(bool))]
+        [HarmonyPatch(typeof(ChaFile), nameof(ChaFile.LoadFile), typeof(string), typeof(int), typeof(bool),
+            typeof(bool))]
 #endif
         private static void ChaFileLoadFilePostfix(ChaFile __instance, string path, bool __result)
         {
@@ -105,7 +105,7 @@ namespace TranslationHelperPlugin.Chara
                     return;
                 }
 #if HS2||AI
-            if (!filename.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) return;
+                if (!filename.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) return;
 #endif
                 Configuration.TrackCharaFileControlPath(__instance, filename,
                     fullPath => __instance.GetTranslationHelperController().SafeProc(c => c.FullPath = fullPath));
@@ -122,7 +122,8 @@ namespace TranslationHelperPlugin.Chara
         [HarmonyPostfix]
         [HarmonyPatch(typeof(ChaFile), nameof(ChaFile.SaveFile), typeof(BinaryWriter), typeof(bool))]
 #else
-        [HarmonyPostfix, HarmonyPatch(typeof(ChaFile), nameof(ChaFile.SaveFile), typeof(BinaryWriter), typeof(bool), typeof(int))]
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(ChaFile), nameof(ChaFile.SaveFile), typeof(BinaryWriter), typeof(bool), typeof(int))]
 #endif
         private static void ChaFile_SaveFile_Postfix(ChaFile __instance)
         {

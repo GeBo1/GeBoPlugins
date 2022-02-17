@@ -5,7 +5,7 @@ using GeBoCommon.Utilities;
 
 namespace TranslationHelperPlugin.Utils
 {
-    internal static partial class CharaFileInfoWrapper
+    static partial class CharaFileInfoWrapper
     {
         private static readonly string
             MalePathKey = PathUtils.CombinePaths(string.Empty, "chara", "male", string.Empty).ToLowerInvariant();

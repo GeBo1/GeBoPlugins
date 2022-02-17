@@ -1,9 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using BepInEx.Logging;
 using HarmonyLib;
-
 #if AI||HS2
-
 #endif
 
 namespace TranslationHelperPlugin.Maker

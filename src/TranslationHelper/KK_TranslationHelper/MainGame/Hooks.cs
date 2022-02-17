@@ -88,7 +88,7 @@ namespace TranslationHelperPlugin.MainGame
                 {
                     if (string.IsNullOrEmpty(name)) return;
                     foreach (var textName in FindChildComponents<Text>(__instance, "textName",
-                        "resize/text/name", "resize/image/chara"))
+                                 "resize/text/name", "resize/image/chara"))
                     {
                         textName.SafeProc(tn => tn.text = name);
                     }

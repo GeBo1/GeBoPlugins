@@ -22,7 +22,11 @@ namespace TranslationHelperPlugin.Translation
             void Handler(ITranslationResult result)
             {
                 if (!result.Succeeded || string.IsNullOrEmpty(path) ||
-                    TranslationHelper.NameStringComparer.Equals(result.TranslatedText, originalName)) return;
+                    TranslationHelper.NameStringComparer.Equals(result.TranslatedText, originalName))
+                {
+                    return;
+                }
+
                 CharaFileInfoTranslationManager.CacheRecentTranslation(scope, path, result.TranslatedText);
             }
 

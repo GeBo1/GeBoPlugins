@@ -123,7 +123,7 @@ namespace TranslationHelperPlugin.Translation
 
                     Logger.DebugLogDebug($"{nameof(FileListCtrlAddListPrefix)}.{nameof(Handler)}: {lstFileInfo}");
 
-                    var entry = lstFileInfo?.FirstOrDefault(x =>
+                    var entry = lstFileInfo.FirstOrDefault(x =>
                     {
                         int index;
                         try

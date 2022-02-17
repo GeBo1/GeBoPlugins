@@ -11,7 +11,7 @@ using JetBrains.Annotations;
 namespace TranslationHelperPlugin.Utils
 {
     [SuppressMessage("ReSharper", "PartialTypeWithSinglePart")]
-    internal static partial class CharaFileInfoWrapper
+    public static partial class CharaFileInfoWrapper
     {
         private static readonly Dictionary<string, Type> WrapperTypes = new Dictionary<string, Type>();
 
@@ -66,8 +66,8 @@ namespace TranslationHelperPlugin.Utils
             CreateGetter<string>("FullPath", "fullpath", "fullPath");
 
 
-        private static readonly Func<T, byte> ByteSexGetter = CreateGetter<byte>("sex");
-        private static readonly Func<T, int> IntSexGetter = CreateGetter<int>("sex");
+        private static readonly Func<T, byte> ByteSexGetter = CreateGetter<byte>(true, "sex");
+        private static readonly Func<T, int> IntSexGetter = CreateGetter<int>(true, "sex");
 
         private readonly T _target;
 
@@ -89,7 +89,7 @@ namespace TranslationHelperPlugin.Utils
 
         public string FullPath => FullPathGetter(_target);
 
-        public CharacterSex Sex
+        public virtual CharacterSex Sex
         {
             get
             {
@@ -156,7 +156,7 @@ namespace TranslationHelperPlugin.Utils
                 catch
                 {
                     Expression<Action<T, TValue>> setter =
-                        (obj, value) => propSetter.Invoke(obj, new object[] {value});
+                        (obj, value) => propSetter.Invoke(obj, new object[] { value });
                     return setter.Compile();
                 }
             }
@@ -178,8 +178,9 @@ namespace TranslationHelperPlugin.Utils
             return (obj, value) => throw new NotSupportedException(msg);
         }
 
-        private static Func<T, TResult> CreateGetter<TResult>(params string[] names)
+        private static bool TryCreateGetter<TResult>(out Func<T, TResult> getter, params string[] names)
         {
+            getter = null;
             if (names.Length < 1) throw new ArgumentException($"{nameof(names)} can not be empty");
             var targetType = typeof(T);
             // prefer properties
@@ -200,12 +201,15 @@ namespace TranslationHelperPlugin.Utils
 
                 try
                 {
-                    return AccessTools.MethodDelegate<Func<T, TResult>>(propGetter);
+                    getter = AccessTools.MethodDelegate<Func<T, TResult>>(propGetter);
+                    return true;
                 }
                 catch
                 {
-                    Expression<Func<T, TResult>> getter = obj => (TResult)propGetter.Invoke(obj, new object[0]);
-                    return getter.Compile();
+                    Expression<Func<T, TResult>> tmpGetter = obj =>
+                        (TResult)propGetter.Invoke(obj, ObjectUtils.GetEmptyArray<object>());
+                    getter = tmpGetter.Compile();
+                    return true;
                 }
             }
 
@@ -216,15 +220,28 @@ namespace TranslationHelperPlugin.Utils
                 if (field == null) continue;
                 if (!CheckCast<TResult>(field.FieldType)) continue;
 
-                Expression<Func<T, TResult>> getter = obj => (TResult)field.GetValue(obj);
+                Expression<Func<T, TResult>> tmpGetter = obj => (TResult)field.GetValue(obj);
                 Logger?.LogDebug(
                     $"Found field {names[0]} for type {targetType} with name {name} (field type: {field.FieldType}, result type: {typeof(TResult)})");
-                return getter.Compile();
+                getter = tmpGetter.Compile();
+                return true;
             }
 
+            return false;
+        }
+
+        private static Func<T, TResult> CreateGetter<TResult>(params string[] names)
+        {
+            return CreateGetter<TResult>(false, names);
+        }
+
+        private static Func<T, TResult> CreateGetter<TResult>(bool supressMessage, params string[] names)
+        {
+            if (TryCreateGetter<TResult>(out var getter, names)) return getter;
+
             var msg =
-                $"unable to expose getter for {names[0]} on {targetType} of type {typeof(TResult)}";
-            Logger?.LogWarning(msg);
+                $"unable to expose getter for {names[0]} on {typeof(T)} of type {typeof(TResult)}";
+            if (!supressMessage) Logger?.LogWarning(msg);
             return obj => throw new NotSupportedException(msg);
         }
     }

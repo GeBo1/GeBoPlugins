@@ -7,7 +7,7 @@ using TranslationHelperPlugin.Translation;
 
 namespace TranslationHelperPlugin.Utils
 {
-    internal static partial class CharaFileInfoWrapper
+    static partial class CharaFileInfoWrapper
     {
         internal static CharacterSex GuessSex(this ICharaFileInfo fileInfo)
         {

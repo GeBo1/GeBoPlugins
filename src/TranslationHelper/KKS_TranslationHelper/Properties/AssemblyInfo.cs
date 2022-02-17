@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
+using GeBoCommon;
+using TranslationHelperPlugin;
 using static TranslationHelperPlugin.TranslationHelper;
 
 // Setting ComVisible to false makes the types in this assembly not visible
@@ -22,7 +24,7 @@ using static TranslationHelperPlugin.TranslationHelper;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion(Version)]
 [assembly: AssemblyFileVersion(Version)]
-[assembly: AssemblyDescription(PluginName + " for " + GeBoCommon.Constants.GameName)]
-[assembly: AssemblyTitle(GeBoCommon.Constants.Prefix + "_" + nameof(TranslationHelperPlugin.TranslationHelper))]
-[assembly: AssemblyProduct(GeBoCommon.Constants.Prefix + "_" + nameof(TranslationHelperPlugin.TranslationHelper))]
-[assembly: AssemblyCompany(GeBoCommon.Constants.RepoUrl)]
+[assembly: AssemblyDescription(PluginName + " for " + Constants.GameName)]
+[assembly: AssemblyTitle(Constants.Prefix + "_" + nameof(TranslationHelper))]
+[assembly: AssemblyProduct(Constants.Prefix + "_" + nameof(TranslationHelper))]
+[assembly: AssemblyCompany(Constants.RepoUrl)]

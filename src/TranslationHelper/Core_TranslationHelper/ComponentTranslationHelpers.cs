@@ -34,24 +34,29 @@ namespace TranslationHelperPlugin
         {
             if (!(context.Component is Text textComponent)) return false;
             if (!predicate(textComponent)) return false;
-            
+
             var originalText = context.OriginalText;
+
             void ResultHandler(ITranslationResult result)
             {
                 // this fires with a simple full-name translation, which is less likely to be accurate than
                 // some other translation options in games with split first/last names, so if it's already changed
                 // we discard it here.
-                if (result.Succeeded) textComponent.SafeProc(tc =>
+                if (result.Succeeded)
                 {
-                    if (tc.text == result.TranslatedText) return;
-                    if (tc.text != originalText)
+                    textComponent.SafeProc(tc =>
                     {
-                        Logger?.DebugLogDebug(
-                            $"text already updated from '{originalText}' to '{tc.text}', discarding '{result.TranslatedText}'");
-                        return;
-                    }
-                    tc.text = result.TranslatedText;
-                });
+                        if (tc.text == result.TranslatedText) return;
+                        if (tc.text != originalText)
+                        {
+                            Logger?.DebugLogDebug(
+                                $"text already updated from '{originalText}' to '{tc.text}', discarding '{result.TranslatedText}'");
+                            return;
+                        }
+
+                        tc.text = result.TranslatedText;
+                    });
+                }
             }
 
             var chaControl = charGetter();
@@ -66,14 +71,16 @@ namespace TranslationHelperPlugin
             {
                 Logger?.DebugLogDebug(
                     $"{nameof(ComponentTranslationHelpers)}.{nameof(TryTranslateFullName)}: attempting async translation for {context.OriginalText} ({chaControl})");
-                textComponent.StartCoroutine(TranslateFullNameCoroutine(context.OriginalText, chaControl, scope, textComponent,
+                textComponent.StartCoroutine(TranslateFullNameCoroutine(context.OriginalText, chaControl, scope,
+                    textComponent,
                     ResultHandler));
             }
 
             return true;
         }
 
-        private static IEnumerator TranslateFullNameCoroutine(string origName, ChaControl chaControl, NameScope scope, Text textComponent,
+        private static IEnumerator TranslateFullNameCoroutine(string origName, ChaControl chaControl, NameScope scope,
+            Text textComponent,
             TranslationResultHandler handler)
         {
             // wait a frame to avoid slowing down XUA TranslatingCallback handling
@@ -85,7 +92,6 @@ namespace TranslationHelperPlugin
 
             if (chaControl != null && chaControl.chaFile != null)
             {
-
                 if (TranslationHelper.CardNameManager.CardNeedsTranslation(chaControl.chaFile) &&
                     chaControl.TryGetTranslationHelperController(out var translationController))
                 {
@@ -111,10 +117,6 @@ namespace TranslationHelperPlugin
             yield return chaControl != null
                 ? chaControl.StartMonitoredCoroutine(job)
                 : TranslationHelper.Instance.StartCoroutine(job);
-
-
-
-
         }
     }
 }

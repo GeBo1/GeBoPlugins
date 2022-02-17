@@ -1,4 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
+
 <!-- ReSharper disable MarkupTextTypo -->
 <NamePresets>
 
@@ -26,6 +27,31 @@
         </Translations>
         <Notes>KKS stock character</Notes>
     </NamePreset>
+
+    <NamePreset>
+        <Sex>Female</Sex>
+        <GivenNames>
+            <Name>里沙</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>伊丹</Name>
+        </FamilyNames>
+        <NickNames>
+            <Name>リサ</Name>
+        </NickNames>
+        <Translations>
+            <Translation>
+                <TargetLanguages>
+                    <Language>en</Language>
+                </TargetLanguages>
+                <GivenName>Risa</GivenName>
+                <FamilyName>Itami</FamilyName>
+                <NickName>Risa</NickName>
+            </Translation>
+        </Translations>
+        <Notes>KKS stock character</Notes>
+    </NamePreset>
+
 
     <!-- remaining stock chars are from KK (so far) -->
 

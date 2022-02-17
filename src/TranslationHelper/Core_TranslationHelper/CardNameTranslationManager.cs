@@ -9,6 +9,7 @@ using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
 using JetBrains.Annotations;
+using KKAPI;
 using TranslationHelperPlugin.Chara;
 using TranslationHelperPlugin.Translation;
 using TranslationHelperPlugin.Utils;
@@ -38,10 +39,13 @@ namespace TranslationHelperPlugin
         private static readonly CoroutineLimiter TranslateNameLimiter =
             new CoroutineLimiter(100, nameof(TranslateNameLimiter), true);
 
+        private static readonly HitMissCounter Stats =
+            new HitMissCounter(typeof(CardNameTranslationManager).PrettyTypeFullName());
+
         private readonly HashSet<string> _cardsInProgress;
         private readonly TranslationTracker _nameTracker;
 
-        private readonly IEnumerable<string> _suffixFormats = new[] {"[{0}]", "-{0}", "{0}"};
+        private readonly IEnumerable<string> _suffixFormats = new[] { "[{0}]", "-{0}", "{0}" };
 
         private readonly IEnumerator _waitWhileCardsAreInProgress;
 
@@ -51,6 +55,7 @@ namespace TranslationHelperPlugin
             _cardsInProgress = new HashSet<string>();
             _waitWhileCardsAreInProgress = new WaitWhile(AreCardsInProgress);
             TranslationHelper.CardTranslationBehaviorChanged += CardTranslationHelperBehaviorChanged;
+            KoikatuAPI.Quitting += ApplicationQuitting;
         }
 
         private static char[] SpaceSplitter => TranslationHelper.SpaceSplitter;
@@ -59,7 +64,13 @@ namespace TranslationHelperPlugin
 
         internal static CardNameTranslationManager Instance => TranslationHelper.CardNameManager;
 
-        internal virtual NameTranslator NameTranslator => TranslationHelper.Instance == null ? null : TranslationHelper.Instance.NameTranslator;
+        internal virtual NameTranslator NameTranslator =>
+            TranslationHelper.Instance == null ? null : TranslationHelper.Instance.NameTranslator;
+
+        private void ApplicationQuitting(object sender, EventArgs e)
+        {
+            LogCacheStats(nameof(ApplicationQuitting));
+        }
 
         private void CardTranslationHelperBehaviorChanged(object sender, EventArgs e)
         {
@@ -83,11 +94,14 @@ namespace TranslationHelperPlugin
 
         public virtual bool CardNeedsTranslation(ChaFile file)
         {
-            return file.EnumerateNames().Any(name => StringUtils.ContainsJapaneseChar(name.Value));
+            return file.EnumerateScopedNames()
+                .Any(scopedName => NameNeedsTranslation(scopedName.Value, scopedName.Key));
         }
 
         public IEnumerator WaitOnCard(ChaFile file)
         {
+            // ReSharper disable once RedundantAssignment - used in debug
+            var start = Time.realtimeSinceStartup;
             if (file == null) yield break;
             var regId = file.GetRegistrationID();
 
@@ -102,7 +116,8 @@ namespace TranslationHelperPlugin
             yield return new WaitWhile(NotDone);
 
             ApplyTranslations(file);
-            Logger.DebugLogDebug($"TranslateCardNames: {file}: card done: {regId}");
+            Logger.DebugLogDebug(
+                $"TranslateCardNames: {file}: card done: {regId} (wait time: {Time.realtimeSinceStartup - start}");
         }
 
         protected virtual void ApplyTranslations(ChaFile file)
@@ -131,26 +146,48 @@ namespace TranslationHelperPlugin
             if (RecentTranslationsByName[scope].TryGetValue(name, out result))
             {
                 Logger.DebugLogDebug($"TryGetRecentTranslation({scope}, {name}): hit => {result}");
+                Stats.RecordHit();
                 return true;
             }
 
             if (!NoTranslate[scope].Contains(name))
             {
+                Stats.RecordMiss();
                 Logger.DebugLogDebug($"TryGetRecentTranslation({scope}, {name}): miss");
                 return false;
             }
 
+            Stats.RecordMiss();
             // found in NoTranslate, return original name
             Logger.DebugLogDebug($"TryGetRecentTranslation({scope}, {name}): no-translate");
             result = name;
             return true;
         }
 
+        public static Action<string> MakeCachingCallbackWrapper(string origName, ChaFile chaFile, NameScope scope,
+            Action<string> callback = null)
+        {
+            void NameCachingCallbackWrapper(string translationResult)
+            {
+                Logger.DebugLogDebug(
+                    $"{nameof(NameCachingCallbackWrapper)}: translationResult={translationResult}, origName={origName}, callback={callback}");
+                if (!translationResult.IsNullOrEmpty() &&
+                    !TranslationHelper.NameStringComparer.Equals(translationResult, origName))
+                {
+                    CacheRecentTranslation(scope, origName, translationResult);
+                }
+
+                callback?.Invoke(translationResult);
+            }
+
+            return NameCachingCallbackWrapper;
+        }
+
         public static void CacheRecentTranslation(NameScope scope, string originalName, string translatedName)
         {
             // ReSharper disable once RedundantAssignment - used in DEBUG
             var start = Time.realtimeSinceStartup;
-            var key = new {scope.TranslationScope, originalName, translatedName};
+            var key = new { scope.TranslationScope, originalName, translatedName };
 
             try
             {
@@ -159,7 +196,7 @@ namespace TranslationHelperPlugin
                 if (TranslationHelper.NameStringComparer.Equals(originalName, translatedName))
                 {
                     if (TranslationHelper.Instance.CurrentCardLoadTranslationMode > CardLoadTranslationMode.Disabled &&
-                        !StringUtils.ContainsJapaneseChar(translatedName))
+                        !NameNeedsTranslation(translatedName, scope))
                     {
                         Logger.DebugLogDebug(
                             $"{nameof(CacheRecentTranslation)}({scope}, {originalName}, {translatedName}): NoTranslate");
@@ -184,11 +221,12 @@ namespace TranslationHelperPlugin
             }
         }
 
-        internal static bool NameNeedsTranslation(string name, NameScope scope)
+        internal static bool NameNeedsTranslation(string name, NameScope scope = null)
         {
             return !name.IsNullOrWhiteSpace() &&
-                   !NoTranslate[scope].Contains(name) &&
-                   StringUtils.ContainsJapaneseChar(name);
+                   (scope == null || !NoTranslate[scope].Contains(name)) &&
+                   GeBoAPI.Instance.AutoTranslationHelper.IsTranslatable(name);
+            // StringUtils.ContainsJapaneseChar(name);
         }
 
         public IEnumerator TranslateCardNames(ChaFile file)
@@ -196,16 +234,24 @@ namespace TranslationHelperPlugin
             var regId = file.GetRegistrationID();
             // if it's in progress and the controller is available then
             // the outstanding job will handle things
-            if (_cardsInProgress.Contains(regId)) yield break;
+            if (_cardsInProgress.Contains(regId))
+            {
+                Logger.DebugLogDebug($"{nameof(TranslateCardNames)}: already translating {regId}:{file.charaFileName}");
+                yield break;
+            }
 
             _cardsInProgress.Add(regId);
 
             if (CardNeedsTranslation(file))
             {
+                Logger.DebugLogDebug(
+                    $"{nameof(TranslateCardNames)}: starting translation {regId}:{file.charaFileName}");
                 file.StartMonitoredCoroutine(new CardJob(file, CardComplete).Start());
             }
             else
             {
+                Logger.DebugLogDebug(
+                    $"{nameof(TranslateCardNames)}: nothing to translate {regId}:{file.charaFileName}");
                 CardComplete(file);
             }
         }
@@ -236,6 +282,39 @@ namespace TranslationHelperPlugin
             return TranslateCardName(originalName, scope, false, callbacks);
         }
 
+        internal IEnumerator SimulateTranslateCardName(string originalName, NameScope scope, string translatedName,
+            params TranslationResultHandler[] callbacks)
+        {
+            var done = false;
+            var tmpCallbacks = callbacks.ToList();
+            tmpCallbacks.Add(r => done = true);
+
+            IEnumerator WhileNotDone()
+            {
+                while (true)
+                {
+                    if (done) yield break;
+                    yield return null;
+                }
+            }
+
+
+            if (!_nameTracker.TryAddHandlers(scope, originalName, tmpCallbacks))
+            {
+                _nameTracker.TrackKey(scope, originalName, tmpCallbacks);
+
+                void Handler(KeyValuePair<string, string> names)
+                {
+                    CardNameComplete(names, scope);
+                }
+
+                /*yield return*/
+                TranslationHelper.Instance.StartCoroutine(new NoOpNameJob(originalName, translatedName, scope, Handler)
+                    .Start());
+            }
+
+            yield return WhileNotDone();
+        }
 
         public IEnumerator TranslateCardName(string originalName, NameScope scope, bool forceSplit,
             params TranslationResultHandler[] callbacks)
@@ -258,7 +337,6 @@ namespace TranslationHelperPlugin
                 tmpCallbacks.CallHandlers(new TranslationResult(originalName, cachedName));
                 yield break;
             }
-
 
             if (!_nameTracker.TryAddHandlers(scope, originalName, tmpCallbacks))
             {
@@ -428,6 +506,11 @@ namespace TranslationHelperPlugin
             _cardsInProgress?.Clear();
         }
 
+        protected static void LogCacheStats(string prefix)
+        {
+            Logger?.LogDebug(Stats.GetCounts(prefix));
+        }
+
         internal abstract class BaseJob<T>
         {
             private readonly Action<T> _callback;
@@ -494,14 +577,9 @@ namespace TranslationHelperPlugin
                 SplitNames = splitNames;
             }
 
-            ~NameJob()
-            {
-                if (NameParts != null) ListPool<string>.Release(NameParts);
-            }
-
             internal NameScope NameScope { get; }
             internal string OriginalName { get; }
-            internal string TranslatedName { get; private set; }
+            public string TranslatedName { get; protected set; }
 
             [UsedImplicitly]
             internal int TranslationScope => NameScope?.TranslationScope ?? NameScope.BaseScope;
@@ -515,6 +593,11 @@ namespace TranslationHelperPlugin
             private bool SplitNames { get; }
 
             private List<string> NameParts { get; set; }
+
+            ~NameJob()
+            {
+                if (NameParts != null) ListPool<string>.Release(NameParts);
+            }
 
             protected override KeyValuePair<string, string> GetResult()
             {
@@ -560,22 +643,42 @@ namespace TranslationHelperPlugin
                 {
                     ListPool<Coroutine>.Release(jobs);
                 }
-
             }
 
             protected override void OnComplete()
             {
-                TranslatedName = string.Join(TranslationHelper.SpaceJoiner, NameParts.ToArray()).Trim();
+                UpdateTranslatedName();
                 CacheRecentTranslation(NameScope, OriginalName, TranslatedName);
                 base.OnComplete();
-                ListPool<string>.Release(NameParts);
+                if (NameParts != null) ListPool<string>.Release(NameParts);
                 NameParts = null;
+            }
+
+            protected virtual void UpdateTranslatedName()
+            {
+                TranslatedName = string.Join(TranslationHelper.SpaceJoiner, NameParts.ToArray()).Trim();
             }
 
             public override string ToString()
             {
                 return $"{this.GetPrettyTypeName()}({OriginalName}, {NameScope}, {SplitNames})";
             }
+        }
+
+        internal class NoOpNameJob : NameJob
+        {
+            internal NoOpNameJob(string originalName, string translatedName, NameScope nameScope,
+                Action<KeyValuePair<string, string>> callback) : base(originalName, nameScope, false, callback)
+            {
+                TranslatedName = translatedName;
+            }
+
+            protected override IEnumerator StartJobs()
+            {
+                yield break;
+            }
+
+            protected override void UpdateTranslatedName() { }
         }
 
         internal class CardJob : BaseJob<ChaFile>
@@ -610,6 +713,8 @@ namespace TranslationHelperPlugin
                 var current = _chaFile.GetFullName();
                 var scope = new NameScope(_chaFile.GetSex());
 
+                Logger.DebugLogDebug($"{this.GetPrettyTypeFullName()}.{nameof(OnComplete)}: {orig} => {current}");
+
                 CacheRecentTranslation(scope, orig, current);
                 if (orig != current)
                 {
@@ -636,70 +741,112 @@ namespace TranslationHelperPlugin
 
             protected override IEnumerator StartJobs()
             {
+                var fullName = _chaFile.GetFullName();
+                var sex = _chaFile.GetSex();
                 var jobs = ListPool<Coroutine>.Get();
 
-                var fullName = _chaFile.GetFullName();
-
-                var handled = HashSetPool<int>.Get();
-                if (TranslationHelper.Instance.NamePresetManager.TryTranslateCardNames(_chaFile, out var result))
+                try
                 {
-                    foreach (var entry in result)
+                    var initial = DictionaryPool<int, string>.Get();
+                    var handled = DictionaryPool<int, string>.Get();
+
+                    try
                     {
-                        FullNameHandled = FullNameHandled || entry.Key == "fullname";
-                        var i = GeBoAPI.Instance.ChaFileNameToIndex(entry.Key);
-                        if (i < 0 || string.IsNullOrEmpty(entry.Value) || _chaFile.GetName(i) == entry.Value) continue;
-                        _chaFile.SetTranslatedName(i, entry.Value);
-                        handled.Add(i);
-                    }
-                }
-
-                var sex = _chaFile.GetSex();
-                foreach (var name in _chaFile.EnumerateNames())
-                {
-                    if (handled.Contains(name.Key)) continue;
-
-                    FullNameHandled = FullNameHandled || name.Value == fullName;
-
-                    var i = name.Key;
-                    var chaFile = _chaFile;
-
-                    var nameScope = new NameScope(sex, _chaFile.GetNameType(i));
-
-                    if (TryGetRecentTranslation(nameScope, name.Value, out var cachedName))
-                    {
-                        // if true, but name unchanged then name in NoTranslate
-                        if (name.Value != cachedName)
+                        foreach (var name in _chaFile.EnumerateNames())
                         {
-                            chaFile.SetTranslatedName(i, cachedName);
+                            initial.Add(name.Key, name.Value);
                         }
 
-                        continue;
-                    }
+                        if (TranslationHelper.Instance.NamePresetManager.TryTranslateCardNames(_chaFile,
+                                out var result))
+                        {
+                            Stats.RecordHit();
+                            FullNameHandled = FullNameHandled ||
+                                              (result.TryGetValue("fullname", out var translatedFullName) &&
+                                               !TranslationHelper.NameStringComparer.Equals(fullName,
+                                                   translatedFullName));
+                            TranslationHelper.Instance.NamePresetManager.ApplyPresetResults(_chaFile, result,
+                                handled.Add);
+                        }
 
-                    if (!StringUtils.ContainsJapaneseChar(name.Value))
+                        foreach (var name in initial)
+                        {
+                            if (handled.ContainsKey(name.Key)) continue;
+
+                            FullNameHandled = FullNameHandled || name.Value == fullName;
+
+                            var i = name.Key;
+                            var chaFile = _chaFile;
+
+                            var nameScope = new NameScope(sex, _chaFile.GetNameType(i));
+
+                            if (TryGetRecentTranslation(nameScope, name.Value, out var cachedName))
+                            {
+                                // if true, but name unchanged then name in NoTranslate
+                                if (name.Value != cachedName)
+                                {
+                                    chaFile.SetTranslatedName(i, cachedName);
+                                }
+
+                                handled.Add(name.Key, cachedName);
+                                Stats.RecordHit();
+                                continue;
+                            }
+
+                            Stats.RecordMiss();
+                            if (!NameNeedsTranslation(name.Value))
+                            {
+                                NoTranslate[nameScope].Add(name.Value);
+                                handled.Add(name.Key, cachedName);
+                                continue;
+                            }
+
+                            JobStarted();
+
+
+                            var job = StartCoroutine(Instance.TranslateCardName(name.Value,
+                                nameScope,
+                                Handlers.UpdateCardName(chaFile, i),
+                                Handlers.AddNameToAutoTranslationCache(name.Value, true),
+                                JobCompleteHandler));
+
+                            jobs.Add(job);
+                        }
+
+                        foreach (var name in handled)
+                        {
+                            var i = name.Key;
+                            var chaFile = _chaFile;
+                            var nameScope = new NameScope(sex, _chaFile.GetNameType(i));
+
+                            JobStarted();
+
+                            var job = StartCoroutine(Instance.SimulateTranslateCardName(
+                                initial[i],
+                                nameScope,
+                                name.Value,
+                                Handlers.UpdateCardName(chaFile, i),
+                                Handlers.AddNameToAutoTranslationCache(name.Value, true),
+                                JobCompleteHandler));
+
+                            jobs.Add(job);
+                        }
+                    }
+                    finally
                     {
-                        NoTranslate[nameScope].Add(name.Value);
-                        continue;
+                        DictionaryPool<int, string>.Release(initial);
+                        DictionaryPool<int, string>.Release(handled);
                     }
 
-                    JobStarted();
-
-
-                    var job = StartCoroutine(Instance.TranslateCardName(name.Value,
-                        nameScope,
-                        Handlers.UpdateCardName(chaFile, i),
-                        Handlers.AddNameToAutoTranslationCache(name.Value, true),
-                        JobCompleteHandler));
-
-                    jobs.Add(job);
+                    foreach (var job in jobs)
+                    {
+                        yield return job;
+                    }
                 }
-                HashSetPool<int>.Release(handled);
-
-                foreach (var job in jobs)
+                finally
                 {
-                    yield return job;
+                    ListPool<Coroutine>.Release(jobs);
                 }
-                ListPool<Coroutine>.Release(jobs);
             }
         }
     }

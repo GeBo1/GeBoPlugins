@@ -4,19 +4,25 @@
 <NamePresets>
     <NamePreset>
         <Sex>Female</Sex>
-        <GivenNames>商人</GivenNames>
+        <GivenNames>
+            <Name>優</Name>
+        </GivenNames>
+        <FamilyNames>
+            <Name>玉城</Name>
+        </FamilyNames>
         <NickNames>
-            <Name>シャン</Name>
+            <Name>ゆう</Name>
         </NickNames>
         <Translations>
             <Translation>
                 <TargetLanguages>
                     <Language>en</Language>
                 </TargetLanguages>
-                <GivenName>Merchant</GivenName>
-                <NickName>Shan</NickName>
+                <GivenName>Yuu</GivenName>
+                <FamilyName>Tamaki</FamilyName>
+                <NickName>Yuu</NickName>
             </Translation>
         </Translations>
-        <Notes>AI NPC</Notes>
+        <Notes>KKS NPC</Notes>
     </NamePreset>
 </NamePresets>

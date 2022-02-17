@@ -23,8 +23,8 @@ namespace TranslationHelperPlugin.Maker
             if (!_pointerCallbackRegistered || !MakerAPI.InsideMaker) return;
             // ReSharper disable once InvertIf
             if (ComponentTranslationHelpers.TryTranslateFullName(context,
-                t => t != null && PointerCallbackActiveTexts.Contains(t),
-                () => null, (CharacterSex)MakerAPI.GetMakerSex()))
+                    t => t != null && PointerCallbackActiveTexts.Contains(t),
+                    () => null, (CharacterSex)MakerAPI.GetMakerSex()))
             {
                 context.IgnoreComponent();
             }
@@ -33,7 +33,7 @@ namespace TranslationHelperPlugin.Maker
         private static void EnableSelectTextHandling()
         {
             if (!GeBoAPI.Instance.SafeProc(g =>
-                g.AutoTranslationHelper.RegisterOnTranslatingCallback(SelectTextCallback)))
+                    g.AutoTranslationHelper.RegisterOnTranslatingCallback(SelectTextCallback)))
             {
                 return;
             }
@@ -44,7 +44,7 @@ namespace TranslationHelperPlugin.Maker
         private static void DisableSelectTextHandling()
         {
             if (!GeBoAPI.Instance.SafeProc(g =>
-                g.AutoTranslationHelper.UnregisterOnTranslatingCallback(SelectTextCallback)))
+                    g.AutoTranslationHelper.UnregisterOnTranslatingCallback(SelectTextCallback)))
             {
                 return;
             }

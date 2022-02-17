@@ -9,12 +9,12 @@ using GeBoCommon.AutoTranslation;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
 using JetBrains.Annotations;
+using KKAPI;
 using KKAPI.Utilities;
 using Studio;
 using TranslationHelperPlugin.Chara;
 using TranslationHelperPlugin.Utils;
 using UnityEngine;
-
 #if AI||HS2
 using AIChara;
 
@@ -32,6 +32,9 @@ namespace TranslationHelperPlugin
         private static readonly CoroutineLimiter TranslateFileInfoLimiter =
             new CoroutineLimiter(300, nameof(TranslateFileInfoLimiter), true);
 
+        private static readonly HitMissCounter Stats =
+            new HitMissCounter(typeof(CharaFileInfoTranslationManager).PrettyTypeName());
+
         private readonly HashSet<string> _pathsInProgress;
         private readonly TranslationTracker _pathTracker;
 
@@ -45,9 +48,15 @@ namespace TranslationHelperPlugin
             _waitWhileFileInfosInProgress = new WaitWhile(AreFileInfosInProgress);
             TranslationHelper.CardTranslationBehaviorChanged += CardTranslationHelperBehaviorChanged;
             ExtendedSave.CardBeingSaved += CardBeingSaved;
+            KoikatuAPI.Quitting += ApplicationQuitting;
         }
 
         internal static ManualLogSource Logger => TranslationHelper.Logger;
+
+        private void ApplicationQuitting(object sender, EventArgs e)
+        {
+            LogCacheStats(nameof(ApplicationQuitting));
+        }
 
         private void CardBeingSaved(ChaFile file)
         {
@@ -96,7 +105,6 @@ namespace TranslationHelperPlugin
             if (fileInfo == null) yield break;
 
             var path = fileInfo.FullPath;
-            var origName = fileInfo.Name;
             var sex = fileInfo.Sex;
 
             bool NotDone()
@@ -123,43 +131,52 @@ namespace TranslationHelperPlugin
         public static bool TryGetRecentTranslation(ICharaFileInfo fileInfo, out string result)
         {
             result = null;
-#if !CORRUPT_CACHE_CAUSING_DUPLICATE_NAMES_FIXED
-            return false;
-#else
+            if (!TranslationHelper.EnableCardListTranslationCaching.Value) return false;
             var hit = RecentTranslationsByPath[new NameScope(fileInfo.Sex)].TryGetValue(fileInfo.FullPath, out result);
             Logger.DebugLogDebug(
                 $"CharaFileInfoTranslationManager.TryGetRecentTranslation({fileInfo.Sex}, {fileInfo.FullPath}) => {result} {hit}");
+            if (hit)
+            {
+                Stats.RecordHit();
+            }
+            else
+            {
+                Stats.RecordMiss();
+            }
+
             return hit;
-#endif
         }
 
         public static bool TryGetRecentTranslation(NameScope scope, string path, out string result)
         {
             result = null;
-#if !CORRUPT_CACHE_CAUSING_DUPLICATE_NAMES_FIXED
-            return false;
-#else
-            path = PathUtils.NormalizePath(path);
+            if (!TranslationHelper.EnableCardListTranslationCaching.Value) return false;
+            //path = PathUtils.NormalizePath(path);
 
             var hit = RecentTranslationsByPath[scope].TryGetValue(path, out result);
             Logger.DebugLogDebug(
                 $"CharaFileInfoTranslationManager.TryGetRecentTranslation({scope}, {path}) => {result} {hit}");
+            if (hit)
+            {
+                Stats.RecordHit();
+            }
+            else
+            {
+                Stats.RecordMiss();
+            }
+
             return hit;
-#endif
         }
 
         public static void CacheRecentTranslation(NameScope scope, string path, string translatedName,
             bool overwriteExisting = true)
         {
-            return;
-
-#if CORRUPT_CACHE_CAUSING_DUPLICATE_NAMES_FIXED
-            
+            if (!TranslationHelper.EnableCardListTranslationCaching.Value) return;
             // ReSharper disable RedundantAssignment - used in DEBUG
             var added = false;
             var start = Time.realtimeSinceStartup;
             // ReSharper restore RedundantAssignment
-            var key = new {path, translatedName};
+            var key = new { path, translatedName };
             try
             {
                 if (CacheRecentTranslationsHelper.WasCalledRecently(key)) return;
@@ -174,8 +191,9 @@ namespace TranslationHelperPlugin
                 // this is less "safe" than the other version, so bail if we've already got cache data
                 if (!overwriteExisting && RecentTranslationsByPath[scope].ContainsKey(path)) return;
 
-                // this is the slowest check, keep until last
-                if (StringUtils.ContainsJapaneseChar(translatedName)) return;
+                // these are the slowest check, keep until last
+                if (StringUtils.ContainsJapaneseChar(translatedName) || PathUtils.IsRawFilename(path)) return;
+
 
                 RecentTranslationsByPath[scope][PathUtils.NormalizePath(path)] = translatedName;
                 // ReSharper disable once RedundantAssignment - used in DEBUG
@@ -187,7 +205,6 @@ namespace TranslationHelperPlugin
                 Logger.DebugLogDebug(
                     $"CardFileInfoTranslationManager.CacheRecentTranslation(path): {Time.realtimeSinceStartup - start:000.0000000000}: added={added}");
             }
-#endif
         }
 
         internal static Action<string> MakeCachingCallbackWrapper(ICharaFileInfo fileInfo,
@@ -197,10 +214,10 @@ namespace TranslationHelperPlugin
             var origName = fileInfo.Name;
             var path = fileInfo.FullPath;
 
-            void ICharaFileInfoCachingCallbackWrapper(string translationResult)
+            void CharaFileInfoCachingCallbackWrapper(string translationResult)
             {
                 Logger.DebugLogDebug(
-                    $"{nameof(ICharaFileInfoCachingCallbackWrapper)}: translationResult={translationResult}, origName={origName}, path={path}, callback={callback}");
+                    $"{nameof(CharaFileInfoCachingCallbackWrapper)}: translationResult={translationResult}, origName={origName}, path={path}, callback={callback}");
                 if (!translationResult.IsNullOrEmpty() &&
                     !TranslationHelper.NameStringComparer.Equals(translationResult, origName) &&
                     !path.IsNullOrEmpty())
@@ -211,7 +228,7 @@ namespace TranslationHelperPlugin
                 callback?.Invoke(translationResult);
             }
 
-            return ICharaFileInfoCachingCallbackWrapper;
+            return CharaFileInfoCachingCallbackWrapper;
         }
 
         public static Action<string> MakeCachingCallbackWrapper(string origName, CharaFileInfo charaFileInfo,
@@ -337,6 +354,11 @@ namespace TranslationHelperPlugin
                 _pathTracker.TrackTranslationCoroutine(TranslationCoroutine, scope, path, tmpCallbacks));
 
             yield return WhileNotDone();
+        }
+
+        protected static void LogCacheStats(string prefix)
+        {
+            Logger?.LogDebug(Stats.GetCounts(prefix));
         }
     }
 }

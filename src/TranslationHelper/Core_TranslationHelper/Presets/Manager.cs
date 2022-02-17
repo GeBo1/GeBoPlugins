@@ -7,6 +7,7 @@ using GeBoCommon;
 using GeBoCommon.Chara;
 using GeBoCommon.Utilities;
 using JetBrains.Annotations;
+using KKAPI;
 using TranslationHelperPlugin.Chara;
 using TranslationHelperPlugin.Presets.Data;
 using UnityEngine;
@@ -25,21 +26,23 @@ namespace TranslationHelperPlugin.Presets
         private static readonly Dictionary<string, string> AliasAutoSuffixes = new Dictionary<string, string>
         {
             // ReSharper disable StringLiteralTypo
-            {"先生", " Sensei"},
-            {"せんせい", " Sensei"},
-            {"さん", "-san"},
-            {"はん", "-han"},
-            {"君", "-kun"},
-            {"くん", "-kun"},
-            {"ちゃん", "-chan"},
-            {"先輩", " Senpai"},
-            {"せんぱい", " Senpai"},
-            {"後輩", " Kōhai"},
-            {"こうはい", " Kōhai"},
-            {"様", " Sama"},
-            {"さま", " Sama"}
+            { "先生", " Sensei" },
+            { "せんせい", " Sensei" },
+            { "さん", "-san" },
+            { "はん", "-han" },
+            { "君", "-kun" },
+            { "くん", "-kun" },
+            { "ちゃん", "-chan" },
+            { "先輩", " Senpai" },
+            { "せんぱい", " Senpai" },
+            { "後輩", " Kōhai" },
+            { "こうはい", " Kōhai" },
+            { "様", " Sama" },
+            { "さま", " Sama" }
             // ReSharper restore StringLiteralTypo
         };
+
+        private static readonly string[] NoNameNameEntries = { string.Empty };
 
         private readonly Dictionary<CharacterSex, Dictionary<CardNameCacheKey, CardNameCacheValue>> _cardCache;
         private readonly Dictionary<CharacterSex, Dictionary<string, string>> _fullNameCache;
@@ -47,27 +50,39 @@ namespace TranslationHelperPlugin.Presets
         private readonly Dictionary<CharacterSex, Dictionary<CardNameCacheKey, Dictionary<string, string>>>
             _nickNameCache;
 
+        private readonly HitMissCounter _stats;
+
         private bool _hasEntries;
+        private int _presetCount;
         private bool _reverseNames;
 
         public Manager()
         {
             var comparer = EnumEqualityComparer<CharacterSex>.Comparer;
+            _stats = new HitMissCounter(this.GetPrettyTypeFullName());
             _cardCache = new Dictionary<CharacterSex, Dictionary<CardNameCacheKey, CardNameCacheValue>>(comparer);
             _fullNameCache = new Dictionary<CharacterSex, Dictionary<string, string>>(comparer);
-            _nickNameCache = new Dictionary<CharacterSex, Dictionary<CardNameCacheKey, Dictionary<string, string>>>(comparer);
+            _nickNameCache =
+                new Dictionary<CharacterSex, Dictionary<CardNameCacheKey, Dictionary<string, string>>>(comparer);
             Reset();
             TranslationHelper.CardTranslationBehaviorChanged += CardTranslationHelperBehaviorChanged;
+            KoikatuAPI.Quitting += ApplicationQuitting;
         }
 
         private static ManualLogSource Logger => TranslationHelper.Logger;
+
+        private void ApplicationQuitting(object sender, EventArgs e)
+        {
+            LogCacheStats(nameof(ApplicationQuitting));
+        }
 
         private void CardTranslationHelperBehaviorChanged(object sender, EventArgs e)
         {
             Reset();
         }
 
-        private static void ResetCache<T>(IDictionary<CharacterSex, T> cache, Func<T> initializer = null) where T : new()
+        private static void ResetCache<T>(IDictionary<CharacterSex, T> cache, Func<T> initializer = null)
+            where T : new()
         {
             foreach (var entry in Enum.GetValues(typeof(CharacterSex)))
             {
@@ -91,23 +106,26 @@ namespace TranslationHelperPlugin.Presets
 
         internal void Reset()
         {
-
             ResetCache(_cardCache);
             ResetCache(_fullNameCache, TranslationHelper.StringCacheInitializer);
             ResetCache(_nickNameCache);
+            _presetCount = 0;
 
             if (TranslationHelper.IsShuttingDown) return;
 
             _nicknamesSupported = GeBoAPI.Instance != null && GeBoAPI.Instance.ChaFileNameToIndex("nickname") >= 0;
 
-            var presetCount = 0;
             _hasEntries = false;
 
             _reverseNames = TranslationHelper.ShowGivenNameFirst;
 
 
             // don't load presets if we're not going to use them
-            if (TranslationHelper.Instance == null || !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled) return;
+            if (TranslationHelper.Instance == null ||
+                !TranslationHelper.Instance.CurrentCardLoadTranslationEnabled)
+            {
+                return;
+            }
 
             var nameCacheDone = new Dictionary<CharacterSex, HashSet<string>>(
                 EnumEqualityComparer<CharacterSex>.Comparer);
@@ -115,19 +133,15 @@ namespace TranslationHelperPlugin.Presets
             var start = Time.realtimeSinceStartup;
             foreach (var preset in NamePresets.Load())
             {
-                presetCount++;
+                _presetCount++;
                 var translation = preset.GetTranslation(AutoTranslatorSettings.DestinationLanguage);
                 if (translation == null) continue;
 
                 var translatedName = BuildFullName(translation.FamilyName, translation.GivenName);
 
                 ResetCache(nameCacheDone);
-                var familyNames = preset.FamilyNames.Count > 0
-                    ? preset.FamilyNames
-                    : new List<string>(new[] {string.Empty});
-                var givenNames = preset.GivenNames.Count > 0
-                    ? preset.GivenNames
-                    : new List<string>(new[] {string.Empty});
+                var familyNames = preset.FamilyNames.Count > 0 ? preset.FamilyNames : NoNameNameEntries.ToList();
+                var givenNames = preset.GivenNames.Count > 0 ? preset.GivenNames : NoNameNameEntries.ToList();
 
                 foreach (var family in familyNames)
                 {
@@ -192,7 +206,7 @@ namespace TranslationHelperPlugin.Presets
                 _hasEntries |= nameCacheDone.Any(k => k.Value.Count > 0);
             }
 
-            Logger.LogDebug($"Loaded {presetCount} preset(s) in {Time.realtimeSinceStartup - start} second(s)");
+            Logger.LogDebug($"Loaded {_presetCount} preset(s) in {Time.realtimeSinceStartup - start} second(s)");
         }
 
         private static void AddSuffixedNicknames(IDictionary<string, string> nickCache)
@@ -263,29 +277,109 @@ namespace TranslationHelperPlugin.Presets
             if (_hasEntries && _fullNameCache[sex].TryGetValue(origName, out result))
             {
                 if (!TranslationHelper.NameStringComparer.Equals(origName, result) &&
-                    !StringUtils.ContainsJapaneseChar(result))
+                    !CardNameTranslationManager.NameNeedsTranslation(result))
                 {
                     CardNameTranslationManager.CacheRecentTranslation(new NameScope(sex), origName, result);
                 }
 
+                _stats.RecordHit();
                 return true;
             }
+
+            _stats.RecordMiss();
             result = null;
             return false;
         }
 
-        // ReSharper disable Unity.PerformanceAnalysis
+        public void ApplyPresetResults(ChaFile chaFile, Dictionary<string, string> result,
+            Action<int, string> callback = null)
+        {
+            foreach (var entry in result)
+            {
+                var i = GeBoAPI.Instance.ChaFileNameToIndex(entry.Key);
+                if (i < 0 || string.IsNullOrEmpty(entry.Value) || chaFile.GetName(i) == entry.Value)
+                {
+                    continue;
+                }
+
+                chaFile.SetTranslatedName(i, entry.Value);
+                callback?.Invoke(i, entry.Value);
+            }
+        }
+
+        private void CachePresetResults(ChaFile chaFile, Dictionary<string, string> result)
+        {
+            var sex = chaFile.GetSex();
+            foreach (var entry in result)
+            {
+                Logger.DebugLogDebug(
+                    $"{this.GetPrettyTypeFullName()}.{nameof(CachePresetResults)}: ({entry.Key}, {entry.Value})");
+                if (entry.Value.IsNullOrEmpty()) continue;
+                var i = GeBoAPI.Instance.ChaFileNameToIndex(entry.Key);
+                var origName = chaFile.GetName(i);
+                Logger.DebugLogDebug(
+                    $"{this.GetPrettyTypeFullName()}.{nameof(CachePresetResults)}: ({entry.Key}, {entry.Value}): origName={origName}");
+                if (TranslationHelper.NameStringComparer.Equals(origName, entry.Value) ||
+                    CardNameTranslationManager.NameNeedsTranslation(entry.Value))
+                {
+                    continue;
+                }
+
+                var nameType = chaFile.GetNameType(i);
+                var scope = new NameScope(sex, nameType);
+
+                Action<string> callback = null;
+                if (entry.Key == "fullname")
+                {
+                    var handled = HashSetPool<string>.Get();
+                    try
+                    {
+                        handled.Add(origName);
+                        foreach (var targetName in IterateTargetNames(chaFile))
+                        {
+                            if (handled.Contains(targetName)) continue;
+                            handled.Add(targetName);
+                            Logger.DebugLogDebug(
+                                $"{this.GetPrettyTypeFullName()}.{nameof(CachePresetResults)}: ({entry.Key}, {entry.Value}): targetName={targetName}");
+                            callback = CardNameTranslationManager.MakeCachingCallbackWrapper(targetName, chaFile, scope,
+                                callback);
+                        }
+                    }
+                    finally
+                    {
+                        HashSetPool<string>.Release(handled);
+                    }
+                }
+
+                callback = CardNameTranslationManager.MakeCachingCallbackWrapper(origName, chaFile, scope, callback);
+                callback = CharaFileInfoTranslationManager.MakeCachingCallbackWrapper(origName, chaFile, scope,
+                    callback);
+                callback(entry.Value);
+            }
+
+            IEnumerable<string> IterateTargetNames(ChaFile cha)
+            {
+                yield return chaFile.GetOriginalFullName();
+                yield return chaFile.GetFormattedOriginalName();
+            }
+        }
+
         public bool TryTranslateCardNames(ChaFile chaFile, out Dictionary<string, string> result)
         {
-            var origName = chaFile.GetFullName();
+            Logger.DebugLogDebug(
+                $"{this.GetPrettyTypeFullName()}.{nameof(TryTranslateCardNames)}: {chaFile} {chaFile.GetFullName()}");
             if (!_hasEntries)
             {
+                _stats.RecordMiss();
+                Logger.DebugLogDebug(
+                    $"{this.GetPrettyTypeFullName()}.{nameof(TryTranslateCardNames)}: {chaFile} {chaFile.GetFullName()}: FALSE: no entries");
                 result = null;
                 return false;
             }
 
             void PopulateResult(IDictionary<string, string> output, string nameType, string nameValue)
             {
+                Logger.DebugLogDebug($"{nameof(PopulateResult)}: {nameType} {nameValue}");
                 if (nameValue != null) output[nameType] = nameValue;
             }
 
@@ -294,39 +388,44 @@ namespace TranslationHelperPlugin.Presets
             var sex = chaFile.GetSex();
             if (!_cardCache[sex].TryGetValue(key, out var match))
             {
+                _stats.RecordMiss();
+                Logger.DebugLogDebug(
+                    $"{this.GetPrettyTypeFullName()}.{nameof(TryTranslateCardNames)}: {chaFile} {chaFile.GetFullName()}: FALSE: no match");
                 return false;
             }
 
+            Logger.DebugLogDebug(
+                $"{this.GetPrettyTypeFullName()}.{nameof(TryTranslateCardNames)}: {chaFile} {chaFile.GetFullName()}: {match}");
 
-            result = new Dictionary<string, string>(GeBoAPI.Instance.ChaFileNameCount);
-            PopulateResult(result, "fullname", match.FullName);
+            result = new Dictionary<string, string>(GeBoAPI.Instance.ChaFileNameCount + 1);
+            var fullName = BuildFullName(match);
+            PopulateResult(result, "fullname", fullName);
             PopulateResult(result, "firstname", match.GivenName);
             PopulateResult(result, "lastname", match.FamilyName);
 
-            var fullName = BuildFullName(match);
-            if (!StringUtils.ContainsJapaneseChar(fullName))
-            {
-                CardNameTranslationManager.CacheRecentTranslation(new NameScope(sex), origName, fullName);
-                var fullPath = chaFile.GetFullPath();
-                if (!string.IsNullOrEmpty(fullPath)) CharaFileInfoTranslationManager.CacheRecentTranslation(
-                    new NameScope(chaFile.GetSex()), fullPath, fullName);
-            }
-
 
             var origNick = chaFile.GetName("nickname");
-            if (string.IsNullOrEmpty(origNick)) return true;
-
-            if (_nickNameCache[sex].TryGetValue(key, out var nickLookup) &&
-                nickLookup.TryGetValue(origNick, out var translatedNick))
+            if (!string.IsNullOrEmpty(origNick))
             {
-                PopulateResult(result, "nickname", translatedNick);
-            }
-            else if (key.GivenName == origNick)
-            {
-                PopulateResult(result, "nickname", match.GivenName);
+                if (_nickNameCache[sex].TryGetValue(key, out var nickLookup) &&
+                    nickLookup.TryGetValue(origNick, out var translatedNick))
+                {
+                    PopulateResult(result, "nickname", translatedNick);
+                }
+                else if (key.GivenName == origNick)
+                {
+                    PopulateResult(result, "nickname", match.GivenName);
+                }
             }
 
+            CachePresetResults(chaFile, result);
+            _stats.RecordHit();
             return true;
+        }
+
+        protected void LogCacheStats(string prefix)
+        {
+            Logger?.LogDebug(_stats.GetCounts(prefix, _presetCount));
         }
     }
 }

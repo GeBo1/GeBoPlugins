@@ -16,7 +16,6 @@ namespace TranslationHelperPlugin.Presets.Data
     [XmlRoot(Namespace = "", IsNullable = true)]
     public class NamePresets : IList<NamePreset>
     {
-
         internal static ManualLogSource Logger => TranslationHelper.Logger;
 
         [XmlElement("NamePreset", IsNullable = true)]
@@ -91,8 +90,9 @@ namespace TranslationHelperPlugin.Presets.Data
 
             XmlSchema schema = null;
             using (var schemaStream =
-                executingAssembly.GetManifestResourceStream(typeof(NamePresets), $"Resources.{nameof(NamePresets)}.xsd")
-            )
+                   executingAssembly.GetManifestResourceStream(typeof(NamePresets),
+                       $"Resources.{nameof(NamePresets)}.xsd")
+                  )
             {
                 if (schemaStream != null) schema = XmlSchema.Read(schemaStream, null);
             }
@@ -157,6 +157,7 @@ namespace TranslationHelperPlugin.Presets.Data
                     resourceLoaded = true;
                 }
             }
+
             if (!resourceLoaded) Logger.LogWarning("No embedded resources loaded");
 
             var presetDirs = new[]
@@ -165,7 +166,7 @@ namespace TranslationHelperPlugin.Presets.Data
             };
 
 
-            var configFiles = presetDirs.SelectMany(d=>Directory
+            var configFiles = presetDirs.SelectMany(d => Directory
                 .GetFiles(d, "*.xml", SearchOption.AllDirectories)
                 .Select(n => new FileInfo(n))
                 .OrderBy(f => f.FullName, StringComparer.OrdinalIgnoreCase));
@@ -180,7 +181,6 @@ namespace TranslationHelperPlugin.Presets.Data
                     }
                 }
             }
-
         }
     }
 }

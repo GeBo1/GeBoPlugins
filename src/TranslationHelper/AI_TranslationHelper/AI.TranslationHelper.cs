@@ -20,17 +20,14 @@ namespace TranslationHelperPlugin
             AILikeStart();
         }
 
-
         private void AI_SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
         {
             if (arg0.name == "Title_Load") TreatUnknownAsGameMode = true;
         }
 
-        
         private void AI_SceneManager_sceneUnloaded(Scene arg0)
         {
             if (arg0.name == "Title_Load") TreatUnknownAsGameMode = false;
         }
-
     }
 }

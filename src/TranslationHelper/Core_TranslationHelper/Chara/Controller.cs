@@ -13,8 +13,12 @@ using KKAPI.Chara;
 using KKAPI.Maker;
 using KKAPI.Utilities;
 using UnityEngine;
+#if KKS || KK
+using Manager;
+#endif
 
-#if HS2 || AI
+#if KKS
+using SaveData;
 #endif
 
 namespace TranslationHelperPlugin.Chara
@@ -31,6 +35,8 @@ namespace TranslationHelperPlugin.Chara
             new SimpleLazy<string[]>(() => new string[GeBoAPI.Instance.ChaFileNameCount]);
 
         private string _fullPath;
+
+        private float _translationStart;
         internal static ManualLogSource Logger => TranslationHelper.Logger;
 
         private static bool RestoreNamesOnSave =>
@@ -56,7 +62,7 @@ namespace TranslationHelperPlugin.Chara
                 if (!_fullPath.IsNullOrEmpty()) return _fullPath;
                 if (Configuration.TryGetCharaFileControlPath(ChaFileControl, out var value))
                 {
-                    _fullPath = PathUtils.NormalizePath(value);
+                    return _fullPath = PathUtils.NormalizePath(value);
                 }
 
                 return _fullPath;
@@ -96,6 +102,14 @@ namespace TranslationHelperPlugin.Chara
 
         internal void SetTranslatedName(int index, string value)
         {
+            if (!IsTranslated)
+            {
+                foreach (var entry in ChaFileControl.EnumerateNames())
+                {
+                    OriginalNames[entry.Key] = entry.Value;
+                }
+            }
+
             IsTranslated = IsTranslated || OriginalNames[index] != value;
             TranslatedNames[index] = value;
             ChaFileControl.SetName(index, value);
@@ -141,7 +155,32 @@ namespace TranslationHelperPlugin.Chara
 
         protected override void OnReload(GameMode currentGameMode)
         {
+            if (currentGameMode == GameMode.MainGame && _fullPath.IsNullOrEmpty() &&
+                ChaFileControl.charaFileName.IsNullOrEmpty())
+            {
+                CalculateMainGameFullPath();
+            }
+
             DoReload();
+        }
+
+        private void CalculateMainGameFullPath()
+        {
+            string saveFilePath = null;
+            // TODO: migrate method of getting current savegame to GeBoAPI
+#if KKS
+            saveFilePath = PathUtils.CombinePaths(WorldData.Path, Game.SaveFileName);
+#elif KK
+            saveFilePath = PathUtils.CombinePaths(SaveData.path, Game.SaveFileName);
+#endif
+            //Logger.LogFatal($"{nameof(CalculateMainGameFullPath)}: saveFileName={saveFilePath}, charaFileName={ChaFileControl.charaFileName}");
+            if (saveFilePath.IsNullOrWhiteSpace()) return;
+
+            var chaFileName = ChaControl.name;
+            if (chaFileName.IsNullOrWhiteSpace()) return;
+            var fullPath = PathUtils.CombinePaths(saveFilePath, chaFileName);
+            //Logger.LogFatal($"{nameof(CalculateMainGameFullPath)}: saveFileName={saveFilePath}, charaFileName={ChaFileControl.charaFileName} => {fullPath}");
+            Configuration.TrackCharaFileControlPath(ChaFileControl, fullPath, s => _fullPath = s);
         }
 
         internal void OnAlternateReload()
@@ -198,6 +237,7 @@ namespace TranslationHelperPlugin.Chara
         {
             Logger?.DebugLogDebug($"Controller.TranslateCardNames: {RegistrationID} {IsTranslated}");
             if (TranslationHelper.Instance.CurrentCardLoadTranslationMode == CardLoadTranslationMode.Disabled) return;
+            _translationStart = Time.realtimeSinceStartup;
             if (!IsTranslated)
             {
                 foreach (var entry in ChaFileControl.EnumerateNames())
@@ -241,7 +281,8 @@ namespace TranslationHelperPlugin.Chara
 
         public void OnTranslationComplete(bool cardFullyLoaded = false)
         {
-            Logger?.DebugLogDebug($"Controller.OnTranslationComplete: {RegistrationID}");
+            Logger?.DebugLogDebug(
+                $"{this.GetPrettyTypeName()}.{nameof(OnTranslationComplete)}: {RegistrationID}: {FullPath}: {Time.realtimeSinceStartup - _translationStart:0.000} seconds");
             TranslationInProgress = false;
             if (!cardFullyLoaded) return;
 

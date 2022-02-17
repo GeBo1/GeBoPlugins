@@ -14,7 +14,6 @@ using KKAPI.Utilities;
 using TranslationHelperPlugin.Chara;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
 #if AI || HS2
 using AIChara;
 
@@ -29,7 +28,7 @@ namespace TranslationHelperPlugin
 
         private const float CleanupIdleTime = 2f;
 
-        internal static readonly HashSet<string> SceneNamesThatTriggerReset = new HashSet<string> {"Title"};
+        internal static readonly HashSet<string> SceneNamesThatTriggerReset = new HashSet<string> { "Title" };
 
         private readonly IEnumerator _cleanupIdleDelay = new WaitForSecondsRealtime(CleanupIdleTime / 2f);
 
@@ -189,7 +188,7 @@ namespace TranslationHelperPlugin
         protected virtual bool NameQualifiesForRegistration(string name)
         {
             if (name.IsNullOrWhiteSpace()) return false;
-            if (StringUtils.ContainsJapaneseChar(name))
+            if (CardNameTranslationManager.NameNeedsTranslation(name))
             {
                 // short japanese names can pollute cache
                 return name.Contains(' ') && name.Length > MinLengthJP;
@@ -219,9 +218,9 @@ namespace TranslationHelperPlugin
 
                 var fullname = chaFile.GetFullName();
                 foreach (var name in new[]
-                {
-                    fullname, chaFile.GetOriginalFullName(), chaFile.GetFormattedOriginalName()
-                })
+                         {
+                             fullname, chaFile.GetOriginalFullName(), chaFile.GetFormattedOriginalName()
+                         })
                 {
                     if (handled.Contains(name)) continue;
                     handled.Add(name);
@@ -248,7 +247,7 @@ namespace TranslationHelperPlugin
                     foreach (var origString in origNames)
                     {
                         if (TranslationHelper.TryTranslateName(NameScope.DefaultNameScope, origString,
-                            out var translatedString))
+                                out var translatedString))
                         {
                             //fastReplacements[origString] = origString;
                             fastReplacements[translatedString] = translatedString;
@@ -512,7 +511,7 @@ namespace TranslationHelperPlugin
                     }
 
                     foreach (var name in _nameToIDMap.Keys.AsEnumerable().Where(key => _nameToIDMap[key].Count == 0)
-                        .ToList())
+                                 .ToList())
                     {
                         namesToRemove.Add(name);
                         _nameToIDMap.Remove(name);

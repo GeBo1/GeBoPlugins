@@ -2,6 +2,6 @@
 {
     public static partial class Extensions
     {
-        private static readonly string[] FullNameNameTypes = {"fullname"};
+        private static readonly string[] FullNameNameTypes = { "fullname" };
     }
 }

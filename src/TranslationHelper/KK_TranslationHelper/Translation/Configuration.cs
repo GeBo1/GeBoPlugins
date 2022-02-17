@@ -56,8 +56,7 @@ namespace TranslationHelperPlugin.Translation
 
         internal static byte GuessSex(string club, string personality)
         {
-            
-            return (byte)(club == "帯刀" && string.IsNullOrEmpty(personality) ? CharacterSex.Male: CharacterSex.Female);
+            return (byte)(club == "帯刀" && string.IsNullOrEmpty(personality) ? CharacterSex.Male : CharacterSex.Female);
         }
 
         private static void CleanTranslatedMaps(ChaFile file)

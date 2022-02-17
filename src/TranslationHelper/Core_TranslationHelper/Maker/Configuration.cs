@@ -13,7 +13,6 @@ using TranslationHelperPlugin.Chara;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
-
 #if AI||HS2
 using AIChara;
 
@@ -89,10 +88,12 @@ namespace TranslationHelperPlugin.Maker
 
         private static void MakerExiting(object sender, EventArgs e)
         {
+            Logger.LogDebug($"({typeof(Configuration).PrettyTypeFullName()}.{nameof(MakerExiting)}: start");
             CharacterApi.CharacterReloaded -= MakerCharacterReloaded;
             TranslationHelper.NotifyBehaviorChanged(e);
             // Maker makes heavy use of some pools, clean them up.
             ObjectPool.GlobalClearIdle(10);
+            Logger.LogDebug($"({typeof(Configuration).PrettyTypeFullName()}.{nameof(MakerExiting)}: end");
         }
 
         private static void MakerStartedLoading(object sender, RegisterCustomControlsEvent e)
@@ -118,7 +119,6 @@ namespace TranslationHelperPlugin.Maker
 
         private static void SetupNameInputField(string name, params string[] inputFieldPath)
         {
-            InputField nameField = null;
             var index = GeBoAPI.Instance.ChaFileNameToIndex(name);
             if (index == -1) throw new ArgumentException($"Unknown name: {name}", nameof(name));
 
@@ -130,14 +130,13 @@ namespace TranslationHelperPlugin.Maker
             }
 
 
-            if (top != null) nameField = top.GetComponent<InputField>();
-
-            if (nameField == null)
+            if (top == null || !top.TryGetComponent<InputField>(out var nameField))
             {
                 Logger.LogDebug(
                     $"Unable to find {typeof(InputField).FullName} {string.Join("/", inputFieldPath)} (might be NPC)");
                 return;
             }
+
 
             void Listener(string value)
             {

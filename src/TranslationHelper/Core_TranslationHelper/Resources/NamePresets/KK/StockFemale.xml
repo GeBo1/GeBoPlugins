@@ -1,4 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
+
 <!-- ReSharper disable MarkupTextTypo -->
 <NamePresets>
     <NamePreset>
@@ -42,7 +43,7 @@
                     <Language>en</Language>
                 </TargetLanguages>
                 <GivenName>Aoi</GivenName>
-                <FamilyName>Saegusa</FamilyName>
+                <FamilyName>Saigusa</FamilyName>
                 <NickName>Aoi</NickName>
             </Translation>
         </Translations>
@@ -88,7 +89,7 @@
                     <Language>en</Language>
                 </TargetLanguages>
                 <GivenName>Arisa</GivenName>
-                <FamilyName>Ogami</FamilyName>
+                <FamilyName>Onoe</FamilyName>
                 <NickName>Arisa</NickName>
             </Translation>
         </Translations>
@@ -249,7 +250,7 @@
                     <Language>en</Language>
                 </TargetLanguages>
                 <GivenName>Sana</GivenName>
-                <FamilyName>Isabe</FamilyName>
+                <FamilyName>Isobe</FamilyName>
                 <NickName>Sana</NickName>
             </Translation>
         </Translations>
@@ -272,7 +273,7 @@
                     <Language>en</Language>
                 </TargetLanguages>
                 <GivenName>Anri</GivenName>
-                <FamilyName>Kamizaki</FamilyName>
+                <FamilyName>Kanzaki</FamilyName>
                 <NickName>Ann</NickName>
             </Translation>
         </Translations>
@@ -317,7 +318,7 @@
                 <TargetLanguages>
                     <Language>en</Language>
                 </TargetLanguages>
-                <GivenName>Kureha</GivenName>
+                <GivenName>Iroha</GivenName>
                 <FamilyName>Shiina</FamilyName>
                 <NickName>Shiina</NickName>
             </Translation>
@@ -426,7 +427,7 @@
                 </TargetLanguages>
                 <GivenName>Yukie</GivenName>
                 <FamilyName>Honma</FamilyName>
-                <NickName>Yukkii</NickName>
+                <NickName>Yuukii</NickName>
             </Translation>
         </Translations>
         <Notes>KK stock character</Notes>
@@ -471,7 +472,7 @@
                     <Language>en</Language>
                 </TargetLanguages>
                 <GivenName>Riho</GivenName>
-                <FamilyName>Waizumi</FamilyName>
+                <FamilyName>Izumi</FamilyName>
                 <NickName>Riho</NickName>
             </Translation>
         </Translations>
@@ -536,7 +537,7 @@
                     <Language>en</Language>
                 </TargetLanguages>
                 <GivenName>Misaki</GivenName>
-                <FamilyName>Okuta</FamilyName>
+                <FamilyName>Okuda</FamilyName>
                 <NickName>Misakichi</NickName>
             </Translation>
         </Translations>
@@ -559,7 +560,7 @@
                     <Language>en</Language>
                 </TargetLanguages>
                 <GivenName>Rinka</GivenName>
-                <FamilyName>Aragaki</FamilyName>
+                <FamilyName>Shingaki</FamilyName>
                 <NickName>Rinka</NickName>
             </Translation>
         </Translations>
@@ -627,7 +628,7 @@
                 <TargetLanguages>
                     <Language>en</Language>
                 </TargetLanguages>
-                <GivenName>Haruna</GivenName>
+                <GivenName>Hazuki</GivenName>
                 <FamilyName>Noguchi</FamilyName>
                 <NickName>Nogucchi</NickName>
             </Translation>
@@ -786,7 +787,7 @@
                 </TargetLanguages>
                 <GivenName>Eriko</GivenName>
                 <FamilyName>Hidaka</FamilyName>
-                <NickName>Eerin</NickName>
+                <NickName>Eirin</NickName>
             </Translation>
         </Translations>
         <Notes>KK stock character</Notes>
@@ -831,7 +832,7 @@
                     <Language>en</Language>
                 </TargetLanguages>
                 <GivenName>Itsuru</GivenName>
-                <FamilyName>Horikata</FamilyName>
+                <FamilyName>Horitaka</FamilyName>
                 <NickName>Ichiru</NickName>
             </Translation>
         </Translations>
@@ -853,8 +854,8 @@
                 <TargetLanguages>
                     <Language>en</Language>
                 </TargetLanguages>
-                <GivenName>Eri</GivenName>
-                <FamilyName>Hatane</FamilyName>
+                <GivenName>Eiri</GivenName>
+                <FamilyName>Haneda</FamilyName>
                 <NickName>Hataeri</NickName>
             </Translation>
         </Translations>
@@ -992,7 +993,7 @@
                     <Language>en</Language>
                 </TargetLanguages>
                 <GivenName>Suzune</GivenName>
-                <FamilyName>Minezaki</FamilyName>
+                <FamilyName>Takashi</FamilyName>
                 <NickName>Belle</NickName>
             </Translation>
         </Translations>
@@ -1061,7 +1062,7 @@
                     <Language>en</Language>
                 </TargetLanguages>
                 <GivenName>Yuna</GivenName>
-                <FamilyName>Oodori</FamilyName>
+                <FamilyName>Ootori</FamilyName>
                 <NickName>Yuna-sama</NickName>
             </Translation>
         </Translations>

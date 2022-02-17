@@ -108,14 +108,19 @@ namespace TranslationHelperPlugin.Studio
             Action<string> callback = null)
         {
             Logger.DebugLogDebug(
-                $"{nameof(TranslateDisplayListEntry)}: entry={entry}, scope={scope}, callback={callback}");
+                $"{nameof(TranslateDisplayListEntry)}: entry={entry} ({entry.GetHashCode()}, {entry.name}), scope={scope}, callback={callback}");
             if (entry == null) yield break;
 
             var origName = entry.name;
 
+            if (origName.IsNullOrWhiteSpace())
+            {
+                callback?.Invoke(origName);
+                yield break;
+            }
+
             var wrappedCallback =
                 CharaFileInfoTranslationManager.MakeCachingCallbackWrapper(origName, entry, scope, callback);
-
 
             void UpdateName(CharaFileInfo charaFileInfo, string translatedName)
             {
@@ -177,11 +182,13 @@ namespace TranslationHelperPlugin.Studio
             Action callback = null)
         {
             // yield null immediately to avoid blocking 
-            yield return null;
+            //yield return null;
             Logger.DebugLogDebug(
                 $"{nameof(TranslateDisplayListEntryCoroutine)}: entry={entry}, scope={scope}, callback={callback}");
+
             var limitCoroutine = TranslationHelper.Instance.StartCoroutine(TreeNodeLimiter.Start());
             if (limitCoroutine != null) yield return limitCoroutine;
+
             yield return TranslationHelper.Instance.StartCoroutine(TranslateDisplayListEntry(entry, scope));
             TreeNodeLimiter.EndImmediately();
             callback?.Invoke();
@@ -199,7 +206,7 @@ namespace TranslationHelperPlugin.Studio
                     return;
                 }
 
-
+                // traverse to avoid version differences
                 var cfiList = Traverse.Create(charaList)?.Field<CharaFileSort>("charaFileSort")?.Value?.cfiList;
                 if (cfiList == null || cfiList.Count == 0) return;
 
@@ -208,17 +215,20 @@ namespace TranslationHelperPlugin.Studio
 
                 var scope = new NameScope((CharacterSex)sex);
 
+                // ReSharper disable once NotAccessedVariable - used in DEBUG
                 var jobs = 0;
 
                 void Finished()
                 {
                     // ReSharper disable once AccessToModifiedClosure
                     jobs--;
+#if DEBUG
                     if (jobs < 1)
                     {
                         Logger.DebugLogDebug(
                             $"TranslateDisplayList: All jobs done: {Time.realtimeSinceStartup - start:000.0000000000} seconds");
                     }
+#endif
                 }
 
                 foreach (var entry in cfiList)
@@ -228,11 +238,13 @@ namespace TranslationHelperPlugin.Studio
                         TranslateDisplayListEntryCoroutine(entry, scope, Finished));
                 }
 
+#if DEBUG
                 if (jobs > 0)
                 {
                     Logger.DebugLogDebug(
                         $"TranslateDisplayList: All jobs started: {Time.realtimeSinceStartup - start:000.0000000000} seconds");
                 }
+#endif
             }
             finally
             {

@@ -7,7 +7,6 @@ using GeBoCommon.Utilities;
 using JetBrains.Annotations;
 using KKAPI.Chara;
 using KKAPI.Maker;
-
 #if AI||HS2
 using AIChara;
 #endif
@@ -19,6 +18,8 @@ namespace TranslationHelperPlugin.Chara
     {
         internal const string GUID = TranslationHelper.GUID + ".chara";
 
+        // ReSharper disable once ConvertToConstant.Global
+        // ReSharper disable once FieldCanBeMadeReadOnly.Global
         internal static bool TrackCharaFileControlPaths = true;
 
         internal static readonly Dictionary<string, string> ChaFileControlPaths =
@@ -39,7 +40,9 @@ namespace TranslationHelperPlugin.Chara
 
         private static void MakerExiting(object sender, EventArgs e)
         {
+            Logger.LogDebug($"{typeof(Configuration).PrettyTypeFullName()}.{nameof(MakerExiting)}: start");
             ChaFileControlPaths.Clear();
+            Logger.LogDebug($"{typeof(Configuration).PrettyTypeFullName()}.{nameof(MakerExiting)}: end");
         }
 
         private static void MakerStartedLoading(object sender, RegisterCustomControlsEvent e)

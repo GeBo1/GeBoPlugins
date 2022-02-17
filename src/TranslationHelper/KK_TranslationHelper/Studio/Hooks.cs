@@ -53,6 +53,7 @@ namespace TranslationHelperPlugin.Studio
         }
 
         [HarmonyPostfix]
+        [HarmonyPriority(Priority.VeryLow)]
         [HarmonyPatch(typeof(CharaList), nameof(CharaList.InitCharaList))]
         internal static void StudioInitCharaListPostfix(CharaList __instance)
         {
@@ -142,9 +143,9 @@ namespace TranslationHelperPlugin.Studio
             }
             */
             if (ComponentTranslationHelpers.TryTranslateFullName(obj,
-                ShouldHandleCharaListText,
-                () => null,
-                sex))
+                    ShouldHandleCharaListText,
+                    () => null,
+                    sex))
             {
                 obj.IgnoreComponent();
             }

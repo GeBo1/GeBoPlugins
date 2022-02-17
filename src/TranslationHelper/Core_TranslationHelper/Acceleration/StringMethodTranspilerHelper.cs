@@ -16,7 +16,7 @@ namespace TranslationHelperPlugin.Acceleration
         private static Dictionary<MethodInfo, MethodInfo> _replacements;
 
         private static readonly Stack<int> Scope = new Stack<int>();
-        private static readonly HashSet<string> NopeStrings = new HashSet<string>(new[] {"[{0}]"});
+        private static readonly HashSet<string> NopeStrings = new HashSet<string>(new[] { "[{0}]" });
         private static ManualLogSource Logger => TranslationHelper.Logger;
 
         [PublicAPI]

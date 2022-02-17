@@ -1,9 +1,7 @@
-using GeBoCommon.AutoTranslation;
+﻿using GeBoCommon.AutoTranslation;
 using JetBrains.Annotations;
 using Studio;
-
 #if AI||HS2
-
 #endif
 
 namespace TranslationHelperPlugin

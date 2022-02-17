@@ -19,7 +19,7 @@ using TranslationHelperPlugin.Translation;
 using TranslationHelperPlugin.Utils;
 using UnityEngine.SceneManagement;
 using Configuration = TranslationHelperPlugin.Translation.Configuration;
-using PluginData = XUnity.AutoTranslator.Plugin.Core.Constants.PluginData;
+using XUAPluginData = XUnity.AutoTranslator.Plugin.Core.Constants.PluginData;
 #if AI || HS2
 using AIChara;
 
@@ -27,18 +27,42 @@ using AIChara;
 
 namespace TranslationHelperPlugin
 {
+    [BepInProcess(Constants.MainGameProcessName)]
+    [BepInProcess(Constants.StudioProcessName)]
+#if KK||HS2||KKS
+    [BepInProcess(Constants.MainGameProcessNameVR)]
+#endif
+#if KK
+    [BepInProcess(Constants.MainGameProcessNameVRSteam)]
+#endif
+#if KK||AI
+    [BepInProcess(Constants.MainGameProcessNameSteam)]
+#endif
+#if KKS
+    [BepInProcess(Constants.TrialProcessName)]
+#endif
     [BepInDependency(GeBoAPI.GUID, GeBoAPI.Version)]
     [BepInDependency(KoikatuAPI.GUID, KoikatuAPI.VersionConst)]
     [BepInDependency(ExtendedSave.GUID)]
-    [BepInDependency(PluginData.Identifier, "4.16.0")] // need new APIs
+    [BepInDependency(XUAPluginData.Identifier, "4.16.0")] // need new APIs
     public partial class TranslationHelper
     {
-        public const string GUID = "com.gebo.bepinex.translationhelper";
+        [PublicAPI]
+        public const string GUID = Constants.PluginGUIDPrefix + "." + nameof(TranslationHelper);
+
         public const string PluginName = "Translation Helper";
         public const string Version = "1.1.0.9";
 
         internal static new ManualLogSource Logger;
         private static TranslationHelper _instance;
+
+        private static readonly HitMissCounter FastTranslateFullNameStats =
+            new HitMissCounter($"{typeof(TranslationHelper).PrettyTypeFullName()}.{nameof(TryFastTranslateFullName)}");
+
+        private static readonly HitMissCounter TranslateNameStats =
+            new HitMissCounter($"{typeof(TranslationHelper).PrettyTypeFullName()}.{nameof(TryTranslateName)}");
+
+        private const string CardListTranslationCachingConfigName = "Enable Card List Translation Caching";
 
         public static TranslationHelper Instance =>
             _instance != null ? _instance : _instance = FindObjectOfType<TranslationHelper>();
@@ -50,7 +74,7 @@ namespace TranslationHelperPlugin
         /// </summary>
         public static bool AlternateLoadEventsEnabled { get; set; } = false;
 
-        public static bool IsShuttingDown { get; private set; }
+        public static bool IsShuttingDown => KoikatuAPI.IsQuitting;
 
         private static bool _treatUnknownAsGameMode;
 
@@ -73,10 +97,10 @@ namespace TranslationHelperPlugin
         internal static readonly CardNameTranslationManager CardNameManager = new CardNameTranslationManager();
 
         internal static readonly ICollection<GameMode> RegistrationGameModes =
-            new HashSet<GameMode> {GameMode.MainGame};
+            new HashSet<GameMode> { GameMode.MainGame };
 
         // space, middle dot (full/half-width), ideographic space
-        public static readonly char[] SpaceSplitter = {' ', '\u30FB', '\uFF65', '\u3000'};
+        public static readonly char[] SpaceSplitter = { ' ', '\u30FB', '\uFF65', '\u3000' };
 
         public static readonly string SpaceJoiner = SpaceSplitter[0].ToString();
 
@@ -136,6 +160,7 @@ namespace TranslationHelperPlugin
         public static ConfigEntry<bool> TranslateNameWithSuffix { get; private set; }
         public static ConfigEntry<string> NameTrimChars { get; private set; }
         public static ConfigEntry<bool> MakerSaveWithTranslatedNames { get; internal set; }
+        public static ConfigEntry<bool> EnableCardListTranslationCaching { get; private set; }
 
         /// <summary>
         ///     Occurs when behavior changes in such a way that previous translations are likely no longer correct.
@@ -254,8 +279,8 @@ namespace TranslationHelperPlugin
             if (IsShuttingDown) CurrentCardLoadTranslationMode = CardLoadTranslationMode.Disabled;
 
             if (origMode == CurrentCardLoadTranslationMode || (
-                origMode != CardLoadTranslationMode.Disabled &&
-                CurrentCardLoadTranslationMode != CardLoadTranslationMode.Disabled))
+                    origMode != CardLoadTranslationMode.Disabled &&
+                    CurrentCardLoadTranslationMode != CardLoadTranslationMode.Disabled))
             {
                 return;
             }
@@ -291,8 +316,31 @@ namespace TranslationHelperPlugin
                 SceneManager.activeSceneChanged += ActiveSceneChanged;
             }
 
+
+            EnableCardListTranslationCaching = Config.Bind("Advanced", CardListTranslationCachingConfigName,
+                GetEnableCardListTranslationCachingDefault(),
+                new ConfigDescription(
+                    "Enables caching to prevent delays when encountering files multiple times. Greatly speeds up browsing cards. If another plugin is doing something non-standard and you see duplicate names, try disabling.",
+                    null, "Advanced"));
+
+            KoikatuAPI.Quitting += ApplicationQuitting;
             UpdateCurrentCardTranslationMode();
         }
+
+        private void ApplicationQuitting(object sender, EventArgs e)
+        {
+            LogCacheStats(nameof(ApplicationQuitting));
+        }
+
+
+#if !KK
+        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification =
+            "not static for all implementations")]
+        private bool GetEnableCardListTranslationCachingDefault()
+        {
+            return true;
+        }
+#endif
 
         private void ActiveSceneChanged(Scene arg0, Scene arg1)
         {
@@ -336,14 +384,13 @@ namespace TranslationHelperPlugin
             GeBoAPI.TranslationsLoaded += GeBoAPI_TranslationsLoaded;
         }
 
-        private void GeBoAPI_TranslationsLoaded(object sender, EventArgs eventArgs)
+        private static void GeBoAPI_TranslationsLoaded(object sender, EventArgs eventArgs)
         {
             NotifyBehaviorChanged(eventArgs);
         }
 
         internal void OnDestroy()
         {
-            IsShuttingDown = true;
             CurrentCardLoadTranslationMode = CardLoadTranslationMode.Disabled;
             RegistrationManager.Deactivate();
         }
@@ -352,7 +399,6 @@ namespace TranslationHelperPlugin
         {
             _instance = this;
             Logger = Logger ?? base.Logger;
-            IsShuttingDown = false;
             GameSpecificStart();
         }
 
@@ -466,36 +512,80 @@ namespace TranslationHelperPlugin
 
         public static bool TryFastTranslateFullName(NameScope scope, string originalName, out string translatedName)
         {
-            return Instance.NamePresetManager.TryTranslateFullName(scope.Sex, originalName, out translatedName) ||
-                   CardNameTranslationManager.TryGetRecentTranslation(scope, originalName, out translatedName);
+            if (originalName.IsNullOrWhiteSpace())
+            {
+                translatedName = originalName;
+                return true;
+            }
+
+            if (Instance.NamePresetManager.TryTranslateFullName(scope.Sex, originalName, out translatedName) ||
+                CardNameTranslationManager.TryGetRecentTranslation(scope, originalName, out translatedName))
+            {
+                FastTranslateFullNameStats.RecordHit();
+                return true;
+            }
+
+            FastTranslateFullNameStats.RecordMiss();
+            return false;
         }
 
         public static bool TryFastTranslateFullName(NameScope scope, string originalName, string path,
             out string translatedName)
         {
-            return (path != null &&
-                    CharaFileInfoTranslationManager.TryGetRecentTranslation(scope, path, out translatedName)) ||
-                   TryFastTranslateFullName(scope, originalName, out translatedName);
+            if (path != null && !originalName.IsNullOrEmpty() &&
+                CharaFileInfoTranslationManager.TryGetRecentTranslation(scope, path, out translatedName))
+            {
+                FastTranslateFullNameStats.RecordHit();
+                return true;
+            }
+
+            return TryFastTranslateFullName(scope, originalName, out translatedName);
         }
 
         public static bool TryTranslateName(NameScope scope, string originalName, out string translatedName)
         {
-            return CardNameTranslationManager.TryGetRecentTranslation(scope, originalName, out translatedName) ||
-                   Instance.NameTranslator.TryTranslateName(originalName, scope, out translatedName);
+            if (originalName.IsNullOrWhiteSpace())
+            {
+                translatedName = originalName;
+                return true;
+            }
+
+            if (CardNameTranslationManager.TryGetRecentTranslation(scope, originalName, out translatedName) ||
+                Instance.NameTranslator.TryTranslateName(originalName, scope, out translatedName))
+            {
+                TranslateNameStats.RecordHit();
+                return true;
+            }
+
+            TranslateNameStats.RecordMiss();
+            return false;
         }
 
         [PublicAPI]
         public static bool TryTranslateName(NameScope scope, string originalName, string path,
             out string translatedName)
         {
-            return (!path.IsNullOrEmpty() &&
-                    CharaFileInfoTranslationManager.TryGetRecentTranslation(scope, path, out translatedName)) ||
-                   TryTranslateName(scope, originalName, out translatedName);
+            if (!path.IsNullOrEmpty() && !originalName.IsNullOrEmpty() &&
+                CharaFileInfoTranslationManager.TryGetRecentTranslation(scope, path, out translatedName))
+
+            {
+                TranslateNameStats.RecordHit();
+                return true;
+            }
+
+            return TryTranslateName(scope, originalName, out translatedName);
         }
+
 
         public static bool NameNeedsTranslation(string name, NameScope scope)
         {
             return CardNameTranslationManager.NameNeedsTranslation(name, scope);
+        }
+
+        private static void LogCacheStats(string prefix)
+        {
+            Logger?.LogDebug(FastTranslateFullNameStats.GetCounts(prefix));
+            Logger?.LogDebug(TranslateNameStats.GetCounts(prefix));
         }
     }
 }

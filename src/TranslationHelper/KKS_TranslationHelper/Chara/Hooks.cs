@@ -22,8 +22,6 @@ namespace TranslationHelperPlugin.Chara
 
             private static bool FullNameGetterPrefix(T __instance, ref string __result)
             {
-                Logger.LogFatal(
-                    $"{nameof(FullNameGetterPrefix)} fired for {__instance} ({typeof(T).GetPrettyTypeName()}");
                 try
                 {
                     if (!TranslationHelper.ShowGivenNameFirst) return true;
@@ -44,7 +42,7 @@ namespace TranslationHelperPlugin.Chara
                 var propGetter = AccessTools.PropertyGetter(typeof(T), propertyName);
                 if (propGetter == null)
                 {
-                    Logger.LogWarning($"Unable to find getter for {typeof(T).GetPrettyTypeName()}.{propertyName}");
+                    Logger.LogWarning($"Unable to find getter for {typeof(T).PrettyTypeName()}.{propertyName}");
                     return;
                 }
 
@@ -58,12 +56,12 @@ namespace TranslationHelperPlugin.Chara
                 try
                 {
                     harmony.Patch(propGetter, new HarmonyMethod(prefix));
-                    Logger.LogDebug($"Hooked {typeof(T).GetPrettyTypeName()}.{propertyName} getter");
+                    Logger.LogDebug($"Hooked {typeof(T).PrettyTypeName()}.{propertyName} getter");
                 }
                 catch (Exception err)
                 {
                     Logger.LogException(err,
-                        $"{nameof(KKS_SetupHooks)}: unable to hook fullname support for {typeof(T).GetPrettyTypeName()}");
+                        $"{nameof(KKS_SetupHooks)}: unable to hook fullname support for {typeof(T).PrettyTypeName()}");
                 }
             }
         }

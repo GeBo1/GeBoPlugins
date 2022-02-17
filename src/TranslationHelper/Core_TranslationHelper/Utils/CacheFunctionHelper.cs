@@ -12,8 +12,6 @@ namespace TranslationHelperPlugin.Utils
         private float _lastCheck;
         private float _staleTime;
 
-        internal static ManualLogSource Logger => TranslationHelper.Logger;
-
         internal CacheFunctionHelper()
         {
             _recentCalls = new HashSet<object>();
@@ -22,6 +20,8 @@ namespace TranslationHelperPlugin.Utils
             TranslationHelper.CardTranslationBehaviorChanged += TranslationHelper_BehaviorChanged;
             TranslationHelper.AccelerationBehaviorChanged += TranslationHelper_BehaviorChanged;
         }
+
+        internal static ManualLogSource Logger => TranslationHelper.Logger;
 
         private void TranslationHelper_BehaviorChanged(object sender, EventArgs e)
         {

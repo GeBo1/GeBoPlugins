@@ -2,17 +2,16 @@
 using BepInEx.Logging;
 using GeBoCommon;
 using GeBoCommon.AutoTranslation;
+using JetBrains.Annotations;
 
 namespace TranslationHelperPlugin.Translation
 {
     internal class NameTranslator
     {
+        [UsedImplicitly]
         internal static ManualLogSource Logger => TranslationHelper.Logger;
 
-        // ReSharper disable once MemberCanBeMadeStatic.Local
-#pragma warning disable CA1822 // Mark members as static
-        private IAutoTranslationHelper AutoTranslationHelper => GeBoAPI.Instance.AutoTranslationHelper;
-#pragma warning restore CA1822 // Mark members as static
+        private static IAutoTranslationHelper AutoTranslationHelper => GeBoAPI.Instance.AutoTranslationHelper;
 
         public bool TryTranslateName(string untranslatedText, NameScope nameScope, out string translatedText)
         {

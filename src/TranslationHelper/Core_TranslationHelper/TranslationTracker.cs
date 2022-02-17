@@ -78,7 +78,7 @@ namespace TranslationHelperPlugin
                 CallHandlers(scope, trackedKey, result);
             }
 
-            translationFunction(new TranslationResultHandler[] {CallbackHandler});
+            translationFunction(new TranslationResultHandler[] { CallbackHandler });
         }
 
         public IEnumerator TrackTranslationCoroutine(NameTranslationCoroutine translationCoroutine,
@@ -102,7 +102,7 @@ namespace TranslationHelperPlugin
             }
 
             yield return null; // allow requests later this frame to batch onto this one
-            var tmp = translationCoroutine(new TranslationResultHandler[] {CallbackHandler});
+            var tmp = translationCoroutine(new TranslationResultHandler[] { CallbackHandler });
             _outstandingCoroutines.Add(tmp);
             yield return TranslationHelper.Instance.StartCoroutine(tmp.AppendCo(() =>
                 _outstandingCoroutines.Remove(tmp)));

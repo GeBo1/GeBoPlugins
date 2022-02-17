@@ -13,7 +13,6 @@ namespace TranslationHelperPlugin.MainGame
 #elif HS2
             //HS2_GameSpecificSetup(harmony);
 #endif
-
         }
     }
 }

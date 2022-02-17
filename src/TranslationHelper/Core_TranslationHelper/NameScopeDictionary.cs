@@ -6,11 +6,23 @@ namespace TranslationHelperPlugin
     internal class NameScopeDictionary<T> where T : new()
     {
         private readonly Dictionary<NameScope, T> _dictionary = new Dictionary<NameScope, T>();
-        private readonly object _lock = new object();
         private readonly Func<T> _initializer;
+        private readonly object _lock = new object();
+
         public NameScopeDictionary(Func<T> initializer = null)
         {
             _initializer = initializer;
+        }
+
+        public T this[NameScope key]
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _dictionary.TryGetValue(key, out var result) ? result : InitializeScope(key);
+                }
+            }
         }
 
         private T InitializeScope(NameScope scope)
@@ -22,16 +34,6 @@ namespace TranslationHelperPlugin
             }
 
             return result;
-        }
-        public T this[NameScope key]
-        {
-            get
-            {
-                lock (_lock)
-                {
-                    return (_dictionary.TryGetValue(key, out var result)) ? result : InitializeScope(key);
-                }
-            }
         }
 
         public IEnumerable<NameScope> GetScopes()

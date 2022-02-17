@@ -1,13 +1,16 @@
-﻿namespace TranslationHelperPlugin
+﻿using GeBoCommon.AutoTranslation;
+
+namespace TranslationHelperPlugin
 {
-    public class TranslationResult : GeBoCommon.AutoTranslation.SimpleTranslationResult 
+    public class TranslationResult : SimpleTranslationResult
     {
         public TranslationResult(bool succeeded, string translatedText = null, string errorMessage = null) :
             base(succeeded, translatedText, errorMessage) { }
 
         public TranslationResult(string originalText, string translatedText = null, string errorMessage = null) :
-            this(!string.IsNullOrEmpty(translatedText) && !TranslationHelper.NameStringComparer.Equals(originalText, translatedText),
+            this(
+                !string.IsNullOrEmpty(translatedText) &&
+                !TranslationHelper.NameStringComparer.Equals(originalText, translatedText),
                 translatedText, errorMessage) { }
-
     }
 }

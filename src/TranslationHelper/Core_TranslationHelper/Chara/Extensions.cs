@@ -32,9 +32,11 @@ namespace TranslationHelperPlugin.Chara
 
         public static string GetRegistrationID(this ChaFile chaFile)
         {
-            string result = null;
-            chaFile.SafeProc(a => result = a.GetHashCode().ToString(CultureInfo.InvariantCulture.NumberFormat));
-            return result;
+            if (chaFile == null) return null;
+            var hash = chaFile.charaFileName.IsNullOrEmpty()
+                ? chaFile.GetHashCode()
+                : ObjectUtils.GetCombinedHashCode(chaFile, chaFile.charaFileName);
+            return hash.ToString(CultureInfo.InvariantCulture.NumberFormat);
         }
 
         public static Coroutine StartMonitoredCoroutine(this ChaFile chaFile, IEnumerator enumerator)
@@ -55,8 +57,6 @@ namespace TranslationHelperPlugin.Chara
             return result ?? TranslationHelper.Instance.StartCoroutine(enumerator);
         }
 
-
-        // ReSharper disable Unity.PerformanceAnalysis
         public static Controller GetTranslationHelperController(this ChaControl chaControl)
         {
             Controller result = default;
@@ -88,9 +88,14 @@ namespace TranslationHelperPlugin.Chara
 
         public static void SetTranslatedName(this ChaFile chaFile, int index, string name)
         {
-            //Logger?.DebugLogDebug($"Extensions.SetTranslatedName: {chaFile} {index} {name}");
-            chaFile.SafeProc(cf =>
-                cf.GetTranslationHelperController().SafeProcObject(c => c.SetTranslatedName(index, name)));
+            if (chaFile == null) return;
+            if (chaFile.TryGetTranslationHelperController(out var controller))
+            {
+                controller.SetTranslatedName(index, name);
+                return;
+            }
+
+            chaFile.SetName(index, name);
         }
 
         public static string GetOriginalFullName(this ChaFile chaFile)
@@ -119,23 +124,47 @@ namespace TranslationHelperPlugin.Chara
 
         public static string GetFullPath(this ChaFile chaFile)
         {
-            if (!chaFile.TryGetTranslationHelperController(out var controller))
+            if (chaFile.TryGetTranslationHelperController(out var controller) && !controller.FullPath.IsNullOrEmpty())
             {
-                return Configuration.TryGetCharaFileControlPath(chaFile, out var val1)
-                    ? PathUtils.NormalizePath(val1)
-                    : null;
+                return controller.FullPath;
             }
 
-            if (!controller.FullPath.IsNullOrEmpty()) return controller.FullPath;
-
-            return Configuration.TryGetCharaFileControlPath(chaFile, out var val2)
-                ? PathUtils.NormalizePath(val2)
+            return Configuration.TryGetCharaFileControlPath(chaFile, out var val)
+                ? PathUtils.NormalizePath(val)
                 : null;
         }
 
         public static void OnTranslationComplete(this ChaFile chaFile)
         {
             chaFile.SafeProc(cf => cf.GetTranslationHelperController().SafeProcObject(c => c.OnTranslationComplete()));
+        }
+
+        public static void TranslateCardNames(this ChaFile chaFile)
+        {
+            if (chaFile == null) return;
+            if (chaFile.TryGetTranslationHelperController(out var controller))
+            {
+                controller.TranslateCardNames();
+            }
+            else
+            {
+                chaFile.StartMonitoredCoroutine(CardNameTranslationManager.Instance.TranslateCardNames(chaFile));
+            }
+        }
+
+        public static IEnumerator TranslateCardNamesCoroutine(this ChaFile chaFile)
+        {
+            if (chaFile == null) yield break;
+            if (chaFile.TryGetTranslationHelperController(out var controller))
+            {
+                controller.TranslateCardNames();
+                yield return controller.WaitOnTranslations();
+            }
+            else
+            {
+                chaFile.StartMonitoredCoroutine(CardNameTranslationManager.Instance.TranslateCardNames(chaFile));
+                yield return chaFile.StartMonitoredCoroutine(CardNameTranslationManager.Instance.WaitOnCard(chaFile));
+            }
         }
 
         public static void TranslateFullName(this ChaFile chaFile, Action<string> callback)
@@ -149,7 +178,7 @@ namespace TranslationHelperPlugin.Chara
 
 
             if (TranslationHelper.TryFastTranslateFullName(scope, origName, chaFile.GetFullPath(),
-                out var fastName) && !TranslationHelper.NameStringComparer.Equals(origName, fastName))
+                    out var fastName) && !TranslationHelper.NameStringComparer.Equals(origName, fastName))
             {
                 wrappedCallback(fastName);
                 return;
@@ -167,7 +196,7 @@ namespace TranslationHelperPlugin.Chara
             IEnumerator TrackedCoroutine(IEnumerable<TranslationResultHandler> handlers)
             {
                 if (TranslationHelper.TryFastTranslateFullName(scope, trackedName, chaFile.GetFullPath(),
-                    out var fastName))
+                        out var fastName))
                 {
                     handlers.CallHandlers(new TranslationResult(trackedName, fastName));
                     yield break;
@@ -221,6 +250,11 @@ namespace TranslationHelperPlugin.Chara
                     chaFile.StartMonitoredCoroutine(TranslateName(i));
                 }
 
+                if (presetMatched)
+                {
+                    TranslationHelper.Instance.NamePresetManager.ApplyPresetResults(chaFile, presetMatch);
+                }
+
                 bool IsDone()
                 {
                     return started < 1;
@@ -242,6 +276,21 @@ namespace TranslationHelperPlugin.Chara
                 TranslateFullNameTracker.TrackTranslationCoroutine(TrackedCoroutine, scope, trackedName,
                     Translation.Handlers.FileInfoCacheHandler(scope, chaFile.GetFullPath(), trackedName),
                     Translation.Handlers.CallbackWrapper(callback, trackedName)));
+        }
+
+        /// <summary>
+        ///     Enumerates the names by scope
+        /// </summary>
+        /// <param name="chaFile" />
+        /// <returns>Names as KeyValuePairs (key is <c>NameScope</c>, value is name string)</returns>
+        public static IEnumerable<KeyValuePair<NameScope, string>> EnumerateScopedNames(this ChaFile chaFile)
+        {
+            var sex = chaFile.GetSex();
+            foreach (var entry in GeBoAPI.Instance.ChaFileEnumerateNames(chaFile))
+            {
+                yield return new KeyValuePair<NameScope, string>(
+                    new NameScope(sex, chaFile.GetNameType(entry.Key)), entry.Value);
+            }
         }
     }
 }

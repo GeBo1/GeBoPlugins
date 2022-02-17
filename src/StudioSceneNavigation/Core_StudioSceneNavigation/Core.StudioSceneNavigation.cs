@@ -282,7 +282,7 @@ namespace StudioSceneNavigationPlugin
                     _navigationInProgress = false;
                     TrackLastLoadedScene();
                 }));
-                coroutines.Add(SaveTrackingFileCouroutine());
+                coroutines.Add(SaveTrackingFileCoroutine());
                 StartCoroutine(CoroutineUtils.ComposeCoroutine(coroutines.ToArray()));
             }
             finally
@@ -634,7 +634,7 @@ namespace StudioSceneNavigationPlugin
             return null;
         }
 
-        private IEnumerator SaveTrackingFileCouroutine()
+        private IEnumerator SaveTrackingFileCoroutine()
         {
             yield return null;
             ThreadingHelper.Instance.StartAsyncInvoke(SaveTrackingFileWorker);

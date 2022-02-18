@@ -116,7 +116,7 @@ namespace GeBoCommon.Utilities
             catch (Exception err)
             {
                 // Any non-cache related exception should be hit/thrown again when _loader is called below
-                Logger.LogException(err, $"{this}: Unexpected error, bypassing caching");
+                Logger.LogException(err, $"{this}: Unexpected error, bypassing caching (key={key})");
             }
 
             return _loader(key);

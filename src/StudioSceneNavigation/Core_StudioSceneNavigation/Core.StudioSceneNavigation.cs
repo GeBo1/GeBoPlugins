@@ -211,7 +211,9 @@ namespace StudioSceneNavigationPlugin
 
         private static string CalculateSceneRelativePath(string scenePath)
         {
-            return PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, scenePath);
+            return PathUtils.NormalizePath(scenePath).StartsWith(SceneUtils.StudioSceneRootFolder)
+                ? PathUtils.GetRelativePath(SceneUtils.StudioSceneRootFolder, scenePath)
+                : string.Empty;
         }
 
         private bool IsSaveReady()
@@ -300,7 +302,16 @@ namespace StudioSceneNavigationPlugin
         private void ExtendedSave_SceneBeingLoaded(string path)
         {
             if (_externalLoadInProgress) return;
-            _currentScenePathCandidate = PathUtils.NormalizePath(path);
+            var normalizedPath = PathUtils.NormalizePath(path);
+            if (!PathUtils.IsUnc(normalizedPath) && normalizedPath.ToLowerInvariant().StartsWith(SceneUtils.StudioSceneRootFolder.ToLowerInvariant()))
+            {
+                _currentScenePathCandidate = normalizedPath;
+            }
+            else
+            {
+                Logger.LogDebug($"not tracking scenes loaded from outside scene folder: {normalizedPath}");
+                _currentScenePathCandidate = string.Empty;
+            }
         }
 
         private void SaveTrackingFile()
@@ -321,8 +332,9 @@ namespace StudioSceneNavigationPlugin
             {
                 foreach (var entry in LastLoadedScenes)
                 {
-                    relativeScenes[SceneRelativePathCache.Get(entry.Key)] =
-                        Path.GetFileName(entry.Value);
+                    var key = SceneRelativePathCache.Get(entry.Key);
+                    if (key.IsNullOrEmpty()) continue; // discard entries not in scene folder
+                    relativeScenes[key] = Path.GetFileName(entry.Value);
                 }
 
                 lock (SavePendingLock)
@@ -463,8 +475,18 @@ namespace StudioSceneNavigationPlugin
                                 }
                                 else
                                 {
+                                    if (entry[0].ToLowerInvariant().Contains("file:"))
+                                    {
+                                        Logger.LogWarning(
+                                            $"{nameof(LoadTrackingFile)}: discarding invalid path on load {entry[0]}");
+                                        continue;
+                                    }
+
+                                    var orig = entry[0];
                                     entry[0] = FastCombineNormalizedPaths(SceneUtils.StudioSceneRootFolder,
                                         entry[0]);
+                                    Logger.LogDebug(
+                                        $"{nameof(LoadTrackingFile)}: normalized {count}: '{orig}' => '{entry[0]}'");
                                 }
                             }
 

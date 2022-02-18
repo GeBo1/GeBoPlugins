@@ -138,9 +138,13 @@ namespace GeBoCommon.Utilities
         public static string CombinePaths(params string[] parts)
         {
             var splitChars = (char[])DirectorySeparatorsToReplace;
-            return parts == null || parts.Length == 0
-                ? null
-                : StringUtils.JoinStrings(Path.DirectorySeparatorChar,
+            if (parts == null || parts.Length == 0) return null;
+
+            if (parts.Skip(1).Any(Path.IsPathRooted))
+            {
+                throw new ArgumentException("only first entry may be a rooted path", nameof(parts));
+            }
+            return StringUtils.JoinStrings(Path.DirectorySeparatorChar,
                     parts.SelectMany(i => i.Split(splitChars)).ToArray());
         }
 
@@ -183,6 +187,21 @@ namespace GeBoCommon.Utilities
             return Uri.UnescapeDataString(relativeUri.ToString());
         }
 
+        [PublicAPI]
+        public static bool IsUnc(string path)
+        {
+            if (Path.IsPathRooted(path) && Path.GetPathRoot(path).StartsWith(@"\\")) return true;
+
+            try
+            {
+                return Uri.TryCreate(path, UriKind.Absolute, out Uri uri) && uri.IsUnc;
+            }
+            catch
+            {
+                // should be fine
+            }
+            return false;
+        }
 
         private static Predicate<string> GetPathMatchingPredicate(this string path)
         {

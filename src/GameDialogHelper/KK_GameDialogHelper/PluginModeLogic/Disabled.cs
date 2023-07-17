@@ -1,6 +1,4 @@
-﻿using TMPro;
-
-namespace GameDialogHelperPlugin.PluginModeLogic
+﻿namespace GameDialogHelperPlugin.PluginModeLogic
 {
     public class Disabled : IPluginModeLogic
     {
@@ -25,6 +23,6 @@ namespace GameDialogHelperPlugin.PluginModeLogic
 
         public void ProcessDialogAnswered(SaveData.Heroine heroine, DialogInfo dialogInfo, bool isCorrect) { }
 
-        public void ApplyHighlightSelection(int answerId, TextMeshProUGUI text) { }
+        public void ApplyHighlightSelection(int answerId, UnityEngine.UI.Text text) { }
     }
 }

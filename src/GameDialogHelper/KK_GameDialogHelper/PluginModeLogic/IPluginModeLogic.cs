@@ -1,6 +1,4 @@
-﻿using TMPro;
-
-namespace GameDialogHelperPlugin.PluginModeLogic
+﻿namespace GameDialogHelperPlugin.PluginModeLogic
 {
     public interface IPluginModeLogic
     {
@@ -16,7 +14,7 @@ namespace GameDialogHelperPlugin.PluginModeLogic
 
         void ProcessDialogAnswered(SaveData.Heroine heroine, DialogInfo dialogInfo, bool isCorrect);
 
-        void ApplyHighlightSelection(int answerId, TextMeshProUGUI text);
+        void ApplyHighlightSelection(int answerId, UnityEngine.UI.Text text);
 
         //void OnCorrectAnswerSelected();
 

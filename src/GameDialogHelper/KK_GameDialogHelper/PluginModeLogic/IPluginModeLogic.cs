@@ -1,6 +1,4 @@
-﻿using TMPro;
-
-namespace GameDialogHelperPlugin.PluginModeLogic
+﻿namespace GameDialogHelperPlugin.PluginModeLogic
 {
     public interface IPluginModeLogic
     {

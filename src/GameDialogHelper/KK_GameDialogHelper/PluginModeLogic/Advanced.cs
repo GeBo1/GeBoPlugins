@@ -4,7 +4,6 @@ using BepInEx.Logging;
 using GeBoCommon.Utilities;
 using JetBrains.Annotations;
 using Manager;
-using TMPro;
 using UnityEngine;
 using Random = UnityEngine.Random;
 

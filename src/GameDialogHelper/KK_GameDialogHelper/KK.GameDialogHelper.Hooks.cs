@@ -6,7 +6,6 @@ using ADV;
 using ADV.Commands.Base;
 using GeBoCommon.Utilities;
 using HarmonyLib;
-using TMPro;
 using Info = ActionGame.Communication.Info;
 
 namespace GameDialogHelperPlugin

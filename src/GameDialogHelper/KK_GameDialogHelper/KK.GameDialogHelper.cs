@@ -15,7 +15,6 @@ using KKAPI;
 using KKAPI.Chara;
 using KKAPI.MainGame;
 using Manager;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;

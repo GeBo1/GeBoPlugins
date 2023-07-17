@@ -71,7 +71,7 @@ namespace GameDialogHelperPlugin
                     foreach (var choice in ___choices)
                     {
                         answerId++;
-                        var text = choice.transform.GetComponentInChildren<TextMeshProUGUI>();
+                        var text = choice.transform.GetComponentInChildren<UnityEngine.UI.Text>();
                         if (text == null) continue;
                         ApplyHighlightSelections(answerId, text);
                     }

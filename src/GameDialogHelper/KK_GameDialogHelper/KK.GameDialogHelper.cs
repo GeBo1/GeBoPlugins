@@ -289,7 +289,7 @@ namespace GameDialogHelperPlugin
         }
 
 
-        internal static void ApplyHighlightSelections(int answerId, TextMeshProUGUI text)
+        internal static void ApplyHighlightSelections(int answerId, UnityEngine.UI.Text text)
         {
             text.color = DefaultColor;
             if (!CurrentlyEnabled) return;
@@ -333,7 +333,7 @@ namespace GameDialogHelperPlugin
             _logic.ProcessDialogAnswered(TargetHeroine, CurrentDialog, isCorrect);
         }
 
-        public static void DefaultApplyHighlightSelection(int answerId, TextMeshProUGUI text)
+        public static void DefaultApplyHighlightSelection(int answerId, UnityEngine.UI.Text text)
         {
             if (!CurrentlyEnabled) return;
             var isCorrect = answerId == CurrentDialog.CorrectAnswerId;

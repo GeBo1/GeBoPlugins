@@ -134,6 +134,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KKS_TranslationCacheCleaner
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "KKLike_TranslationHelper", "src\TranslationHelper\KKLike_TranslationHelper\KKLike_TranslationHelper.shproj", "{5F26C87F-B51A-4F58-8C56-36190B16FDD6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KKS_StudioSceneNavigation", "src\StudioSceneNavigation\KKS_StudioSceneNavigation\KKS_StudioSceneNavigation.csproj", "{F85A2E3A-7F06-4BE5-A091-45EE9805F1B6}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\StudioSceneNavigation\Core_StudioSceneNavigation\Core_StudioSceneNavigation.projitems*{19796e45-b2ff-4206-8901-a1821b797df8}*SharedItemsImports = 4
@@ -185,6 +187,7 @@ Global
 		src\GeBoCommon\Core_GeBoCommon.Shared\Core_GeBoCommon.Shared.projitems*{ed839651-4764-420e-97fc-a40d7d98449b}*SharedItemsImports = 4
 		src\GeBoCommon\Core_GeBoCommon.Studio\Shared.CharaStudio.projitems*{ed839651-4764-420e-97fc-a40d7d98449b}*SharedItemsImports = 4
 		src\GeBoCommon\Core_GeBoCommon\Shared.Core.projitems*{ed839651-4764-420e-97fc-a40d7d98449b}*SharedItemsImports = 4
+		src\StudioSceneNavigation\Core_StudioSceneNavigation\Core_StudioSceneNavigation.projitems*{f85a2e3a-7f06-4be5-a091-45ee9805f1b6}*SharedItemsImports = 4
 		src\TranslationHelper\Core_TranslationHelper\Core_TranslationHelper.projitems*{fa213cea-3166-4258-b3eb-0931880fb310}*SharedItemsImports = 13
 		src\GeBoCommon\Core_GeBoCommon.Studio\Shared.CharaStudio.projitems*{fd627628-359c-4edc-959d-598999a4bfcf}*SharedItemsImports = 13
 	EndGlobalSection
@@ -356,6 +359,12 @@ Global
 		{D67B9AEF-16C0-405F-8A89-7EBED4249D9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D67B9AEF-16C0-405F-8A89-7EBED4249D9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D67B9AEF-16C0-405F-8A89-7EBED4249D9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F85A2E3A-7F06-4BE5-A091-45EE9805F1B6}.Debug + Asserts|Any CPU.ActiveCfg = Debug|Any CPU
+		{F85A2E3A-7F06-4BE5-A091-45EE9805F1B6}.Debug + Asserts|Any CPU.Build.0 = Debug|Any CPU
+		{F85A2E3A-7F06-4BE5-A091-45EE9805F1B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F85A2E3A-7F06-4BE5-A091-45EE9805F1B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F85A2E3A-7F06-4BE5-A091-45EE9805F1B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F85A2E3A-7F06-4BE5-A091-45EE9805F1B6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -400,6 +409,7 @@ Global
 		{4A600A62-3CAF-47F8-B1EC-BE161313A5F5} = {6F2BE13A-8A89-4B96-A51F-BD220C2660A5}
 		{D67B9AEF-16C0-405F-8A89-7EBED4249D9E} = {65700315-D0D8-4E75-9F3F-514CE624A5A0}
 		{5F26C87F-B51A-4F58-8C56-36190B16FDD6} = {DB633DB4-148A-452A-B5CC-957335BDA302}
+		{F85A2E3A-7F06-4BE5-A091-45EE9805F1B6} = {EDCAD560-423D-456F-A39A-818D3BB38290}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ACC65545-B46C-4998-B489-9249F65FD93B}
